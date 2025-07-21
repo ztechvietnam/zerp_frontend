@@ -1,18 +1,20 @@
 import React, { useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
-import { Button, message, Modal, Table, TableColumnsType } from "antd";
-import { UserEntity, UserForm, UserFormRef } from "./UserForm";
+import { App, Button, Table, TableColumnsType } from "antd";
+import { UserForm, UserFormRef } from "./UserForm";
 import { MEASSAGE } from "../../components/constant/constant";
 import { iconClose } from "../../components/IconSvg/iconSvg";
+import { UserEntity } from "../../common/services/user/user";
 
 const ListUsers = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const { message, modal } = App.useApp();
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const userFormRef = useRef<UserFormRef>(null);
 
   const columns: TableColumnsType<UserEntity> = [
     {
-      title: "Name",
+      title: "Họ và tên",
       dataIndex: "name",
       render: (value, record: UserEntity) => {
         return (
@@ -28,12 +30,12 @@ const ListUsers = () => {
       },
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
-    { title: "Email", dataIndex: "email" },
-    { title: "Address", dataIndex: "address" },
+    { title: "Địa chỉ email", dataIndex: "email" },
+    { title: "Địa chỉ", dataIndex: "address" },
   ];
 
   const dataSource = Array.from({ length: 46 }).map((_, i) => ({
-    id: i,
+    id: i.toString(),
     name: `Nguyễn Văn ${i}`,
     email: `hailong${i}@gmail.com`,
     address: `Số ${i} Lý Tự Trọng, Hải Phòng`,
@@ -60,7 +62,7 @@ const ListUsers = () => {
               size="middle"
               style={{ marginLeft: 16 }}
               onClick={() => {
-                Modal.confirm({
+                modal.confirm({
                   title: MEASSAGE.CONFIRM_DELETE,
                   okText: MEASSAGE.OK,
                   cancelText: MEASSAGE.NO,

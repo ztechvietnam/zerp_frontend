@@ -180,7 +180,15 @@ const AppSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span
+                    className={`menu-item-text ${
+                      isActive(nav.path)
+                        ? "text-[#1677ff]"
+                        : "text-[#344054]"
+                    }`}
+                  >
+                    {nav.name}
+                  </span>
                 )}
               </Link>
             )

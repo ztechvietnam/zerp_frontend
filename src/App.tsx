@@ -6,9 +6,9 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { SIDE_BAR } from "./components/constant/constant";
 import ListUsers from "./pages/01.UsersManagement/ListUsers";
-import ListRoles from "./pages/02.RolesManagement/ListRoles";
 import ListPatients from "./pages/03.PatientsManagement/ListPatients";
 import ListMessages from "./pages/04.MessagesManagement/ListMessages";
+import ListRoles from "./pages/02.RolesManagement/ListRoles";
 
 export default function App() {
   return (

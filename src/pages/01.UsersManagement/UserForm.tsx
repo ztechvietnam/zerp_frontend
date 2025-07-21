@@ -1,14 +1,10 @@
-import { Button, Col, Form, Input, message, Modal, Row, Spin } from "antd";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { App, Col, Form, Input, Modal, Row, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { MEASSAGE } from "../../components/constant/constant";
 import { pick } from "lodash";
-
-export interface UserEntity {
-  name: string;
-  email: string;
-  address: string;
-}
+import { UserEntity } from "../../common/services/user/user";
 
 export interface UserFormRef {
   show(currentItem?: UserEntity): Promise<void>;
@@ -25,6 +21,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
     const [currentUser, setCurrentUser] = useState<UserEntity | undefined>(
       undefined
     );
+    const { message } = App.useApp();
     const [form] = useForm();
 
     useImperativeHandle(
@@ -35,7 +32,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
           setShowModal(true);
           if (currentItem) {
             setCurrentUser(currentItem);
-            const formControlValues: any = pick(currentItem, [
+            const formControlValues = pick(currentItem, [
               "name",
               "email",
               "address",
@@ -55,6 +52,9 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
       message.success(
         currentUser ? "Chỉnh sửa thành công" : "Thêm mới thành công"
       );
+      if (resetData) {
+        resetData();
+      }
     };
 
     const closeModal = () => {
