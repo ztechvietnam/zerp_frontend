@@ -4,10 +4,15 @@ import { Link, useLocation } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { SIDE_BAR } from "../components/constant/constant";
 import {
+  BarsOutlined,
+  BookOutlined,
   CommentOutlined,
   DownOutlined,
   EllipsisOutlined,
+  HddOutlined,
   LockOutlined,
+  NotificationOutlined,
+  PlaySquareOutlined,
   SolutionOutlined,
   UnlockOutlined,
   UserOutlined,
@@ -19,6 +24,88 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
+
+const customerCareNavItems: NavItem[] = [
+  {
+    icon: <SolutionOutlined />,
+    name: "Quản lý bệnh nhân",
+    path: SIDE_BAR.PATIENTS_MANAGEMENT,
+  },
+  {
+    icon: <CommentOutlined />,
+    name: "Lịch sử gửi tin nhắn ZNS",
+    path: SIDE_BAR.MESSAGES_MANAGEMENT,
+  },
+];
+
+const newsNavItems: NavItem[] = [
+  {
+    icon: <NotificationOutlined />,
+    name: "Tin hoạt động",
+    path: SIDE_BAR.NEWS,
+  },
+];
+
+const documentLookupNavItems: NavItem[] = [
+  {
+    name: "Tài liệu dùng chung",
+    icon: <HddOutlined />,
+    subItems: [
+      { name: "Lịch khám bệnh", path: SIDE_BAR.CLINIC_SCHEDULE, pro: false },
+      { name: "Lịch trực", path: SIDE_BAR.DUTY_SCHEDULE, pro: false },
+    ],
+  },
+  {
+    icon: <HddOutlined />,
+    name: "Khối lâm sàng",
+    path: SIDE_BAR.CLINICAL_DEPARTMENT,
+  },
+  {
+    icon: <HddOutlined />,
+    name: "Khối cận lâm sàng",
+    path: SIDE_BAR.PARACLINICAL_DEPARTMENT,
+  },
+  {
+    icon: <HddOutlined />,
+    name: "Phòng chức năng",
+    path: SIDE_BAR.FUNCTIONAL_ROOM,
+  },
+  {
+    icon: <PlaySquareOutlined />,
+    name: "Clip bài giảng",
+    path: SIDE_BAR.LECTURE_VIDEO,
+  },
+];
+const documentManagementNavItems: NavItem[] = [
+  {
+    icon: <BookOutlined />,
+    name: "Danh mục văn bản",
+    path: SIDE_BAR.DOCUMENT_CATALOG,
+  },
+  {
+    icon: <BookOutlined />,
+    name: "Quản lý văn bản",
+    path: SIDE_BAR.DOCUMENT_MANAGEMENT,
+  },
+];
+
+const systemAdminNavItems: NavItem[] = [
+  {
+    icon: <BarsOutlined />,
+    name: "Danh sách đơn vị",
+    path: SIDE_BAR.DEPARTMENT_LIST,
+  },
+  {
+    icon: <UserOutlined />,
+    name: "Quản lý người dùng",
+    path: SIDE_BAR.USERS_MANAGEMENT,
+  },
+  {
+    icon: <UnlockOutlined />,
+    name: "Quản lý phân quyền",
+    path: SIDE_BAR.ROLES_MANAGEMENT,
+  },
+];
 
 const navItems: NavItem[] = [
   {
@@ -46,11 +133,8 @@ const navItems: NavItem[] = [
 const othersItems: NavItem[] = [
   {
     icon: <LockOutlined />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
+    name: "Sign In",
+    path: "/signin",
   },
 ];
 
@@ -182,9 +266,7 @@ const AppSidebar: React.FC = () => {
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <span
                     className={`menu-item-text ${
-                      isActive(nav.path)
-                        ? "text-[#1677ff]"
-                        : "text-[#344054]"
+                      isActive(nav.path) ? "text-[#1677ff]" : "text-[#344054]"
                     }`}
                   >
                     {nav.name}
@@ -255,7 +337,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 pl-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -301,7 +383,7 @@ const AppSidebar: React.FC = () => {
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>
@@ -313,12 +395,76 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  "CHĂM SÓC KHÁCH HÀNG"
                 ) : (
                   <EllipsisOutlined />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(customerCareNavItems, "main")}
+            </div>
+            <div>
+              <h2
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "justify-start"
+                }`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "TIN TỨC BỆNH VIỆN"
+                ) : (
+                  <EllipsisOutlined />
+                )}
+              </h2>
+              {renderMenuItems(newsNavItems, "main")}
+            </div>
+            <div>
+              <h2
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "justify-start"
+                }`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "TRA CỨU VĂN BẢN"
+                ) : (
+                  <EllipsisOutlined />
+                )}
+              </h2>
+              {renderMenuItems(documentLookupNavItems, "main")}
+            </div>
+            <div>
+              <h2
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "justify-start"
+                }`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "PHÂN HỆ QUẢN TRỊ VĂN BẢN"
+                ) : (
+                  <EllipsisOutlined />
+                )}
+              </h2>
+              {renderMenuItems(documentManagementNavItems, "main")}
+            </div>
+            <div>
+              <h2
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "justify-start"
+                }`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "PHÂN HỆ QUẢN TRỊ HỆ THỐNG"
+                ) : (
+                  <EllipsisOutlined />
+                )}
+              </h2>
+              {renderMenuItems(systemAdminNavItems, "main")}
             </div>
             <div className="">
               <h2
