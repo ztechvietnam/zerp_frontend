@@ -2,10 +2,20 @@ import { MessageEntity } from "../../common/services/message/message";
 import { PatientEntity } from "../../common/services/patient/patient";
 
 export enum SIDE_BAR {
-  "USERS_MANAGEMENT" = "/users-management",
-  "ROLES_MANAGEMENT" = "/roles-management",
-  "PATIENTS_MANAGEMENT" = "/patients-management",
-  "MESSAGES_MANAGEMENT" = "/messages-management",
+  CLINICAL_DEPARTMENT = "/clinical-department",
+  PARACLINICAL_DEPARTMENT = "/paraclinical-department",
+  FUNCTIONAL_ROOM = "/functional-room",
+  LECTURE_VIDEO = "/lecture-video",
+  NEWS = "/news",
+  CLINIC_SCHEDULE = "/clinic-schedule",
+  DUTY_SCHEDULE = "/duty-schedule",
+  DEPARTMENT_LIST = "/department-list",
+  USERS_MANAGEMENT = "/users-management",
+  ROLES_MANAGEMENT = "/roles-management",
+  PATIENTS_MANAGEMENT = "/patients-management",
+  MESSAGES_MANAGEMENT = "/messages-management",
+  DOCUMENT_CATALOG = "/document-catalog",
+  DOCUMENT_MANAGEMENT = "/document-management",
 }
 
 export enum MEASSAGE {
