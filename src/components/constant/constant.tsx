@@ -1,21 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  CategoryEntity,
+  TreeNode,
+} from "../../common/services/category/category";
+import { DocumentEntity } from "../../common/services/document/document";
 import { MessageEntity } from "../../common/services/message/message";
 import { PatientEntity } from "../../common/services/patient/patient";
 
 export enum SIDE_BAR {
-  CLINICAL_DEPARTMENT = "/clinical-department",
-  PARACLINICAL_DEPARTMENT = "/paraclinical-department",
-  FUNCTIONAL_ROOM = "/functional-room",
   LECTURE_VIDEO = "/lecture-video",
   NEWS = "/news",
-  CLINIC_SCHEDULE = "/clinic-schedule",
-  DUTY_SCHEDULE = "/duty-schedule",
   DEPARTMENT_LIST = "/department-list",
   USERS_MANAGEMENT = "/users-management",
   ROLES_MANAGEMENT = "/roles-management",
   PATIENTS_MANAGEMENT = "/patients-management",
   MESSAGES_MANAGEMENT = "/messages-management",
-  DOCUMENT_CATALOG = "/document-catalog",
+  DOCUMENT_CATEGORY = "/document-category",
   DOCUMENT_MANAGEMENT = "/document-management",
+  DOCUMENT = "/document",
 }
 
 export enum MEASSAGE {
@@ -380,3 +382,406 @@ export const dataMessages: MessageEntity[] = [
     patient: "NTY",
   },
 ];
+
+export const dataTemplates = Array.from({ length: 25 }, (_, i) => ({
+  label: `Biểu mẫu ${i + 1}`,
+  value: `Biểu mẫu ${i + 1}`,
+}));
+
+export const documentCategories: CategoryEntity[] = [
+  // Cấp cha
+  {
+    id: "1",
+    name: "Phòng chức năng",
+    code: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "2",
+    name: "Khối cận lâm sàng",
+    code: "KCLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "3",
+    name: "Khối lâm sàng",
+    code: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "4",
+    name: "Tài liệu dùng chung",
+    code: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  // Cấp con của PCN
+  {
+    id: "5",
+    name: "Phòng KHTH",
+    code: "PCN_ND",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "6",
+    name: "Phòng TCHC",
+    code: "PCN_TCHC",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "7",
+    name: "Phòng TCKT",
+    code: "PCN_TCKT",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "8",
+    name: "Phòng CNTT",
+    code: "PCN_CNTT",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "9",
+    name: "Phòng Truyền thông",
+    code: "PCN_TT",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "10",
+    name: "Phòng CSKH",
+    code: "PCN_CSKH",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "11",
+    name: "Phòng CSSK cộng đồng",
+    code: "PCN_CSKCD",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "12",
+    name: "Phòng Điều dưỡng",
+    code: "PCN_DD",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "13",
+    name: "Phòng Đào tạo - QLCL",
+    code: "PCN_DTQLCL",
+    parentCode: "PCN",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  // Cấp con của KCLS
+  {
+    id: "15",
+    name: "Khoa Xét nghiệm",
+    code: "KCLS_XN",
+    parentCode: "KCLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "16",
+    name: "Khoa CĐHA và Thăm dò chức năng",
+    code: "KCLS_CĐHA",
+    parentCode: "KCLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "17",
+    name: "Khoa KSNK",
+    code: "KCLS_KSNK",
+    parentCode: "KCLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "18",
+    name: "Khoa Dược",
+    code: "KCLS_DUOC",
+    parentCode: "KCLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  // Cấp con của KLS
+  {
+    id: "19",
+    name: "Khoa cấp cứu - HSTC",
+    code: "KLS_CC_HSTC",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "20",
+    name: "Khoa Khám bệnh",
+    code: "KLS_KB",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "21",
+    name: "Khoa Nội tổng hợp 1 (Hô Hấp - Nội tiết - Truyền Nhiễm)",
+    code: "KLS_NOI1",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "22",
+    name: "Khoa Thần Kinh đột quỵ",
+    code: "KLS_TK_DOTQUY",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "23",
+    name: "Khoa Tim mạch",
+    code: "KLS_TIM",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "24",
+    name: "Khoa Nội tổng hợp 2 (Dị ứng - Thận - Miễn dịch)",
+    code: "KLS_NOI2",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "25",
+    name: "Khoa Tiêu hóa - Nội soi (Tiêu hóa - Nội soi - Gan mật)",
+    code: "KLS_TIEUHOA",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "26",
+    name: "Khoa Tai mũi họng",
+    code: "KLS_TMH",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "27",
+    name: "Khoa Ngoại tổng hợp",
+    code: "KLS_NGOAI_TONGHOP",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "28",
+    name: "Khoa Ngoại Thận tiết niệu và Nam học",
+    code: "KLS_NGOAI_THAN_NAMHOC",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "29",
+    name: "Khoa Ngoại chấn thương chỉnh hình",
+    code: "KLS_CTC",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "30",
+    name: "Khoa Phục hồi chức năng",
+    code: "KLS_PHCN",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "31",
+    name: "Khoa Thận nhân tạo",
+    code: "KLS_TNA",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "32",
+    name: "Khoa Ung Bướu",
+    code: "KLS_UNGBUOU",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "33",
+    name: "Khoa Liên Chuyên Khoa RHM - Mắt",
+    code: "KLS_LCK_RHM_MAT",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "34",
+    name: "Khoa Gây mê hồi sức",
+    code: "KLS_GMHS",
+    parentCode: "KLS",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  // Cấp con của TLDC
+  {
+    id: "35",
+    name: "Lịch khám bệnh",
+    code: "TLDC_LICH_KHAM",
+    parentCode: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "36",
+    name: "Lịch trực",
+    code: "TLDC_LICH_TRUC",
+    parentCode: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "37",
+    name: "KHTH - Bảo hiểm y tế",
+    code: "TLDC_KHTH_BHYT",
+    parentCode: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "38",
+    name: "Đào tạo - NCKH - QLCL",
+    code: "TLDC_DT_NCKH_QLCL",
+    parentCode: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "39",
+    name: "Tổ chức - Hành chính - Thiết bị y tế",
+    code: "TLDC_TC_HC_TBYT",
+    parentCode: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "40",
+    name: "Tài chính kế toán",
+    code: "TLDC_TCKT",
+    parentCode: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+  {
+    id: "41",
+    name: "Kiểm soát nhiễm khuẩn",
+    code: "TLDC_KSNK",
+    parentCode: "TLDC",
+    created: "2025-08-05T08:00:00Z",
+    status: true,
+  },
+];
+
+export const generateDataDocuments = (): DocumentEntity[] => {
+  const pad = (num: any) => num.toString().padStart(3, "0");
+
+  const getRandomCategory = (i: number) =>
+    documentCategories.filter((cate) => {
+      return cate.parentCode;
+    })[i % documentCategories.length];
+
+  const documents: DocumentEntity[] = [];
+
+  for (let i = 1; i <= 100; i++) {
+    const category = getRandomCategory(i);
+    const document: DocumentEntity = {
+      id: `doc-${i}`,
+      name: `Văn bản ${i}`,
+      code: `VB_${pad(i)}`,
+      template: `Biểu mẫu ${i}`,
+      category: category,
+      createdBy: `Người tạo ${(i % 4) + 1}`,
+      created: new Date(
+        Date.now() - Math.floor(Math.random() * 10000000000)
+      ).toISOString(),
+      status: Math.random() > 0.2,
+    };
+    documents.push(document);
+  }
+
+  return documents;
+};
+
+export const dataDocuments: DocumentEntity[] = generateDataDocuments();
+
+export const buildCategoryTree = (categories: CategoryEntity[]): TreeNode[] => {
+  const categoryMap = new Map<string, TreeNode>();
+  categories.forEach((category) => {
+    categoryMap.set(category.code, {
+      item: category,
+      key: category.code,
+      children: [],
+    });
+  });
+
+  const tree: TreeNode[] = [];
+  categories.forEach((category) => {
+    const node = categoryMap.get(category.code)!;
+
+    if (category.parentCode) {
+      const parentNode = categoryMap.get(category.parentCode);
+      if (parentNode) {
+        parentNode.children!.push(node);
+      } else {
+        console.warn(
+          `⚠️ Không tìm thấy parent với code: '${category.parentCode}' cho node '${category.code}'`
+        );
+        tree.push(node);
+      }
+    } else {
+      tree.push(node);
+    }
+  });
+  const cleanEmptyChildren = (nodes: TreeNode[]) => {
+    nodes.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        cleanEmptyChildren(node.children);
+      } else {
+        delete node.children;
+      }
+    });
+  };
+
+  cleanEmptyChildren(tree);
+  return tree;
+};

@@ -9,6 +9,8 @@ import ListUsers from "./pages/01.UsersManagement/ListUsers";
 import ListPatients from "./pages/03.PatientsManagement/ListPatients";
 import ListMessages from "./pages/04.MessagesManagement/ListMessages";
 import ListRoles from "./pages/02.RolesManagement/ListRoles";
+import DocumentsManagement from "./pages/06.DocumentsManagement/DocumentsManagement";
+import DocumentCategories from "./pages/05.DocumentCategory/DocumentCategories";
 
 export default function App() {
   return (
@@ -30,6 +32,18 @@ export default function App() {
             <Route
               path={SIDE_BAR.MESSAGES_MANAGEMENT}
               element={<ListMessages />}
+            />
+            <Route
+              path={SIDE_BAR.DOCUMENT_CATEGORY}
+              element={<DocumentCategories />}
+            />
+            <Route
+              path={SIDE_BAR.DOCUMENT_MANAGEMENT}
+              element={<DocumentsManagement />}
+            />
+            <Route
+              path={`${SIDE_BAR.DOCUMENT}/:idCategory`}
+              element={<DocumentsManagement />}
             />
           </Route>
           <Route path="/signin" element={<SignIn />} />

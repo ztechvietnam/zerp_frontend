@@ -68,7 +68,7 @@ export const EditPasswordModal = forwardRef<
       title="Đổi mật khẩu"
       onCancel={() => closeModal()}
       width={500}
-      visible={showModal}
+      open={showModal}
       closable={loading ? false : true}
       onOk={async () => {
         try {

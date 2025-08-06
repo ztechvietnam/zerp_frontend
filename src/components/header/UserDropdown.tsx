@@ -35,11 +35,11 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-[auto] w-[auto]">
+        <span className="lg:mr-3 overflow-hidden rounded-full h-[auto] w-[auto]">
           <Avatar size={32} icon={<UserOutlined />} />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">
+        <span className="hidden mr-1 font-medium text-theme-sm lg:block">
           Nguyễn Hải Long
         </span>
         <svg

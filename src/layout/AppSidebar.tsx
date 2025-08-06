@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import { useSidebar } from "../context/SidebarContext";
-import { SIDE_BAR } from "../components/constant/constant";
+import { buildCategoryTree, documentCategories, SIDE_BAR } from "../components/constant/constant";
 import {
   BarsOutlined,
   BookOutlined,
@@ -20,12 +20,15 @@ import {
 
 type NavItem = {
   name: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
 const customerCareNavItems: NavItem[] = [
+  {
+    name: "Chăm sóc khách hàng",
+  },
   {
     icon: <SolutionOutlined />,
     name: "Quản lý bệnh nhân",
@@ -40,47 +43,23 @@ const customerCareNavItems: NavItem[] = [
 
 const newsNavItems: NavItem[] = [
   {
+    name: "Tin tức bệnh viện",
+  },
+  {
     icon: <NotificationOutlined />,
     name: "Tin hoạt động",
     path: SIDE_BAR.NEWS,
   },
 ];
 
-const documentLookupNavItems: NavItem[] = [
-  {
-    name: "Tài liệu dùng chung",
-    icon: <HddOutlined />,
-    subItems: [
-      { name: "Lịch khám bệnh", path: SIDE_BAR.CLINIC_SCHEDULE, pro: false },
-      { name: "Lịch trực", path: SIDE_BAR.DUTY_SCHEDULE, pro: false },
-    ],
-  },
-  {
-    icon: <HddOutlined />,
-    name: "Khối lâm sàng",
-    path: SIDE_BAR.CLINICAL_DEPARTMENT,
-  },
-  {
-    icon: <HddOutlined />,
-    name: "Khối cận lâm sàng",
-    path: SIDE_BAR.PARACLINICAL_DEPARTMENT,
-  },
-  {
-    icon: <HddOutlined />,
-    name: "Phòng chức năng",
-    path: SIDE_BAR.FUNCTIONAL_ROOM,
-  },
-  {
-    icon: <PlaySquareOutlined />,
-    name: "Clip bài giảng",
-    path: SIDE_BAR.LECTURE_VIDEO,
-  },
-];
 const documentManagementNavItems: NavItem[] = [
+  {
+    name: "Phân hệ quản trị văn bản",
+  },
   {
     icon: <BookOutlined />,
     name: "Danh mục văn bản",
-    path: SIDE_BAR.DOCUMENT_CATALOG,
+    path: SIDE_BAR.DOCUMENT_CATEGORY,
   },
   {
     icon: <BookOutlined />,
@@ -90,6 +69,9 @@ const documentManagementNavItems: NavItem[] = [
 ];
 
 const systemAdminNavItems: NavItem[] = [
+  {
+    name: "Phân hệ quản trị hệ thống",
+  },
   {
     icon: <BarsOutlined />,
     name: "Danh sách đơn vị",
@@ -104,29 +86,6 @@ const systemAdminNavItems: NavItem[] = [
     icon: <UnlockOutlined />,
     name: "Quản lý phân quyền",
     path: SIDE_BAR.ROLES_MANAGEMENT,
-  },
-];
-
-const navItems: NavItem[] = [
-  {
-    icon: <UserOutlined />,
-    name: "Quản lý người dùng",
-    path: SIDE_BAR.USERS_MANAGEMENT,
-  },
-  {
-    icon: <UnlockOutlined />,
-    name: "Quản lý phân quyền",
-    path: SIDE_BAR.ROLES_MANAGEMENT,
-  },
-  {
-    icon: <SolutionOutlined />,
-    name: "Quản lý bệnh nhân",
-    path: SIDE_BAR.PATIENTS_MANAGEMENT,
-  },
-  {
-    icon: <CommentOutlined />,
-    name: "Quản lý lịch sử gửi tin nhắn ZNS",
-    path: SIDE_BAR.MESSAGES_MANAGEMENT,
   },
 ];
 
@@ -151,35 +110,70 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
   );
 
-  useEffect(() => {
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
+  const documentLookupNavItems: NavItem[] = useMemo(() => {
+    const treeData = buildCategoryTree(documentCategories);
+
+    const categoryNavItems: NavItem[] = treeData.map((data) => {
+      if (data.children && data.children.length) {
+        return {
+          icon: <HddOutlined />,
+          name: data.item.name,
+          subItems: data.children.map((child) => ({
+            name: child.item.name,
+            path: `${SIDE_BAR.DOCUMENT}/${child.item.id}`,
+            pro: false,
+          })),
+        };
+      } else {
+        return {
+          icon: <HddOutlined />,
+          name: data.item.name,
+          path: `${SIDE_BAR.DOCUMENT}/${data.item.id}`,
+        };
+      }
     });
 
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [location, isActive]);
+    return [
+      {
+        name: "Tra cứu văn bản",
+      },
+      ...categoryNavItems,
+      {
+        icon: <PlaySquareOutlined />,
+        name: "Clip bài giảng",
+        path: SIDE_BAR.LECTURE_VIDEO,
+      },
+    ];
+  }, [documentCategories]);
+
+  // useEffect(() => {
+  //   let submenuMatched = false;
+  //   ["main", "others"].forEach((menuType) => {
+  //     const items = menuType === "main" ? navItems : othersItems;
+  //     items.forEach((nav, index) => {
+  //       if (nav.subItems) {
+  //         nav.subItems.forEach((subItem) => {
+  //           if (isActive(subItem.path)) {
+  //             setOpenSubmenu({
+  //               type: menuType as "main" | "others",
+  //               index,
+  //             });
+  //             submenuMatched = true;
+  //           }
+  //         });
+  //       }
+  //     });
+  //   });
+
+  //   if (!submenuMatched) {
+  //     setOpenSubmenu(null);
+  //   }
+  // }, [location, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -206,144 +200,168 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
-    <ul className="flex flex-col gap-4">
-      {items.map((nav, index) => (
-        <li key={nav.name}>
-          {nav.subItems ? (
-            <button
-              onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              } cursor-pointer ${
-                !isExpanded && !isHovered
-                  ? "lg:justify-center"
-                  : "lg:justify-start"
-              }`}
-            >
-              <span
-                className={`menu-item-icon-size  ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                }`}
-              >
-                {nav.icon}
-              </span>
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
-              )}
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <DownOutlined
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
+  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => {
+    const itemTitle = items.filter((item) => !item.icon);
+    const itemRender = items.filter((item) => item.icon);
+    return (
+      <div>
+        <h2
+          className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+            !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          }`}
+        >
+          {isExpanded || isHovered || isMobileOpen ? (
+            `${itemTitle.length ? itemTitle[0].name.toUpperCase() : "Khác"}`
+          ) : (
+            <EllipsisOutlined />
+          )}
+        </h2>
+        <ul className="flex flex-col gap-4">
+          {itemRender.map((nav, index) => (
+            <li key={nav.name}>
+              {nav.subItems ? (
+                <button
+                  onClick={() => handleSubmenuToggle(index, menuType)}
+                  className={`menu-item group ${
                     openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
-                  }`}
-                />
-              )}
-            </button>
-          ) : (
-            nav.path && (
-              <Link
-                to={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
-              >
-                <span
-                  className={`menu-item-icon-size ${
-                    isActive(nav.path)
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
+                      ? "menu-item-active"
+                      : "menu-item-inactive"
+                  } cursor-pointer ${
+                    !isExpanded && !isHovered
+                      ? "lg:justify-center"
+                      : "lg:justify-start"
                   }`}
                 >
-                  {nav.icon}
-                </span>
-                {(isExpanded || isHovered || isMobileOpen) && (
                   <span
-                    className={`menu-item-text ${
-                      isActive(nav.path) ? "text-[#1677ff]" : "text-[#344054]"
+                    className={`menu-item-icon-size  ${
+                      openSubmenu?.type === menuType &&
+                      openSubmenu?.index === index
+                        ? "menu-item-icon-active"
+                        : "menu-item-icon-inactive"
                     }`}
                   >
-                    {nav.name}
+                    {nav.icon}
                   </span>
-                )}
-              </Link>
-            )
-          )}
-          {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-            <div
-              ref={(el) => {
-                subMenuRefs.current[`${menuType}-${index}`] = el;
-              }}
-              className="overflow-hidden transition-all duration-300"
-              style={{
-                height:
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px",
-              }}
-            >
-              <ul className="mt-2 space-y-1 ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
+                  {(isExpanded || isHovered || isMobileOpen) && (
+                    <span className="menu-item-text">{nav.name}</span>
+                  )}
+                  {(isExpanded || isHovered || isMobileOpen) && (
+                    <DownOutlined
+                      className={`ml-auto w-5 h-5 transition-transform duration-200 ${
+                        openSubmenu?.type === menuType &&
+                        openSubmenu?.index === index
+                          ? "rotate-180 text-brand-500"
+                          : ""
+                      }`}
+                    />
+                  )}
+                </button>
+              ) : (
+                nav.path && (
+                  <Link
+                    to={nav.path}
+                    className={`menu-item group ${
+                      isActive(nav.path)
+                        ? "menu-item-active"
+                        : "menu-item-inactive"
+                    }`}
+                  >
+                    <span
+                      className={`menu-item-icon-size ${
+                        isActive(nav.path)
+                          ? "menu-item-icon-active"
+                          : "menu-item-icon-inactive"
                       }`}
                     >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
-                          </span>
-                        )}
+                      {nav.icon}
+                    </span>
+                    {(isExpanded || isHovered || isMobileOpen) && (
+                      <span
+                        className={`menu-item-text ${
+                          isActive(nav.path)
+                            ? "text-[#1677ff]"
+                            : "text-[#344054]"
+                        }`}
+                      >
+                        {nav.name}
                       </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
+                    )}
+                  </Link>
+                )
+              )}
+              {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
+                <div
+                  ref={(el) => {
+                    subMenuRefs.current[`${menuType}-${index}`] = el;
+                  }}
+                  className="overflow-hidden transition-all duration-300"
+                  style={{
+                    height:
+                      openSubmenu?.type === menuType &&
+                      openSubmenu?.index === index
+                        ? `${subMenuHeight[`${menuType}-${index}`]}px`
+                        : "0px",
+                  }}
+                >
+                  <ul className="mt-2 space-y-1 ml-9">
+                    {nav.subItems.map((subItem) => (
+                      <li key={subItem.name}>
+                        <Link
+                          to={subItem.path}
+                          className={`menu-dropdown-item ${
+                            isActive(subItem.path)
+                              ? "menu-dropdown-item-active"
+                              : "menu-dropdown-item-inactive"
+                          }`}
+                        >
+                          {subItem.name}
+                          <span className="flex items-center gap-1 ml-auto">
+                            {subItem.new && (
+                              <span
+                                className={`ml-auto ${
+                                  isActive(subItem.path)
+                                    ? "menu-dropdown-badge-active"
+                                    : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                              >
+                                new
+                              </span>
+                            )}
+                            {subItem.pro && (
+                              <span
+                                className={`ml-auto ${
+                                  isActive(subItem.path)
+                                    ? "menu-dropdown-badge-active"
+                                    : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                              >
+                                pro
+                              </span>
+                            )}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 pl-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 pl-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 shadow-[2px_0_6px_0_rgba(1,41,112,0.1)] 
         ${
           isExpanded || isMobileOpen
-            ? "w-[290px]"
+            ? "w-[290px] mt-[46.8px]"
             : isHovered
             ? "w-[290px]"
-            : "w-[90px]"
+            : "w-[90px] mt-[46.8px]"
         }
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
@@ -386,102 +404,12 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "CHĂM SÓC KHÁCH HÀNG"
-                ) : (
-                  <EllipsisOutlined />
-                )}
-              </h2>
-              {renderMenuItems(customerCareNavItems, "main")}
-            </div>
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "TIN TỨC BỆNH VIỆN"
-                ) : (
-                  <EllipsisOutlined />
-                )}
-              </h2>
-              {renderMenuItems(newsNavItems, "main")}
-            </div>
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "TRA CỨU VĂN BẢN"
-                ) : (
-                  <EllipsisOutlined />
-                )}
-              </h2>
-              {renderMenuItems(documentLookupNavItems, "main")}
-            </div>
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "PHÂN HỆ QUẢN TRỊ VĂN BẢN"
-                ) : (
-                  <EllipsisOutlined />
-                )}
-              </h2>
-              {renderMenuItems(documentManagementNavItems, "main")}
-            </div>
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "PHÂN HỆ QUẢN TRỊ HỆ THỐNG"
-                ) : (
-                  <EllipsisOutlined />
-                )}
-              </h2>
-              {renderMenuItems(systemAdminNavItems, "main")}
-            </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <EllipsisOutlined />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
-            </div>
+            <div>{renderMenuItems(customerCareNavItems, "main")}</div>
+            <div>{renderMenuItems(newsNavItems, "main")}</div>
+            <div>{renderMenuItems(documentLookupNavItems, "main")}</div>
+            <div>{renderMenuItems(documentManagementNavItems, "main")}</div>
+            <div>{renderMenuItems(systemAdminNavItems, "main")}</div>
+            <div className="">{renderMenuItems(othersItems, "others")}</div>
           </div>
         </nav>
       </div>
