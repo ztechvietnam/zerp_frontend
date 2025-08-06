@@ -107,7 +107,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         title={`Bệnh nhân ${currentPatient?.fullName}`}
         onCancel={() => closeModal()}
         width={1200}
-        visible={showModal}
+        open={showModal}
         closable={loading ? false : true}
         maskClosable={false}
         footer={[

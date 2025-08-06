@@ -76,7 +76,7 @@ export const EditProfileModal = forwardRef<
       title={currentUser ? "Chỉnh sửa thông tin cá nhân" : "Thêm mới người dùng"}
       onCancel={() => closeModal()}
       width={1200}
-      visible={showModal}
+      open={showModal}
       closable={loading ? false : true}
       onOk={async () => {
         try {

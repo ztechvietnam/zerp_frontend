@@ -4,10 +4,10 @@ import { useForm } from "antd/es/form/Form";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { MEASSAGE } from "../../components/constant/constant";
 import { pick } from "lodash";
-import { UserEntity } from "../../common/services/user/user";
+import { DocumentEntity } from "../../common/services/document/document";
 
 export interface UserFormRef {
-  show(currentItem?: UserEntity): Promise<void>;
+  show(currentItem?: DocumentEntity): Promise<void>;
 }
 
 interface UserFormProps {
@@ -18,24 +18,28 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
   ({ resetData }, ref) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
-    const [currentUser, setCurrentUser] = useState<UserEntity | undefined>(
-      undefined
-    );
+    const [currentDocument, setCurrentDocument] = useState<
+      DocumentEntity | undefined
+    >(undefined);
     const { message } = App.useApp();
     const [form] = useForm();
 
     useImperativeHandle(
       ref,
       () => ({
-        show: async (currentItem?: UserEntity) => {
+        show: async (currentItem?: DocumentEntity) => {
           setLoading(true);
           setShowModal(true);
           if (currentItem) {
-            setCurrentUser(currentItem);
+            setCurrentDocument(currentItem);
             const formControlValues = pick(currentItem, [
               "name",
-              "email",
-              "address",
+              "code",
+              "template",
+              "category",
+              "createdBy",
+              "created",
+              "status",
             ]);
             setTimeout(() => {
               form.setFieldsValue(formControlValues);
@@ -50,7 +54,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
     const onOK = async (valueForm: any) => {
       console.log(valueForm);
       message.success(
-        currentUser ? "Chỉnh sửa thành công" : "Thêm mới thành công"
+        currentDocument ? "Chỉnh sửa thành công" : "Thêm mới thành công"
       );
       if (resetData) {
         resetData();
@@ -59,13 +63,13 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
 
     const closeModal = () => {
       setShowModal(false);
-      setCurrentUser(undefined);
+      setCurrentDocument(undefined);
       form.resetFields();
     };
 
     return (
       <Modal
-        title={currentUser ? "Chỉnh sửa người dùng" : "Thêm mới người dùng"}
+        title={currentDocument ? "Chỉnh sửa văn bản" : "Thêm mới văn bản"}
         onCancel={() => closeModal()}
         width={1200}
         open={showModal}
@@ -78,8 +82,8 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
             console.log(e);
           }
         }}
-        okText={currentUser ? MEASSAGE.SAVE : MEASSAGE.CREATE}
-        cancelText={currentUser ? MEASSAGE.CANCEL : MEASSAGE.CLOSE}
+        okText={currentDocument ? MEASSAGE.SAVE : MEASSAGE.CREATE}
+        cancelText={currentDocument ? MEASSAGE.CANCEL : MEASSAGE.CLOSE}
         maskClosable={false}
       >
         <Spin spinning={loading}>

@@ -100,7 +100,7 @@ export const RoleForm = forwardRef<RoleFormRef, RoleFormProps>(
         title={`Danh sách phân quyền ${currentRole?.name}`}
         onCancel={() => closeModal()}
         width={1200}
-        visible={showModal}
+        open={showModal}
         closable={loading ? false : true}
         onOk={async () => {
           try {
