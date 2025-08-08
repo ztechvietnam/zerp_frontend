@@ -1,14 +1,21 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import { useSidebar } from "../context/SidebarContext";
-import { buildCategoryTree, documentCategories, SIDE_BAR } from "../components/constant/constant";
+import {
+  buildCategoryTree,
+  documentCategories,
+  SIDE_BAR,
+  SUB_SYSTEM,
+} from "../components/constant/constant";
 import {
   BarsOutlined,
   BookOutlined,
   CommentOutlined,
   DownOutlined,
   EllipsisOutlined,
+  FileDoneOutlined,
   HddOutlined,
   LockOutlined,
   NotificationOutlined,
@@ -38,6 +45,11 @@ const customerCareNavItems: NavItem[] = [
     icon: <CommentOutlined />,
     name: "Lịch sử gửi tin nhắn ZNS",
     path: SIDE_BAR.MESSAGES_MANAGEMENT,
+  },
+  {
+    icon: <FileDoneOutlined />,
+    name: "Danh sách đánh giá",
+    path: SIDE_BAR.LIST_REVIEWS,
   },
 ];
 
@@ -98,7 +110,8 @@ const othersItems: NavItem[] = [
 ];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, subSystem } =
+    useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -150,30 +163,6 @@ const AppSidebar: React.FC = () => {
       },
     ];
   }, [documentCategories]);
-
-  // useEffect(() => {
-  //   let submenuMatched = false;
-  //   ["main", "others"].forEach((menuType) => {
-  //     const items = menuType === "main" ? navItems : othersItems;
-  //     items.forEach((nav, index) => {
-  //       if (nav.subItems) {
-  //         nav.subItems.forEach((subItem) => {
-  //           if (isActive(subItem.path)) {
-  //             setOpenSubmenu({
-  //               type: menuType as "main" | "others",
-  //               index,
-  //             });
-  //             submenuMatched = true;
-  //           }
-  //         });
-  //       }
-  //     });
-  //   });
-
-  //   if (!submenuMatched) {
-  //     setOpenSubmenu(null);
-  //   }
-  // }, [location, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -404,11 +393,19 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
-            <div>{renderMenuItems(customerCareNavItems, "main")}</div>
+            {subSystem === SUB_SYSTEM.CUSTOMER_SUPPORT && (
+              <div>{renderMenuItems(customerCareNavItems, "main")}</div>
+            )}
             <div>{renderMenuItems(newsNavItems, "main")}</div>
-            <div>{renderMenuItems(documentLookupNavItems, "main")}</div>
-            <div>{renderMenuItems(documentManagementNavItems, "main")}</div>
-            <div>{renderMenuItems(systemAdminNavItems, "main")}</div>
+            {subSystem === SUB_SYSTEM.LIBRARY && (
+              <div>{renderMenuItems(documentLookupNavItems, "main")}</div>
+            )}
+            {subSystem === SUB_SYSTEM.MANAGEMENT && (
+              <div>{renderMenuItems(documentManagementNavItems, "main")}</div>
+            )}
+            {subSystem === SUB_SYSTEM.MANAGEMENT && (
+              <div>{renderMenuItems(systemAdminNavItems, "main")}</div>
+            )}
             <div className="">{renderMenuItems(othersItems, "others")}</div>
           </div>
         </nav>

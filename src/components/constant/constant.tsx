@@ -6,6 +6,8 @@ import {
 import { DocumentEntity } from "../../common/services/document/document";
 import { MessageEntity } from "../../common/services/message/message";
 import { PatientEntity } from "../../common/services/patient/patient";
+import { QuestionEntity } from "../../common/services/question/question";
+import { ReviewEntity } from "../../common/services/review/review";
 
 export enum SIDE_BAR {
   LECTURE_VIDEO = "/lecture-video",
@@ -15,9 +17,16 @@ export enum SIDE_BAR {
   ROLES_MANAGEMENT = "/roles-management",
   PATIENTS_MANAGEMENT = "/patients-management",
   MESSAGES_MANAGEMENT = "/messages-management",
+  LIST_REVIEWS = "/list-reviews",
   DOCUMENT_CATEGORY = "/document-category",
   DOCUMENT_MANAGEMENT = "/document-management",
   DOCUMENT = "/document",
+}
+
+export enum SUB_SYSTEM {
+  CUSTOMER_SUPPORT = "CUSTOMER_SUPPORT",
+  LIBRARY = "LIBRARYLIBRARY",
+  MANAGEMENT = "MANAGEMENT",
 }
 
 export enum MEASSAGE {
@@ -785,3 +794,274 @@ export const buildCategoryTree = (categories: CategoryEntity[]): TreeNode[] => {
   cleanEmptyChildren(tree);
   return tree;
 };
+
+export const listQuestions: QuestionEntity[] = [
+  {
+    id: "q1",
+    order: 1,
+    type: "CHOOSE",
+    question:
+      "Bệnh viện Quốc tế Sản Nhi Hải Phòng lắng nghe ý kiến của Quý khách và thay đổi để nâng cao chất lượng dịch vụ. Xin Quý khách vui lòng cho biết ý kiến của mình và điền đầy đủ, chính xác thông tin giúp chúng tôi có thể tiếp thu, phản hồi",
+    options: [
+      { label: "Đồng ý tham gia khảo sát", value: "yes", nextQuestionId: "q2" },
+      { label: "Không đồng ý", value: "no", nextQuestionId: null },
+    ],
+    required: true,
+  },
+  {
+    id: "q2",
+    order: 2,
+    type: "CHOOSE",
+    question:
+      "Quý khách có hài lòng khi khám chữa bệnh tại Bệnh viện Quốc tế Sản Nhi Hải Phòng không?",
+    options: [
+      { label: "Hài lòng", value: "yes", nextQuestionId: "q4" },
+      { label: "Không hài lòng", value: "no", nextQuestionId: "q3" },
+    ],
+    required: true,
+  },
+  {
+    id: "q3",
+    order: 3,
+    type: "TEXT",
+    question:
+      "Theo Quý khách, Bệnh viện Quốc tế Sản Nhi Hải Phòng cần cải thiện những dịch vụ gì để phục vụ tốt hơn nhu cầu khám chữa bệnh?",
+    placeholder: "Vui lòng nhập tại đây",
+    required: true,
+    nextQuestionId: "q4",
+  },
+  {
+    id: "q4",
+    order: 4,
+    type: "FORM",
+    question: "Quý khách vui lòng nhập thông tin",
+    required: true,
+    formFields: [
+      {
+        name: "fullName",
+        label: "Họ tên",
+        type: "fullName",
+        required: true,
+        placeholder: "Nhập họ tên của bạn",
+      },
+      {
+        name: "phone",
+        label: "Số điện thoại",
+        type: "phone",
+        required: true,
+        placeholder: "Nhập số điện thoại",
+      },
+      {
+        name: "email",
+        label: "Email",
+        type: "email",
+        required: false,
+        placeholder: "Nhập email (nếu có)",
+      },
+    ],
+  },
+];
+
+export const dataReviews: ReviewEntity[] = [
+  {
+    id: "1",
+    name: "Nguyễn Thị A",
+    phone: "0911000001",
+    email: "a.nguyen@example.com",
+    review: "Thái độ của nhân viên không thân thiện, trả lời cộc lốc.",
+    created: "2025-08-01T10:20:00Z",
+  },
+  {
+    id: "2",
+    name: "Trần Văn B",
+    phone: "0911000002",
+    email: "b.tran@example.com",
+    review: "Chờ khám quá lâu, không có thông báo rõ ràng.",
+    created: "2025-08-01T11:15:00Z",
+  },
+  {
+    id: "3",
+    name: "Lê Thị C",
+    phone: "0911000003",
+    email: "c.le@example.com",
+    review: "Quy trình khám rườm rà, mất nhiều thời gian.",
+    created: "2025-08-01T11:45:00Z",
+  },
+  {
+    id: "4",
+    name: "Phạm Văn D",
+    phone: "0911000004",
+    email: "d.pham@example.com",
+    review: "Bác sĩ khám rất sơ sài, không giải thích rõ tình trạng bệnh.",
+    created: "2025-08-01T12:30:00Z",
+  },
+  {
+    id: "5",
+    name: "Hoàng Thị E",
+    phone: "0911000005",
+    email: "e.hoang@example.com",
+    review: "Phòng khám đông đúc, không đảm bảo vệ sinh.",
+    created: "2025-08-01T12:45:00Z",
+  },
+  {
+    id: "6",
+    name: "Đỗ Văn F",
+    phone: "0911000006",
+    email: "f.do@example.com",
+    review: "Chi phí cao nhưng chất lượng phục vụ không tương xứng.",
+    created: "2025-08-01T13:10:00Z",
+  },
+  {
+    id: "7",
+    name: "Ngô Thị G",
+    phone: "0911000007",
+    email: "g.ngo@example.com",
+    review: "Lễ tân không hướng dẫn rõ ràng, gây khó khăn cho bệnh nhân mới.",
+    created: "2025-08-01T13:25:00Z",
+  },
+  {
+    id: "8",
+    name: "Mai Văn H",
+    phone: "0911000008",
+    email: "h.mai@example.com",
+    review: "Bác sĩ khám qua loa, cảm giác không quan tâm đến người bệnh.",
+    created: "2025-08-01T13:45:00Z",
+  },
+  {
+    id: "9",
+    name: "Lương Thị I",
+    phone: "0911000009",
+    email: "i.luong@example.com",
+    review: "Khám rồi vẫn không biết bệnh gì, không yên tâm chút nào.",
+    created: "2025-08-01T14:00:00Z",
+  },
+  {
+    id: "10",
+    name: "Vũ Văn J",
+    phone: "0911000010",
+    email: "j.vu@example.com",
+    review: "Máy móc trục trặc, phải đợi sửa rất lâu mới được tiếp tục khám.",
+    created: "2025-08-01T14:20:00Z",
+  },
+  {
+    id: "11",
+    name: "Nguyễn Văn K",
+    phone: "0911000011",
+    email: "k.nguyen@example.com",
+    review: "Không có chỗ ngồi chờ, bệnh nhân phải đứng rất lâu.",
+    created: "2025-08-01T14:30:00Z",
+  },
+  {
+    id: "12",
+    name: "Trịnh Thị L",
+    phone: "0911000012",
+    email: "l.trinh@example.com",
+    review: "Đăng ký online rồi mà vẫn phải chờ cả tiếng đồng hồ.",
+    created: "2025-08-01T14:40:00Z",
+  },
+  {
+    id: "13",
+    name: "Lý Văn M",
+    phone: "0911000013",
+    email: "m.ly@example.com",
+    review: "Giá thuốc tại quầy cao hơn nhiều so với bên ngoài.",
+    created: "2025-08-01T15:00:00Z",
+  },
+  {
+    id: "14",
+    name: "Đoàn Thị N",
+    phone: "0911000014",
+    email: "n.doan@example.com",
+    review: "Thái độ bác sĩ thiếu nhiệt tình, không trả lời câu hỏi rõ ràng.",
+    created: "2025-08-01T15:15:00Z",
+  },
+  {
+    id: "15",
+    name: "Kiều Văn O",
+    phone: "0911000015",
+    email: "o.kieu@example.com",
+    review: "Hẹn tái khám nhưng đến nơi vẫn phải chờ lại từ đầu.",
+    created: "2025-08-01T15:30:00Z",
+  },
+  {
+    id: "16",
+    name: "Bùi Thị P",
+    phone: "0911000016",
+    email: "p.bui@example.com",
+    review: "Nhân viên kỹ thuật làm việc chậm, thiếu trách nhiệm.",
+    created: "2025-08-01T15:45:00Z",
+  },
+  {
+    id: "17",
+    name: "Tống Văn Q",
+    phone: "0911000017",
+    email: "q.tong@example.com",
+    review: "Không có người hướng dẫn trong khu vực khám, rất lộn xộn.",
+    created: "2025-08-01T16:00:00Z",
+  },
+  {
+    id: "18",
+    name: "Phan Thị R",
+    phone: "0911000018",
+    email: "r.phan@example.com",
+    review: "Không khí phòng chờ quá nóng, không có điều hòa.",
+    created: "2025-08-01T16:15:00Z",
+  },
+  {
+    id: "19",
+    name: "Nguyễn Văn S",
+    phone: "0911000019",
+    email: "s.nguyen@example.com",
+    review: "Khâu thanh toán rườm rà, mất thời gian.",
+    created: "2025-08-01T16:30:00Z",
+  },
+  {
+    id: "20",
+    name: "Võ Thị T",
+    phone: "0911000020",
+    email: "t.vo@example.com",
+    review: "Y tá gọi nhầm tên, gây nhầm lẫn giữa bệnh nhân.",
+    created: "2025-08-01T16:45:00Z",
+  },
+  {
+    id: "21",
+    name: "Hồ Văn U",
+    phone: "0911000021",
+    email: "u.ho@example.com",
+    review: "Quy trình xét nghiệm chậm, chờ kết quả quá lâu.",
+    created: "2025-08-01T17:00:00Z",
+  },
+  {
+    id: "22",
+    name: "Trương Thị V",
+    phone: "0911000022",
+    email: "v.truong@example.com",
+    review: "Không có nơi để đồ cá nhân, rất bất tiện.",
+    created: "2025-08-01T17:15:00Z",
+  },
+  {
+    id: "23",
+    name: "Đặng Văn W",
+    phone: "0911000023",
+    email: "w.dang@example.com",
+    review:
+      "Bác sĩ dùng từ chuyên môn quá nhiều, không giải thích cho người bệnh hiểu.",
+    created: "2025-08-01T17:30:00Z",
+  },
+  {
+    id: "24",
+    name: "Cao Thị X",
+    phone: "0911000024",
+    email: "x.cao@example.com",
+    review: "Dịch vụ chăm sóc sau khám gần như không có.",
+    created: "2025-08-01T17:45:00Z",
+  },
+  {
+    id: "25",
+    name: "Nguyễn Văn Y",
+    phone: "0911000025",
+    email: "y.nguyen@example.com",
+    review: "Không hài lòng với cách xử lý phản ánh của bệnh viện.",
+    created: "2025-08-01T18:00:00Z",
+  },
+];

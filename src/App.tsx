@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
-import SignUp from "./pages/AuthPages/SignUp";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
@@ -11,6 +10,7 @@ import ListMessages from "./pages/04.MessagesManagement/ListMessages";
 import ListRoles from "./pages/02.RolesManagement/ListRoles";
 import DocumentsManagement from "./pages/06.DocumentsManagement/DocumentsManagement";
 import DocumentCategories from "./pages/05.DocumentCategory/DocumentCategories";
+import ListReviews from "./pages/07.ListReviews/ListReviews";
 
 export default function App() {
   return (
@@ -34,6 +34,10 @@ export default function App() {
               element={<ListMessages />}
             />
             <Route
+              path={SIDE_BAR.LIST_REVIEWS}
+              element={<ListReviews />}
+            />
+            <Route
               path={SIDE_BAR.DOCUMENT_CATEGORY}
               element={<DocumentCategories />}
             />
@@ -47,7 +51,6 @@ export default function App() {
             />
           </Route>
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
         </Routes>
       </Router>
     </>
