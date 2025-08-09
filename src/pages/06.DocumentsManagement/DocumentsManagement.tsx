@@ -492,7 +492,7 @@ const DocumentsManagement = () => {
                     treeCheckable
                     allowClear
                     showCheckedStrategy={SHOW_PARENT}
-                    placeholder="Please select"
+                    placeholder="Chọn danh mục"
                     style={{
                       width: "100%",
                     }}

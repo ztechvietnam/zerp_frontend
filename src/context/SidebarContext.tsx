@@ -7,8 +7,10 @@ type SidebarContextType = {
   isHovered: boolean;
   activeItem: string | null;
   openSubmenu: string | null;
+  subSystem: string | null;
   toggleSidebar: () => void;
   toggleMobileSidebar: () => void;
+  setSubSystem: (subsystem: string) => void;
   setIsHovered: (isHovered: boolean) => void;
   setActiveItem: (item: string | null) => void;
   toggleSubmenu: (item: string) => void;
@@ -32,6 +34,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [subSystem, setSubSystem] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,10 +73,12 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         isMobileOpen,
         isMobile,
         isHovered,
+        subSystem,
         activeItem,
         openSubmenu,
         toggleSidebar,
         toggleMobileSidebar,
+        setSubSystem,
         setIsHovered,
         setActiveItem,
         toggleSubmenu,
