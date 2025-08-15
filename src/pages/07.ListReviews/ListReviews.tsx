@@ -6,6 +6,7 @@ import {
   Breadcrumb,
   Button,
   Col,
+  DatePicker,
   Drawer,
   Form,
   Input,
@@ -17,11 +18,18 @@ import {
 } from "antd";
 import { dataReviews } from "../../components/constant/constant";
 import { ReviewForm, ReviewFormRef } from "./ReviewForm";
-import { FilterOutlined } from "@ant-design/icons";
+import {
+  DownloadOutlined,
+  FilterOutlined,
+  SearchOutlined,
+  SwapRightOutlined,
+} from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { QualityReview } from "./QualityReview";
 import { ReviewEntity } from "../../common/services/review/review";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const ListReviews = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
@@ -34,6 +42,10 @@ const ListReviews = () => {
   const reviewFormRef = useRef<ReviewFormRef>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const [openEvaluation, setOpenEvaluation] = useState<boolean>(false);
+  const [startCreated, setStartCreated] = useState<Dayjs | undefined>(
+    undefined
+  );
+  const [endCreated, setEndCreated] = useState<Dayjs | undefined>(undefined);
   const [form] = useForm();
 
   const columns: TableColumnsType<ReviewEntity> = [
@@ -63,6 +75,77 @@ const ListReviews = () => {
       width: 100,
       showSorterTooltip: false,
       sorter: (a, b) => a.created.localeCompare(b.name),
+      filterDropdown: ({ clearFilters, close }) => (
+        <div
+          className="flex flex-col gap-2 p-2"
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-0.5">
+            <DatePicker
+              value={startCreated}
+              format="DD/MM/YYYY"
+              onChange={(e) => setStartCreated(e)}
+              placeholder="Từ ngày"
+              disabledDate={(date) => {
+                return !!endCreated && date.isAfter(endCreated, "day");
+              }}
+            />
+            <SwapRightOutlined />
+            <DatePicker
+              value={endCreated}
+              format="DD/MM/YYYY"
+              onChange={(e) => setEndCreated(e)}
+              placeholder="Đến ngày"
+              disabledDate={(date) => {
+                return !!startCreated && date.isBefore(startCreated, "day");
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="primary"
+              onClick={async () => {
+                try {
+                  const formValues = form.getFieldsValue();
+                  await searchData(formValues, startCreated, endCreated);
+                  setPageIndex(1);
+                  setShowFilter(false);
+                } catch (e) {
+                  await searchData(undefined, startCreated, endCreated);
+                  setPageIndex(1);
+                }
+                close();
+              }}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => {
+                if (clearFilters) {
+                  setStartCreated(undefined);
+                  setEndCreated(undefined);
+                }
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => {
+                close();
+              }}
+            >
+              close
+            </Button>
+          </div>
+        </div>
+      ),
       dataIndex: "created",
       render: (value) => <span>{dayjs(value).format("HH:mm DD/MM/YYYY")}</span>,
     },
@@ -78,49 +161,75 @@ const ListReviews = () => {
     },
   ];
 
-  const calculateCounterFilter = (formValues?: any) => {
+  const calculateCounterFilter = (
+    formValues?: any,
+    startDate?: Dayjs,
+    endDate?: Dayjs
+  ) => {
     if (formValues) {
-      const filledCount = Object.values(formValues).filter((value) => {
+      let filledCount = Object.values(formValues).filter((value) => {
         if (Array.isArray(value)) return value.length > 0;
         if (typeof value === "object" && value !== null)
           return Object.keys(value).length > 0;
         return value !== undefined && value !== null && value !== "";
       }).length;
+      if (startDate || endDate) {
+        filledCount += 1;
+      }
       setCounterFilter(filledCount);
     } else {
-      setCounterFilter(0);
+      setCounterFilter(startDate || endDate ? 1 : 0);
     }
   };
 
-  const searchData = useCallback(async (formValues?: any) => {
-    let dataFilter: ReviewEntity[] = [];
-    calculateCounterFilter(formValues);
-    if (formValues && formValues["keyword"]) {
-      dataFilter = dataReviews.filter((patient) => {
-        return (
-          patient.name
-            .toLowerCase()
-            .includes(formValues["keyword"]?.toLowerCase()) ||
-          patient.phone
-            .toLowerCase()
-            .includes(formValues["keyword"]?.toLowerCase()) ||
-          (patient.email &&
-            patient.email
+  const searchData = useCallback(
+    async (formValues?: any, startDate?: Dayjs, endDate?: Dayjs) => {
+      let dataFilter: ReviewEntity[] = [];
+      calculateCounterFilter(formValues, startDate, endDate);
+      if (formValues && formValues["keyword"]) {
+        dataFilter = dataReviews.filter((patient) => {
+          return (
+            patient.name
               .toLowerCase()
-              .includes(formValues["keyword"]?.toLowerCase()))
-        );
-      });
-    } else {
-      dataFilter = dataReviews;
-    }
-    setListReviews(dataFilter);
-  }, []);
+              .includes(formValues["keyword"]?.toLowerCase()) ||
+            patient.phone
+              .toLowerCase()
+              .includes(formValues["keyword"]?.toLowerCase()) ||
+            (patient.email &&
+              patient.email
+                .toLowerCase()
+                .includes(formValues["keyword"]?.toLowerCase()))
+          );
+        });
+      } else {
+        dataFilter = dataReviews;
+      }
+      if (startDate || endDate) {
+        dataFilter = dataFilter.filter((patient) => {
+          return startDate && endDate
+            ? (dayjs(patient.created).isAfter(startDate.startOf("day")) ||
+                dayjs(patient.created).isSame(startDate.startOf("day"))) &&
+                (dayjs(patient.created).isBefore(endDate.endOf("day")) ||
+                  dayjs(patient.created).isSame(endDate.endOf("day")))
+            : startDate
+            ? dayjs(patient.created).isAfter(startDate.startOf("day")) ||
+              dayjs(patient.created).isSame(startDate.startOf("day"))
+            : endDate
+            ? dayjs(patient.created).isBefore(endDate.endOf("day")) ||
+              dayjs(patient.created).isSame(endDate.endOf("day"))
+            : true;
+        });
+      }
+      setListReviews(dataFilter);
+    },
+    []
+  );
 
   useEffect(() => {
     (async () => {
       searchData();
     })();
-  }, [searchData]);
+  }, []);
 
   useEffect(() => {
     const data = listReviews.slice(
@@ -129,6 +238,54 @@ const ListReviews = () => {
     );
     setListData(data);
   }, [pageSize, pageIndex, listReviews]);
+
+  const exportToExcel = useCallback(async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Danh sách đánh giá");
+
+    const headers = [
+      "Họ và Tên",
+      "Số điện thoại",
+      "Email",
+      "Ngày đánh giá",
+      "Đánh giá",
+    ];
+
+    sheet.addRow(headers);
+
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.alignment = { horizontal: "center", vertical: "middle" };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF4F81BD" },
+    };
+
+    listReviews.forEach((item) => {
+      sheet.addRow([
+        item.name,
+        item.phone,
+        item.email,
+        dayjs(item.created).format("HH:mm DD:MM:YYYY"),
+        item.review,
+      ]);
+    });
+
+    sheet.columns = [
+      { width: 25 },
+      { width: 15 },
+      { width: 25 },
+      { width: 25 },
+      { width: 50 },
+    ];
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(
+      new Blob([buffer]),
+      `Danh_sách_đánh_giá-${dayjs().format("HH:mm_DD/MM/YYYY")}.xlsx`
+    );
+  }, [listReviews]);
 
   return (
     <PageContainer
@@ -153,6 +310,14 @@ const ListReviews = () => {
       }
       toolbarRight={
         <div className="flex gap-[10px] items-center">
+          <Button
+            className="flex !gap-[3px] items-center justify-center cursor-pointer"
+            type="primary"
+            onClick={async () => await exportToExcel()}
+          >
+            <DownloadOutlined />
+            Xuất dữ liệu
+          </Button>
           <Button type="primary" onClick={() => setOpenEvaluation(true)}>
             Đánh giá dịch vụ
           </Button>
@@ -216,6 +381,9 @@ const ListReviews = () => {
             onChange={(page) => {
               setPageIndex(page);
             }}
+            onShowSizeChange={(current, size) => {
+              console.log(current, size);
+            }}
             align="end"
           />
         </div>
@@ -261,6 +429,41 @@ const ListReviews = () => {
           </Row>
           <Row gutter={12}>
             <Col span={24}>
+              <Form.Item
+                labelCol={{ span: 24 }}
+                wrapperCol={{ span: 24 }}
+                label="Thời gian đánh giá"
+              >
+                <div className="flex items-center gap-0.5 w-full">
+                  <DatePicker
+                    value={startCreated}
+                    format="DD/MM/YYYY"
+                    onChange={(e) => setStartCreated(e)}
+                    placeholder="Từ ngày"
+                    style={{ width: "calc((100% - 18px)/2)" }}
+                    disabledDate={(date) => {
+                      return !!endCreated && date.isAfter(endCreated, "day");
+                    }}
+                  />
+                  <SwapRightOutlined />
+                  <DatePicker
+                    value={endCreated}
+                    format="DD/MM/YYYY"
+                    onChange={(e) => setEndCreated(e)}
+                    placeholder="Đến ngày"
+                    style={{ width: "calc((100% - 18px)/2)" }}
+                    disabledDate={(date) => {
+                      return (
+                        !!startCreated && date.isBefore(startCreated, "day")
+                      );
+                    }}
+                  />
+                </div>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col span={24}>
               <div className="flex gap-[10px] justify-end">
                 <Button
                   type="primary"
@@ -281,7 +484,9 @@ const ListReviews = () => {
                 <Button
                   onClick={async () => {
                     form.resetFields();
-                    await searchData();
+                    setStartCreated(undefined);
+                    setEndCreated(undefined);
+                    await searchData(undefined, undefined, undefined);
                     setPageIndex(1);
                     setShowFilter(false);
                   }}

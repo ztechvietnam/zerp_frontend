@@ -11,6 +11,7 @@ import ListRoles from "./pages/02.RolesManagement/ListRoles";
 import DocumentsManagement from "./pages/06.DocumentsManagement/DocumentsManagement";
 import DocumentCategories from "./pages/05.DocumentCategory/DocumentCategories";
 import ListReviews from "./pages/07.ListReviews/ListReviews";
+import ListDepartments from "./pages/08.DepartmentManagement/ListDepartments";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
 
             {/* Others Page */}
             {/* <Route path="/profile" element={<UserProfiles />} /> */}
+            <Route path={SIDE_BAR.DEPARTMENT_MANAGEMENT} element={<ListDepartments />} />
             <Route path={SIDE_BAR.USERS_MANAGEMENT} element={<ListUsers />} />
             <Route path={SIDE_BAR.ROLES_MANAGEMENT} element={<ListRoles />} />
             <Route

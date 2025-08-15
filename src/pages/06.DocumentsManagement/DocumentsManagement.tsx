@@ -26,8 +26,10 @@ import {
   TreeSelect,
 } from "antd";
 import {
+  dataDepartments,
   dataDocuments,
   dataTemplates,
+  dataUsers,
   documentCategories,
 } from "../../components/constant/constant";
 import {
@@ -44,8 +46,14 @@ import dayjs from "dayjs";
 import ModalPlayVideo, { ModalPlayVideoRef } from "./ModalPlayVideo";
 import { useParams } from "react-router";
 import { CategoryEntity } from "../../common/services/category/category";
+import { DocumentForm, DocumentFormRef } from "./DocumentsForm";
+import {
+  DepartmentEntity,
+  DepartmentTreeNode,
+} from "../../common/services/department/department";
+import { UserEntity } from "../../common/services/user/user";
 
-interface TreeSelectNode {
+export interface TreeSelectNode {
   title: string;
   value: string;
   key: string;
@@ -63,14 +71,92 @@ const DocumentsManagement = () => {
   const [listDocuments, setListDocuments] = useState<DocumentEntity[]>([]);
   const [listData, setListData] = useState<DocumentEntity[]>([]);
   const [treeData, setTreeData] = useState<TreeSelectNode[]>([]);
+  const [departmentTree, setDepartmentTree] = useState<DepartmentTreeNode[]>(
+    []
+  );
   const [currentCategory, setCurrentCategory] = useState<
     CategoryEntity | undefined
   >(undefined);
   const modalPlayVideoRef = useRef<ModalPlayVideoRef>(null);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const documentFormRef = useRef<DocumentFormRef>(null);
   const [form] = useForm();
   const { idCategory } = useParams();
+
+  const buildDepartmentTree = (
+    departments: DepartmentEntity[]
+  ): DepartmentTreeNode[] => {
+    const categoryMap = new Map<string, DepartmentTreeNode>();
+    departments.forEach((department) => {
+      categoryMap.set(department.code, {
+        item: department,
+        key: department.code,
+        children: [],
+        users: [],
+      });
+    });
+
+    const tree: DepartmentTreeNode[] = [];
+    departments.forEach((department) => {
+      const node = categoryMap.get(department.code)!;
+
+      if (department.parentCode) {
+        const parentNode = categoryMap.get(department.parentCode);
+        if (parentNode) {
+          parentNode.children!.push(node);
+        } else {
+          console.warn(
+            `⚠️ Không tìm thấy parent với code: '${department.parentCode}' cho node '${department.code}'`
+          );
+          tree.push(node);
+        }
+      } else {
+        tree.push(node);
+      }
+    });
+    const cleanEmptyChildren = (nodes: DepartmentTreeNode[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length > 0) {
+          cleanEmptyChildren(node.children);
+        } else {
+          delete node.children;
+        }
+      });
+    };
+
+    cleanEmptyChildren(tree);
+    return tree;
+  };
+
+  const mapUsersToDepartments = (
+    tree: DepartmentTreeNode[],
+    users: UserEntity[],
+    departments: DepartmentEntity[]
+  ) => {
+    // Tạo map từ id -> code để tìm node dễ hơn
+    const idToCode = new Map(departments.map((dep) => [dep.id, dep.code]));
+
+    // Đệ quy để gán users vào node
+    const assignUsers = (nodes: DepartmentTreeNode[]) => {
+      nodes.forEach((node) => {
+        const depId = [...idToCode.entries()].find(
+          ([, code]) => code === node.key
+        )?.[0];
+
+        if (depId) {
+          node.users = users.filter((u) => u.department === depId);
+        }
+
+        if (node.children) {
+          assignUsers(node.children);
+        }
+      });
+    };
+
+    assignUsers(tree);
+    return tree;
+  };
 
   const buildCategoryTree = (
     categories: CategoryEntity[]
@@ -130,7 +216,11 @@ const DocumentsManagement = () => {
 
   useEffect(() => {
     setTreeData(buildCategoryTree(documentCategories));
-  }, [])
+    const treeDep = buildDepartmentTree(dataDepartments);
+    setDepartmentTree(
+      mapUsersToDepartments(treeDep, dataUsers, dataDepartments)
+    );
+  }, []);
 
   const columns: TableColumnsType<DocumentEntity> = [
     { title: "Tên văn bản", dataIndex: "name", width: 200, fixed: "left" },
@@ -156,12 +246,16 @@ const DocumentsManagement = () => {
             width: 120,
             render(value: any) {
               return (
-                <Tag
-                  className="w-fit !whitespace-break-spaces"
-                  color="processing"
-                >
-                  {value.name}
-                </Tag>
+                <>
+                  {value && (
+                    <Tag
+                      className="w-fit !whitespace-break-spaces"
+                      color="processing"
+                    >
+                      {value?.name || ""}
+                    </Tag>
+                  )}
+                </>
               );
             },
           },
@@ -198,7 +292,7 @@ const DocumentsManagement = () => {
               color="primary"
               variant="outlined"
               onClick={() => {
-                modalPlayVideoRef.current?.show();
+                documentFormRef.current?.show(record);
               }}
             >
               <Tooltip title="Xem chi tiết">
@@ -279,16 +373,16 @@ const DocumentsManagement = () => {
           });
         }
         if (formValues["category"] && formValues["category"]?.length) {
-          const categoryFilter = treeData.filter((data) => {
-            return formValues["category"].includes(data.value);
+          const categoryFilter = documentCategories.filter((data) => {
+            return formValues["category"].includes(data.id);
           });
           const idCateFilter = categoryFilter
-            .map((cate) => [
-              cate.value,
-              ...(cate.children && cate.children.length
-                ? cate.children.map((child) => child.value)
-                : []),
-            ])
+            .map((cate) => {
+              const children = documentCategories.filter((data) => {
+                return data.parentCode === cate.code;
+              });
+              return [...cate.id, ...children.map((child) => child.id)];
+            })
             .flat();
           dataFilter = dataFilter.filter((doc) => {
             return doc.category && idCateFilter.includes(doc.category.id);
@@ -347,7 +441,17 @@ const DocumentsManagement = () => {
         </div>
       }
       toolbarRight={
-        <div>
+        <div className="flex items-center gap-4">
+          <Button
+            type="primary"
+            size="middle"
+            style={{ marginLeft: 16 }}
+            onClick={() => {
+              documentFormRef.current?.show();
+            }}
+          >
+            Thêm văn bản
+          </Button>
           <Button
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
@@ -433,7 +537,7 @@ const DocumentsManagement = () => {
         width={window.innerWidth < 768 ? (window.innerWidth * 70) / 100 : 400}
         open={showFilter}
       >
-        <Form layout="horizontal" form={form}>
+        <Form layout="horizontal" form={form} style={{ padding: 12 }}>
           <Row gutter={12}>
             <Col span={24}>
               <Form.Item
@@ -496,6 +600,16 @@ const DocumentsManagement = () => {
                     style={{
                       width: "100%",
                     }}
+                    showSearch
+                    filterTreeNode={(inputValue: string, treeNode: any) => {
+                      const title =
+                        typeof treeNode.title === "string"
+                          ? treeNode.title
+                          : "";
+                      return title
+                        .toLocaleLowerCase()
+                        .includes(inputValue?.trim().toLocaleLowerCase());
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -553,7 +667,12 @@ const DocumentsManagement = () => {
           </Row>
         </Form>
       </Drawer>
-      {/* <PatientForm ref={patientFormRef} /> */}
+      <DocumentForm
+        ref={documentFormRef}
+        treeCategory={treeData}
+        treeDepartment={departmentTree}
+        resetData={() => console.log("reset")}
+      />
       <ModalPlayVideo ref={modalPlayVideoRef} />
     </PageContainer>
   );

@@ -83,7 +83,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
         maskClosable={false}
       >
         <Spin spinning={loading}>
-          <Form layout="horizontal" form={form} style={{ padding: 24 }}>
+          <Form layout="horizontal" form={form} style={{ padding: 12 }}>
             <Row gutter={24}>
               <Col span={24}>
                 <Form.Item

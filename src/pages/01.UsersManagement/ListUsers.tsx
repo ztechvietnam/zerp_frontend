@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import { App, Button, Table, TableColumnsType } from "antd";
 import { UserForm, UserFormRef } from "./UserForm";
-import { MEASSAGE } from "../../components/constant/constant";
+import { dataUsers, MEASSAGE } from "../../components/constant/constant";
 import { iconClose } from "../../components/IconSvg/iconSvg";
 import { UserEntity } from "../../common/services/user/user";
 
@@ -33,13 +33,6 @@ const ListUsers = () => {
     { title: "Địa chỉ email", dataIndex: "email" },
     { title: "Địa chỉ", dataIndex: "address" },
   ];
-
-  const dataSource = Array.from({ length: 46 }).map((_, i) => ({
-    id: i.toString(),
-    name: `Nguyễn Văn ${i}`,
-    email: `hailong${i}@gmail.com`,
-    address: `Số ${i} Lý Tự Trọng, Hải Phòng`,
-  }));
 
   return (
     <PageContainer
@@ -107,7 +100,7 @@ const ListUsers = () => {
         }}
         rowKey="id"
         columns={columns}
-        dataSource={dataSource}
+        dataSource={dataUsers}
         scroll={{ y: window.innerHeight - 255 }}
       />
       <UserForm
