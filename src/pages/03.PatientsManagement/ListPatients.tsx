@@ -208,7 +208,7 @@ const ListPatients = () => {
         width={window.innerWidth < 768 ? window.innerWidth*70/100 : 400}
         open={showFilter}
       >
-        <Form layout="horizontal" form={form}>
+        <Form layout="horizontal" form={form} style={{ padding: 12 }}>
           <Row gutter={12}>
             <Col span={24}>
               <Form.Item

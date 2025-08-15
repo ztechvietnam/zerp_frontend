@@ -87,7 +87,7 @@ const systemAdminNavItems: NavItem[] = [
   {
     icon: <BarsOutlined />,
     name: "Danh sách đơn vị",
-    path: SIDE_BAR.DEPARTMENT_LIST,
+    path: SIDE_BAR.DEPARTMENT_MANAGEMENT,
   },
   {
     icon: <UserOutlined />,

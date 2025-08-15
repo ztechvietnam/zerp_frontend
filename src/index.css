@@ -776,3 +776,9 @@ span.flatpickr-weekday,
 .simplebar-scrollbar.simplebar-open:before {
   @apply opacity-100;
 }
+
+.ant-modal .ant-modal-header {
+  padding-bottom: 8px !important;
+  margin-bottom: 0 !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
