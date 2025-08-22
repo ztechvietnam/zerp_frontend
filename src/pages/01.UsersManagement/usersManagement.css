@@ -1,0 +1,6 @@
+.spinContainer {
+  height: calc(100% - 52px);
+  .ant-spin-container {
+    height: 100%;
+  }
+}

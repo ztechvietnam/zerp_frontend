@@ -1,17 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { App, Col, Form, Input, message, Modal, Row, Spin } from "antd";
+import { App, Col, Form, Input, Modal, Row, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { MEASSAGE } from "../constant/constant";
-
-export interface UserEntity {
-  id?: string;
-  name: string;
-  email: string;
-  address: string;
-  loginName?: string;
-  passWord?: string;
-}
+import { UserEntity } from "../../common/services/user/user";
 
 export interface EditPasswordModalRef {
   show(currentItem?: UserEntity): Promise<void>;

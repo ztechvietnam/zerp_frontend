@@ -40,6 +40,8 @@ export enum MEASSAGE {
   "ERROR" = "Có lỗi xảy ra trong quá trình xử lý",
 }
 
+export const DEFAULT_PAGE_SIZE = 10;
+
 export const dataUsers = Array.from({ length: 46 }).map((_, i) => ({
   id: i.toString(),
   name: `Nguyễn Văn ${i}`,
