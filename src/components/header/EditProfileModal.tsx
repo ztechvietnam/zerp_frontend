@@ -4,19 +4,15 @@ import { useForm } from "antd/es/form/Form";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { MEASSAGE } from "../../components/constant/constant";
 import { pick } from "lodash";
-
-export interface UserEntity {
-  name: string;
-  email: string;
-  address: string;
-}
+import { UserEntity } from "../../common/services/user/user";
+import { authService } from "../../common/services/auth/authService";
 
 export interface EditProfileModalRef {
   show(currentItem?: UserEntity): Promise<void>;
 }
 
 interface EditProfileModalProps {
-  resetData: () => void;
+  resetData: (newCurrentUser: UserEntity) => void;
 }
 
 export const EditProfileModal = forwardRef<
@@ -34,20 +30,18 @@ export const EditProfileModal = forwardRef<
   useImperativeHandle(
     ref,
     () => ({
-      show: async (currentItem?: UserEntity) => {
+      show: async (currentItem: UserEntity) => {
         setLoading(true);
         setShowModal(true);
-        if (currentItem) {
-          setCurrentUser(currentItem);
-          const formControlValues: any = pick(currentItem, [
-            "name",
-            "email",
-            "address",
-          ]);
-          setTimeout(() => {
-            form.setFieldsValue(formControlValues);
-          }, 0);
-        }
+        setCurrentUser(currentItem);
+        const formControlValues: any = pick(currentItem, [
+          "lastName",
+          "firstName",
+          "email",
+        ]);
+        setTimeout(() => {
+          form.setFieldsValue(formControlValues);
+        }, 0);
         setLoading(false);
       },
     }),
@@ -55,14 +49,23 @@ export const EditProfileModal = forwardRef<
   );
 
   const onOK = async (valueForm: any) => {
-    console.log(valueForm);
-    message.success(
-      currentUser ? "Chỉnh sửa thành công" : "Thêm mới thành công"
-    );
-    if(resetData){
-      resetData();
+    try {
+      const newData = valueForm;
+      if (currentUser) {
+        newData.id = currentUser.id;
+        const newCurrentUser = await authService.updateMe(newData);
+        message.success(
+          currentUser ? "Chỉnh sửa thành công" : "Thêm mới thành công"
+        );
+        closeModal();
+        if (resetData) {
+          resetData(newCurrentUser);
+        }
+      }
+    } catch (e) {
+      console.log(e);
+      message.error("Có lỗi xảy ra trong quá trình xử lý");
     }
-    closeModal();
   };
 
   const closeModal = () => {
@@ -73,7 +76,7 @@ export const EditProfileModal = forwardRef<
 
   return (
     <Modal
-      title={currentUser ? "Chỉnh sửa thông tin cá nhân" : "Thêm mới người dùng"}
+      title={"Chỉnh sửa thông tin cá nhân"}
       onCancel={() => closeModal()}
       width={1200}
       open={showModal}
@@ -93,12 +96,12 @@ export const EditProfileModal = forwardRef<
       <Spin spinning={loading}>
         <Form layout="horizontal" form={form} style={{ padding: 24 }}>
           <Row gutter={24}>
-            <Col span={24}>
+            <Col span={12}>
               <Form.Item
                 labelCol={{ span: 24 }}
                 wrapperCol={{ span: 24 }}
-                label="Họ và tên"
-                name="name"
+                label="Họ và tên đệm"
+                name="lastName"
                 rules={[
                   {
                     required: true,
@@ -108,7 +111,27 @@ export const EditProfileModal = forwardRef<
               >
                 <Input
                   style={{ width: "100%" }}
-                  placeholder={"Nhập họ và tên"}
+                  placeholder={"Nhập họ và tên đệm"}
+                  maxLength={255}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                labelCol={{ span: 24 }}
+                wrapperCol={{ span: 24 }}
+                label="Tên"
+                name="firstName"
+                rules={[
+                  {
+                    required: true,
+                    message: "Trường yêu cầu nhập!",
+                  },
+                ]}
+              >
+                <Input
+                  style={{ width: "100%" }}
+                  placeholder={"Nhập tên"}
                   maxLength={255}
                 />
               </Form.Item>
@@ -133,19 +156,6 @@ export const EditProfileModal = forwardRef<
                   placeholder={"Nhập địa chỉ email"}
                   maxLength={255}
                 />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={24}>
-            <Col span={24}>
-              <Form.Item
-                labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}
-                label="Địa chỉ"
-                name="address"
-                rules={[]}
-              >
-                <Input style={{ width: "100%" }} placeholder={"Nhập địa chỉ"} />
               </Form.Item>
             </Col>
           </Row>

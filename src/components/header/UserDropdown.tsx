@@ -6,19 +6,12 @@ import { Avatar } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { EditProfileModal, EditProfileModalRef } from "./EditProfileModal";
 import { EditPasswordModal, EditPasswordModalRef } from "./EditPasswordModal";
-
-
-const currentUser = {
-  id: "ababababab",
-  name: "Nguyễn Hải Long",
-  loginName: "longnh",
-  passWord: "abc123-",
-  email: "hailong@gmail.com",
-  address: "Vĩnh Bảo, Hải Phòng",
-};
+import { useAuth } from "../../context/AuthContext";
+import { UserEntity } from "../../common/services/user/user";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const { currentUser, logout, setNewCuruser } = useAuth();
   const editProfileModalRef = useRef<EditProfileModalRef>(null);
   const editPasswordModalRef = useRef<EditPasswordModalRef>(null);
 
@@ -40,7 +33,7 @@ export default function UserDropdown() {
         </span>
 
         <span className="hidden mr-1 font-medium text-theme-sm lg:block">
-          Nguyễn Hải Long
+          {currentUser?.firstName} {currentUser?.lastName}
         </span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -69,10 +62,10 @@ export default function UserDropdown() {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {currentUser.name}
+            {currentUser?.firstName} {currentUser?.lastName}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {currentUser.email}
+            {currentUser?.email}
           </span>
         </div>
 
@@ -132,6 +125,7 @@ export default function UserDropdown() {
         </ul>
         <Link
           to="/signin"
+          onClick={logout}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium !text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <svg
@@ -154,13 +148,11 @@ export default function UserDropdown() {
       </Dropdown>
       <EditProfileModal
         ref={editProfileModalRef}
-        resetData={() => {
-          console.log("resetData");
+        resetData={(newCurrentUser: UserEntity) => {
+          setNewCuruser(newCurrentUser);
         }}
       />
-      <EditPasswordModal
-        ref={editPasswordModalRef}
-      />
+      <EditPasswordModal ref={editPasswordModalRef} />
     </div>
   );
 }

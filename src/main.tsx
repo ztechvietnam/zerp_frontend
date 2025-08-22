@@ -10,6 +10,7 @@ import { App as AntdApp } from "antd";
 import { ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";
 import "dayjs/locale/vi";
+import { AuthProvider } from "./context/AuthContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -17,7 +18,9 @@ createRoot(document.getElementById("root")!).render(
       <ConfigProvider locale={viVN}>
         <AppWrapper>
           <AntdApp>
-            <App />
+            <AuthProvider>
+              <App />
+            </AuthProvider>
           </AntdApp>
         </AppWrapper>
       </ConfigProvider>

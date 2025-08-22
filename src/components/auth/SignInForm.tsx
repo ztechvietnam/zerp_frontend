@@ -1,8 +1,39 @@
-import { Col, Form, Row, Input, Button } from "antd";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Col, Form, Row, Input, Button, Spin } from "antd";
 import { useForm } from "antd/lib/form/Form";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router";
+import { authService } from "../../common/services/auth/authService";
+import { useState } from "react";
 
 export default function SignInForm() {
+  const [showMessage, setShowMessage] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [form] = useForm();
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogin = async (formValues: any) => {
+    try {
+      setLoading(true);
+      setShowMessage("");
+      const resultLogin = await authService.emailLogin(
+        formValues.username,
+        formValues.password
+      );
+      setShowMessage("SUCCESS");
+      setTimeout(() => {
+        login(resultLogin);
+        navigate("/");
+        setLoading(false);
+      }, 2000);
+    } catch (e) {
+      setLoading(false);
+      setShowMessage("ERROR");
+      console.log(e);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -20,7 +51,18 @@ export default function SignInForm() {
               Nhập tài khoản và mật khẩu
             </p>
           </div>
-          <div>
+          {showMessage === "ERROR" ? (
+            <div className="flex p-4 m-4 mb-0 bg-[#f8d7da] border border-[#f1aeb5] rounded-lg text-[#58151c] text-sm">
+              Tài khoản hoặc mật khẩu không đúng, vui lòng thử lại
+            </div>
+          ) : showMessage === "SUCCESS" ? (
+            <div className="flex p-4 m-4 mb-0 bg-[#d1e7dd] border border-[#a3cfbb] rounded-lg text-[#0f5132] text-sm">
+              Đăng nhập thành công
+            </div>
+          ) : (
+            ""
+          )}
+          <Spin spinning={loading}>
             <Form layout="horizontal" form={form} style={{ padding: 24 }}>
               <Row gutter={24}>
                 <Col span={24}>
@@ -60,13 +102,25 @@ export default function SignInForm() {
               </Row>
               <Row gutter={24}>
                 <Col span={24}>
-                  <Button type="primary" htmlType="submit" className="w-full mt-[12px]" style={{ height: 40 }}>
+                  <Button
+                    type="primary"
+                    className="w-full mt-[12px]"
+                    style={{ height: 40 }}
+                    onClick={async () => {
+                      try {
+                        const formValues = await form.validateFields();
+                        handleLogin(formValues);
+                      } catch (e) {
+                        console.log(e);
+                      }
+                    }}
+                  >
                     Đăng nhập
                   </Button>
                 </Col>
               </Row>
             </Form>
-          </div>
+          </Spin>
         </div>
       </div>
     </div>

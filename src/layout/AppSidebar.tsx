@@ -17,7 +17,6 @@ import {
   EllipsisOutlined,
   FileDoneOutlined,
   HddOutlined,
-  LockOutlined,
   NotificationOutlined,
   PlaySquareOutlined,
   SolutionOutlined,
@@ -98,14 +97,6 @@ const systemAdminNavItems: NavItem[] = [
     icon: <UnlockOutlined />,
     name: "Quản lý phân quyền",
     path: SIDE_BAR.ROLES_MANAGEMENT,
-  },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <LockOutlined />,
-    name: "Sign In",
-    path: "/signin",
   },
 ];
 
@@ -406,7 +397,6 @@ const AppSidebar: React.FC = () => {
             {subSystem === SUB_SYSTEM.MANAGEMENT && (
               <div>{renderMenuItems(systemAdminNavItems, "main")}</div>
             )}
-            <div className="">{renderMenuItems(othersItems, "others")}</div>
           </div>
         </nav>
       </div>

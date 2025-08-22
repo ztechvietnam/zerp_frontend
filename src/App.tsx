@@ -12,49 +12,52 @@ import DocumentsManagement from "./pages/06.DocumentsManagement/DocumentsManagem
 import DocumentCategories from "./pages/05.DocumentCategory/DocumentCategories";
 import ListReviews from "./pages/07.ListReviews/ListReviews";
 import ListDepartments from "./pages/08.DepartmentManagement/ListDepartments";
+import PrivateRoute from "./context/PrivateRoute";
 
 export default function App() {
   return (
-    <>
-      <Router>
-        <ScrollToTop />
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+    <Router>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/signin" element={<SignIn />} />
+        <Route
+          element={
+            <PrivateRoute>
+              <AppLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route index path="/" element={<Home />} />
 
-            {/* Others Page */}
-            {/* <Route path="/profile" element={<UserProfiles />} /> */}
-            <Route path={SIDE_BAR.DEPARTMENT_MANAGEMENT} element={<ListDepartments />} />
-            <Route path={SIDE_BAR.USERS_MANAGEMENT} element={<ListUsers />} />
-            <Route path={SIDE_BAR.ROLES_MANAGEMENT} element={<ListRoles />} />
-            <Route
-              path={SIDE_BAR.PATIENTS_MANAGEMENT}
-              element={<ListPatients />}
-            />
-            <Route
-              path={SIDE_BAR.MESSAGES_MANAGEMENT}
-              element={<ListMessages />}
-            />
-            <Route
-              path={SIDE_BAR.LIST_REVIEWS}
-              element={<ListReviews />}
-            />
-            <Route
-              path={SIDE_BAR.DOCUMENT_CATEGORY}
-              element={<DocumentCategories />}
-            />
-            <Route
-              path={SIDE_BAR.DOCUMENT_MANAGEMENT}
-              element={<DocumentsManagement />}
-            />
-            <Route
-              path={`${SIDE_BAR.DOCUMENT}/:idCategory`}
-              element={<DocumentsManagement />}
-            />
-          </Route>
-          <Route path="/signin" element={<SignIn />} />
-        </Routes>
-      </Router>
-    </>
+          <Route
+            path={SIDE_BAR.DEPARTMENT_MANAGEMENT}
+            element={<ListDepartments />}
+          />
+          <Route path={SIDE_BAR.USERS_MANAGEMENT} element={<ListUsers />} />
+          <Route path={SIDE_BAR.ROLES_MANAGEMENT} element={<ListRoles />} />
+          <Route
+            path={SIDE_BAR.PATIENTS_MANAGEMENT}
+            element={<ListPatients />}
+          />
+          <Route
+            path={SIDE_BAR.MESSAGES_MANAGEMENT}
+            element={<ListMessages />}
+          />
+          <Route path={SIDE_BAR.LIST_REVIEWS} element={<ListReviews />} />
+          <Route
+            path={SIDE_BAR.DOCUMENT_CATEGORY}
+            element={<DocumentCategories />}
+          />
+          <Route
+            path={SIDE_BAR.DOCUMENT_MANAGEMENT}
+            element={<DocumentsManagement />}
+          />
+          <Route
+            path={`${SIDE_BAR.DOCUMENT}/:idCategory`}
+            element={<DocumentsManagement />}
+          />
+        </Route>
+      </Routes>
+    </Router>
   );
 }

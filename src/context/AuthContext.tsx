@@ -1,0 +1,84 @@
+"use client";
+
+import type React from "react";
+import { createContext, useState, useContext, useEffect } from "react";
+import { UserEntity } from "../common/services/user/user";
+import { AuthEntity } from "../common/services/auth/auth";
+import { ServiceBase } from "../common/services/servicebase";
+import { scheduleTokenRefresh } from "../common/function/commonFunction";
+import { authService } from "../common/services/auth/authService";
+
+interface AuthContextType {
+  currentUser: UserEntity | undefined;
+  token: string | undefined;
+  login: (dataLogin: AuthEntity) => void;
+  setNewCuruser: (curUser: UserEntity | undefined) => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [currentUser, setCurrentUser] = useState<UserEntity | undefined>(
+    undefined
+  );
+  const [token, setToken] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("access_token");
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setCurrentUser(JSON.parse(savedUser));
+      scheduleTokenRefresh(savedToken);
+    }
+    setLoading(false);
+  }, []);
+
+  const setNewCuruser = (curUser: UserEntity | undefined) => {
+    setCurrentUser(curUser);
+    localStorage.setItem("currentUser", JSON.stringify(curUser));
+  };
+
+  const login = (dataLogin: AuthEntity) => {
+    setToken(dataLogin.token);
+    setCurrentUser(dataLogin.user);
+    ServiceBase.setToken(dataLogin.token);
+    localStorage.setItem("access_token", dataLogin.token);
+    localStorage.setItem("refresh_token", dataLogin.refreshToken);
+    localStorage.setItem("currentUser", JSON.stringify(dataLogin.user));
+
+    scheduleTokenRefresh(dataLogin.token);
+  };
+
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.log(e);
+    }
+    setToken(undefined);
+    setCurrentUser(undefined);
+    ServiceBase.setToken(undefined);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("currentUser");
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{ currentUser, token, login, logout, setNewCuruser }}
+    >
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+};
