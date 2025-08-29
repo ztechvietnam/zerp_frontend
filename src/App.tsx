@@ -13,6 +13,10 @@ import DocumentCategories from "./pages/05.DocumentCategory/DocumentCategories";
 import ListReviews from "./pages/07.ListReviews/ListReviews";
 import ListDepartments from "./pages/08.DepartmentManagement/ListDepartments";
 import PrivateRoute from "./context/PrivateRoute";
+import HomeLayout from "./homepage/HomeLayout";
+import { NewDetail } from "./homepage/NewDetail";
+import HomeContent from "./homepage/HomeContent";
+import NewsManagement from "./pages/09.NewsManagement/NewsManagement";
 
 export default function App() {
   return (
@@ -23,11 +27,30 @@ export default function App() {
         <Route
           element={
             <PrivateRoute>
+              <HomeLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<HomeContent />} />
+          <Route
+            path={`${SIDE_BAR.NEW_DETAIL}/:idNew`}
+            element={<NewDetail />}
+          />
+        </Route>
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
               <AppLayout />
             </PrivateRoute>
           }
         >
-          <Route index path="/" element={<Home />} />
+          <Route index element={<Home />} />
+
+          <Route
+            path={SIDE_BAR.NEWS}
+            element={<NewsManagement />}
+          />
 
           <Route
             path={SIDE_BAR.DEPARTMENT_MANAGEMENT}

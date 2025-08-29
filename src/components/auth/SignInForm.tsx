@@ -18,7 +18,7 @@ export default function SignInForm() {
     try {
       setLoading(true);
       setShowMessage("");
-      const resultLogin = await authService.emailLogin(
+      const resultLogin = await authService.login(
         formValues.username,
         formValues.password
       );

@@ -1,3 +1,4 @@
+import { CategoryNewsEntity } from "../../common/services/category-news/categoryNews";
 import {
   CategoryEntity,
   TreeNode,
@@ -5,21 +6,23 @@ import {
 import { DepartmentEntity } from "../../common/services/department/department";
 import { DocumentEntity } from "../../common/services/document/document";
 import { MessageEntity } from "../../common/services/message/message";
+import { NewsEntity } from "../../common/services/news/news";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { QuestionEntity } from "../../common/services/question/question";
 
 export enum SIDE_BAR {
-  LECTURE_VIDEO = "/lecture-video",
-  NEWS = "/news",
-  DEPARTMENT_MANAGEMENT = "/department-management",
-  USERS_MANAGEMENT = "/users-management",
-  ROLES_MANAGEMENT = "/roles-management",
-  PATIENTS_MANAGEMENT = "/patients-management",
-  MESSAGES_MANAGEMENT = "/messages-management",
-  LIST_REVIEWS = "/list-reviews",
-  DOCUMENT_CATEGORY = "/document-category",
-  DOCUMENT_MANAGEMENT = "/document-management",
-  DOCUMENT = "/document",
+  LECTURE_VIDEO = "lecture-video",
+  NEWS = "news",
+  DEPARTMENT_MANAGEMENT = "department-management",
+  USERS_MANAGEMENT = "users-management",
+  ROLES_MANAGEMENT = "roles-management",
+  PATIENTS_MANAGEMENT = "patients-management",
+  MESSAGES_MANAGEMENT = "messages-management",
+  LIST_REVIEWS = "list-reviews",
+  DOCUMENT_CATEGORY = "document-category",
+  DOCUMENT_MANAGEMENT = "document-management",
+  DOCUMENT = "document",
+  NEW_DETAIL = "new-detail",
 }
 
 export enum SUB_SYSTEM {
@@ -2587,3 +2590,446 @@ export const dataDepartments: DepartmentEntity[] = [
     parentCode: "DKQT",
   },
 ];
+
+export const dataCategoryNews: CategoryNewsEntity[] = [
+  { id: 1, name: "Hoạt động bệnh viện" },
+  { id: 2, name: "Chăm sóc sức khỏe" },
+  { id: 3, name: "Nghiên cứu y học" },
+  { id: 4, name: "Câu chuyện bệnh nhân" },
+  { id: 5, name: "Thông báo" },
+];
+
+export const dataNews: NewsEntity[] = [
+  // Hoạt động bệnh viện (id = 1)
+  {
+    id: 101,
+    title: "Bệnh viện khai trương khoa Nội tổng hợp mới",
+    description:
+      "Khoa Nội tổng hợp mới được trang bị hiện đại, phục vụ tốt hơn nhu cầu khám chữa bệnh.",
+    image: "https://picsum.photos/400/200?random=1",
+    category: "1",
+  },
+  {
+    id: 102,
+    title: "Khởi động chương trình khám sức khỏe miễn phí cho người cao tuổi",
+    description:
+      "Bệnh viện tổ chức chuỗi sự kiện khám sức khỏe miễn phí cho người già trên 60 tuổi.",
+    image: "https://picsum.photos/400/200?random=2",
+    category: "1",
+  },
+  {
+    id: 103,
+    title: "Hội thảo nội bộ về cải tiến chất lượng dịch vụ",
+    description:
+      "Các y bác sĩ cùng nhau chia sẻ kinh nghiệm và ý tưởng nhằm nâng cao chất lượng chăm sóc bệnh nhân.",
+    image: "https://picsum.photos/400/200?random=3",
+    category: "1",
+  },
+  {
+    id: 104,
+    title: "Tặng quà cho bệnh nhân nghèo nhân dịp lễ lớn",
+    description:
+      "Hơn 200 phần quà đã được trao tặng cho bệnh nhân có hoàn cảnh khó khăn.",
+    image: "https://picsum.photos/400/200?random=4",
+    category: "1",
+  },
+  {
+    id: 105,
+    title: "Khánh thành khu vực tiếp đón mới",
+    description:
+      "Khu vực tiếp đón hiện đại, rộng rãi và tiện nghi được đưa vào sử dụng.",
+    image: "https://picsum.photos/400/200?random=5",
+    category: "1",
+  },
+  {
+    id: 106,
+    title: "Bệnh viện triển khai dịch vụ đăng ký khám trực tuyến",
+    description:
+      "Người dân có thể đặt lịch khám qua website, tiết kiệm thời gian chờ đợi.",
+    image: "https://picsum.photos/400/200?random=26",
+    category: "1",
+  },
+  {
+    id: 107,
+    title: "Bệnh viện hợp tác với trường đại học y dược",
+    description:
+      "Ký kết hợp tác đào tạo bác sĩ và nghiên cứu y khoa chuyên sâu.",
+    image: "https://picsum.photos/400/200?random=27",
+    category: "1",
+  },
+  {
+    id: 108,
+    title: "Tổ chức ngày hội hiến máu tình nguyện",
+    description:
+      "Hàng trăm cán bộ nhân viên và người dân đã tham gia hiến máu.",
+    image: "https://picsum.photos/400/200?random=28",
+    category: "1",
+  },
+  {
+    id: 109,
+    title: "Bệnh viện đưa vào sử dụng hệ thống xét nghiệm tự động",
+    description:
+      "Rút ngắn thời gian trả kết quả và tăng độ chính xác cho bệnh nhân.",
+    image: "https://picsum.photos/400/200?random=29",
+    category: "1",
+  },
+  {
+    id: 110,
+    title: "Khởi công xây dựng khu điều trị nội trú mới",
+    description:
+      "Dự án mở rộng bệnh viện nhằm nâng cao chất lượng chăm sóc bệnh nhân.",
+    image: "https://picsum.photos/400/200?random=30",
+    category: "1",
+  },
+
+  // Chăm sóc sức khỏe (id = 2)
+  {
+    id: 201,
+    title: "10 thói quen tốt để bảo vệ tim mạch",
+    description:
+      "Chia sẻ những thói quen lành mạnh giúp phòng ngừa các bệnh tim mạch.",
+    image: "https://picsum.photos/400/200?random=6",
+    category: "2",
+  },
+  {
+    id: 202,
+    title: "Lợi ích của việc tập thể dục buổi sáng",
+    description:
+      "Tập thể dục sáng giúp tăng cường sức khỏe và tinh thần minh mẫn.",
+    image: "https://picsum.photos/400/200?random=7",
+    category: "2",
+  },
+  {
+    id: 203,
+    title: "Chế độ ăn uống khoa học cho người tiểu đường",
+    description:
+      "Hướng dẫn chế độ dinh dưỡng phù hợp để kiểm soát đường huyết.",
+    image: "https://picsum.photos/400/200?random=8",
+    category: "2",
+  },
+  {
+    id: 204,
+    title: "Cách giảm stress hiệu quả tại nhà",
+    description:
+      "Một số bài tập đơn giản giúp giảm căng thẳng và cải thiện tinh thần.",
+    image: "https://picsum.photos/400/200?random=9",
+    category: "2",
+  },
+  {
+    id: 205,
+    title: "Ngủ đủ giấc và tác động đến sức khỏe",
+    description:
+      "Ngủ đủ 7-8 tiếng mỗi ngày giúp tăng cường hệ miễn dịch và trí nhớ.",
+    image: "https://picsum.photos/400/200?random=10",
+    category: "2",
+  },
+  {
+    id: 206,
+    title: "Tác dụng của việc uống đủ nước mỗi ngày",
+    description: "Uống đủ nước giúp cải thiện chức năng thận và làm đẹp da.",
+    image: "https://picsum.photos/400/200?random=31",
+    category: "2",
+  },
+  {
+    id: 207,
+    title: "Lợi ích của yoga đối với tinh thần",
+    description: "Yoga giúp giảm lo âu, căng thẳng và cải thiện sự tập trung.",
+    image: "https://picsum.photos/400/200?random=32",
+    category: "2",
+  },
+  {
+    id: 208,
+    title: "Dinh dưỡng cho phụ nữ mang thai",
+    description:
+      "Cung cấp các nhóm thực phẩm cần thiết cho mẹ và bé phát triển khỏe mạnh.",
+    image: "https://picsum.photos/400/200?random=33",
+    category: "2",
+  },
+  {
+    id: 209,
+    title: "Đi bộ 30 phút mỗi ngày có lợi ích gì?",
+    description:
+      "Đi bộ thường xuyên giúp cải thiện hệ tim mạch và giảm nguy cơ béo phì.",
+    image: "https://picsum.photos/400/200?random=34",
+    category: "2",
+  },
+  {
+    id: 210,
+    title: "Cách bảo vệ mắt khi dùng máy tính nhiều",
+    description: "Nên nghỉ mắt 5 phút sau mỗi 30 phút làm việc với màn hình.",
+    image: "https://picsum.photos/400/200?random=35",
+    category: "2",
+  },
+
+  // Nghiên cứu y học (id = 3)
+  {
+    id: 301,
+    title: "Công bố nghiên cứu mới về ung thư phổi",
+    description:
+      "Các nhà khoa học phát hiện phương pháp điều trị tiềm năng cho bệnh nhân ung thư phổi.",
+    image: "https://picsum.photos/400/200?random=11",
+    category: "3",
+  },
+  {
+    id: 302,
+    title: "Ứng dụng AI trong chẩn đoán bệnh sớm",
+    description:
+      "Trí tuệ nhân tạo đang được nghiên cứu để hỗ trợ bác sĩ trong chẩn đoán.",
+    image: "https://picsum.photos/400/200?random=12",
+    category: "3",
+  },
+  {
+    id: 303,
+    title: "Thử nghiệm vaccine mới chống cúm mùa",
+    description:
+      "Các nhà khoa học đang thử nghiệm vaccine với hiệu quả cao hơn và ít tác dụng phụ.",
+    image: "https://picsum.photos/400/200?random=13",
+    category: "3",
+  },
+  {
+    id: 304,
+    title: "Nghiên cứu gene trong điều trị bệnh hiếm",
+    description:
+      "Liệu pháp gene mở ra hi vọng mới cho các bệnh nhân mắc bệnh di truyền.",
+    image: "https://picsum.photos/400/200?random=14",
+    category: "3",
+  },
+  {
+    id: 305,
+    title: "Công bố kết quả nghiên cứu về sức khỏe tâm thần",
+    description:
+      "Nghiên cứu mới chỉ ra mối liên hệ giữa chế độ ăn uống và sức khỏe tâm thần.",
+    image: "https://picsum.photos/400/200?random=15",
+    category: "3",
+  },
+  {
+    id: 306,
+    title: "Thử nghiệm thuốc mới điều trị Alzheimer",
+    description:
+      "Thuốc đang trong giai đoạn thử nghiệm lâm sàng cho kết quả khả quan.",
+    image: "https://picsum.photos/400/200?random=36",
+    category: "3",
+  },
+  {
+    id: 307,
+    title: "Nghiên cứu tế bào gốc trong điều trị tiểu đường",
+    description:
+      "Liệu pháp tế bào gốc có tiềm năng giúp kiểm soát đường huyết.",
+    image: "https://picsum.photos/400/200?random=37",
+    category: "3",
+  },
+  {
+    id: 308,
+    title: "AI hỗ trợ dự đoán nguy cơ mắc bệnh tim",
+    description:
+      "Ứng dụng AI phân tích dữ liệu sức khỏe để dự đoán nguy cơ bệnh tim mạch.",
+    image: "https://picsum.photos/400/200?random=38",
+    category: "3",
+  },
+  {
+    id: 309,
+    title: "Khám phá cơ chế lây lan của virus mới",
+    description:
+      "Nghiên cứu cơ chế giúp đưa ra phương pháp phòng chống hiệu quả hơn.",
+    image: "https://picsum.photos/400/200?random=39",
+    category: "3",
+  },
+  {
+    id: 310,
+    title: "Ứng dụng công nghệ nano trong y học",
+    description:
+      "Công nghệ nano mở ra nhiều giải pháp mới trong điều trị và chẩn đoán.",
+    image: "https://picsum.photos/400/200?random=40",
+    category: "3",
+  },
+
+  // Câu chuyện bệnh nhân (id = 4)
+  {
+    id: 401,
+    title: "Hành trình hồi phục kỳ diệu của bệnh nhân ung thư",
+    description:
+      "Một bệnh nhân chia sẻ câu chuyện vượt qua bệnh ung thư sau nhiều tháng điều trị.",
+    image: "https://picsum.photos/400/200?random=16",
+    category: "4",
+  },
+  {
+    id: 402,
+    title: "Bé gái 5 tuổi vượt qua căn bệnh tim bẩm sinh",
+    description:
+      "Câu chuyện đầy xúc động về sự hồi phục của một bệnh nhi sau ca phẫu thuật tim.",
+    image: "https://picsum.photos/400/200?random=17",
+    category: "4",
+  },
+  {
+    id: 403,
+    title: "Người mẹ hiến gan cứu con",
+    description: "Một ca ghép gan thành công nhờ tình mẫu tử thiêng liêng.",
+    image: "https://picsum.photos/400/200?random=18",
+    category: "4",
+  },
+  {
+    id: 404,
+    title: "Bệnh nhân phục hồi sau tai nạn giao thông nghiêm trọng",
+    description:
+      "Câu chuyện về sự kiên cường và nỗ lực phục hồi của bệnh nhân.",
+    image: "https://picsum.photos/400/200?random=19",
+    category: "4",
+  },
+  {
+    id: 405,
+    title: "Niềm vui của bệnh nhân được ghép thận thành công",
+    description: "Một bệnh nhân đã có cơ hội sống mới sau ca ghép thận.",
+    image: "https://picsum.photos/400/200?random=20",
+    category: "4",
+  },
+  {
+    id: 406,
+    title: "Bệnh nhân vượt qua hôn mê kéo dài",
+    description:
+      "Sau nhiều tháng hôn mê, bệnh nhân đã tỉnh lại và dần hồi phục.",
+    image: "https://picsum.photos/400/200?random=41",
+    category: "4",
+  },
+  {
+    id: 407,
+    title: "Người đàn ông hồi phục sau ca ghép tim",
+    description:
+      "Một ca phẫu thuật ghép tim thành công đã đem lại sự sống mới.",
+    image: "https://picsum.photos/400/200?random=42",
+    category: "4",
+  },
+  {
+    id: 408,
+    title: "Bệnh nhân vượt qua căn bệnh hiếm gặp",
+    description: "Câu chuyện đầy nghị lực của một bệnh nhân mắc bệnh hiếm.",
+    image: "https://picsum.photos/400/200?random=43",
+    category: "4",
+  },
+  {
+    id: 409,
+    title: "Người lính hồi phục sau chiến tranh",
+    description:
+      "Một thương binh đã hồi phục và trở lại cuộc sống bình thường.",
+    image: "https://picsum.photos/400/200?random=44",
+    category: "4",
+  },
+  {
+    id: 410,
+    title: "Bệnh nhân được hồi sinh sau ngừng tim",
+    description: "Nhờ sự can thiệp kịp thời, bệnh nhân đã qua cơn nguy kịch.",
+    image: "https://picsum.photos/400/200?random=45",
+    category: "4",
+  },
+
+  // Thông báo (id = 5)
+  {
+    id: 501,
+    title: "Lịch nghỉ lễ Quốc khánh",
+    description:
+      "Bệnh viện thông báo lịch nghỉ lễ 2/9 cho toàn thể cán bộ và bệnh nhân.",
+    image: "https://picsum.photos/400/200?random=21",
+    category: "5",
+  },
+  {
+    id: 502,
+    title: "Cập nhật quy trình tiếp nhận bệnh nhân",
+    description:
+      "Thông báo thay đổi trong quy trình tiếp nhận và phân loại bệnh nhân.",
+    image: "https://picsum.photos/400/200?random=22",
+    category: "5",
+  },
+  {
+    id: 503,
+    title: "Thông báo về phí dịch vụ khám chữa bệnh",
+    description:
+      "Một số dịch vụ y tế sẽ được điều chỉnh mức phí kể từ tháng tới.",
+    image: "https://picsum.photos/400/200?random=23",
+    category: "5",
+  },
+  {
+    id: 504,
+    title: "Mở rộng thời gian làm việc của phòng khám",
+    description:
+      "Phòng khám sẽ mở cửa thêm vào buổi tối để phục vụ bệnh nhân tốt hơn.",
+    image: "https://picsum.photos/400/200?random=24",
+    category: "5",
+  },
+  {
+    id: 505,
+    title: "Thông báo tuyển dụng nhân sự mới",
+    description:
+      "Bệnh viện cần tuyển thêm điều dưỡng và bác sĩ cho nhiều khoa.",
+    image: "https://picsum.photos/400/200?random=25",
+    category: "5",
+  },
+  {
+    id: 506,
+    title: "Thông báo thay đổi giờ làm việc",
+    description:
+      "Một số khoa sẽ có sự điều chỉnh về giờ khám bệnh từ tuần tới.",
+    image: "https://picsum.photos/400/200?random=46",
+    category: "5",
+  },
+  {
+    id: 507,
+    title: "Cảnh báo dịch bệnh theo mùa",
+    description: "Khuyến cáo người dân tiêm vaccine phòng bệnh đúng lịch.",
+    image: "https://picsum.photos/400/200?random=47",
+    category: "5",
+  },
+  {
+    id: 508,
+    title: "Thông báo bảo trì hệ thống điện",
+    description: "Một số khu vực sẽ tạm ngừng cấp điện để bảo trì thiết bị.",
+    image: "https://picsum.photos/400/200?random=48",
+    category: "5",
+  },
+  {
+    id: 509,
+    title: "Thông báo cập nhật phần mềm bệnh án điện tử",
+    description:
+      "Hệ thống sẽ được nâng cấp để phục vụ tốt hơn cho bác sĩ và bệnh nhân.",
+    image: "https://picsum.photos/400/200?random=49",
+    category: "5",
+  },
+  {
+    id: 510,
+    title: "Thông báo hội nghị cán bộ nhân viên",
+    description:
+      "Bệnh viện tổ chức hội nghị tổng kết cuối năm cho toàn thể nhân viên.",
+    image: "https://picsum.photos/400/200?random=50",
+    category: "5",
+  },
+];
+
+export const contentTemplate = `
+  <!-- Ảnh chính (giữ nguyên nếu vẫn OK) -->
+  <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=1200"
+       alt="Trung tâm"
+       loading="lazy"
+       style="width:100%; border-radius:12px; margin:20px 0;" />
+
+  <p>Sáng ngày 27/08/2025, Bệnh viện Đa khoa Trung ương đã chính thức đưa vào hoạt động Trung tâm Khám chữa bệnh chất lượng cao...</p>
+
+  <!-- Cụm 2 ảnh thay bằng public link ổn định -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:20px 0;">
+    <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=1200"
+       alt="Trung tâm"
+       loading="lazy"
+       style="width:100%; border-radius:12px; margin:20px 0;" />
+    <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=1200"
+       alt="Trung tâm"
+       loading="lazy"
+       style="width:100%; border-radius:12px; margin:20px 0;" />
+  </div>
+
+  <p>Trung tâm được trang bị nhiều thiết bị y tế hiện đại, đạt chuẩn quốc tế...</p>
+
+  <!-- Ảnh cuối thay bằng public link ổn định -->
+  <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=1200"
+       alt="Trung tâm"
+       loading="lazy"
+       style="width:100%; border-radius:12px; margin:20px 0;" />
+
+  <p>Với sự kiện khai trương này, Bệnh viện Đa khoa Trung ương khẳng định cam kết mang lại dịch vụ khám chữa bệnh chất lượng cao...</p>
+`;

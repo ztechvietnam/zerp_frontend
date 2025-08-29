@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 "use client";
 
 import type React from "react";
@@ -5,7 +6,7 @@ import { createContext, useState, useContext, useEffect } from "react";
 import { UserEntity } from "../common/services/user/user";
 import { AuthEntity } from "../common/services/auth/auth";
 import { ServiceBase } from "../common/services/servicebase";
-import { scheduleTokenRefresh } from "../common/function/commonFunction";
+import { parseJwt, scheduleTokenRefresh } from "../common/function/commonFunction";
 import { authService } from "../common/services/auth/authService";
 
 interface AuthContextType {
@@ -30,12 +31,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const savedToken = localStorage.getItem("access_token");
     const savedUser = localStorage.getItem("currentUser");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setCurrentUser(JSON.parse(savedUser));
-      scheduleTokenRefresh(savedToken);
-    }
-    setLoading(false);
+    const refreshToken = localStorage.getItem("refresh_token");
+
+    const initAuth = async () => {
+      if (savedToken && savedUser) {
+        const { exp } = parseJwt(savedToken);
+        const now = Date.now();
+
+        if (exp * 1000 > now) {
+          setToken(savedToken);
+          setCurrentUser(JSON.parse(savedUser));
+          scheduleTokenRefresh(savedToken);
+        } else {
+          if (refreshToken) {
+            try {
+              const res = await authService.refresh(refreshToken);
+
+              ServiceBase.setToken(res.token);
+              setToken(res.token);
+              setCurrentUser(res.user);
+
+              localStorage.setItem("access_token", res.token);
+              localStorage.setItem("refresh_token", res.refreshToken);
+              localStorage.setItem("currentUser", JSON.stringify(res.user));
+
+              scheduleTokenRefresh(res.token);
+            } catch (e) {
+              console.error("Refresh failed", e);
+              localStorage.clear();
+              window.location.href = "/signin";
+            }
+          } else {
+            localStorage.clear();
+            window.location.href = "/signin";
+          }
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const setNewCuruser = (curUser: UserEntity | undefined) => {
