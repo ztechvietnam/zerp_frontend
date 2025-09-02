@@ -8,6 +8,14 @@ export class AuthService extends ServiceBase {
   }
 
   // email login
+  async login(username: string, password: string) {
+    return this.post<AuthEntity>(
+      { username, password },
+      { endpoint: "login", passthroughErrorCatcher: true }
+    );
+  }
+  
+  // email login
   async emailLogin(email: string, password: string) {
     return this.post<AuthEntity>(
       { email, password },
