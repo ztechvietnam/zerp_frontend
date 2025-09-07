@@ -10,7 +10,7 @@ import { iconClose } from "../../components/IconSvg/iconSvg";
 import { userService } from "../../common/services/user/user-service";
 import { UserEntity } from "../../common/services/user/user";
 import CustomPagination from "../../components/common/CustomPagination";
-import './usersManagement.css';
+import "./usersManagement.css";
 
 const ListUsers = () => {
   const pageSize = DEFAULT_PAGE_SIZE || 10;
@@ -22,7 +22,6 @@ const ListUsers = () => {
   const { message, modal } = App.useApp();
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const userFormRef = useRef<UserFormRef>(null);
-  const hasFetched = useRef(false);
 
   const getDataUser = useCallback(async () => {
     try {
@@ -48,12 +47,7 @@ const ListUsers = () => {
   }, [pageIndex, pageSize]);
 
   useEffect(() => {
-    if (!hasFetched.current) {
-      hasFetched.current = true;
-      getDataUser();
-    } else {
-      getDataUser();
-    }
+    getDataUser();
   }, [getDataUser]);
 
   const columns: TableColumnsType<UserEntity> = [

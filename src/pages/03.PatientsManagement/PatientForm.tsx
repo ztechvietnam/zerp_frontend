@@ -49,6 +49,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
             setCurrentPatient(currentItem);
             const formControlValues = pick(currentItem, [
               "name",
+              "phone",
               "email",
               "address",
             ]);
@@ -104,7 +105,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
 
     return (
       <Modal
-        title={`Bệnh nhân ${currentPatient?.fullName}`}
+        title={`Bệnh nhân ${currentPatient?.name}`}
         onCancel={() => closeModal()}
         width={1200}
         open={showModal}
@@ -130,16 +131,16 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
               {currentPatient && (
                 <Descriptions column={2} bordered size="middle">
                   <Descriptions.Item label="Họ tên" span={2}>
-                    {currentPatient.fullName}
+                    {currentPatient.name}
                   </Descriptions.Item>
                   <Descriptions.Item label="Số điện thoại" span={2}>
-                    {currentPatient.mobile}
+                    {currentPatient.phone}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Email" span={2}>
+                    {currentPatient.email}
                   </Descriptions.Item>
                   <Descriptions.Item label="Địa chỉ" span={2}>
                     {currentPatient.address}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Khoa điều trị" span={2}>
-                    {currentPatient.department}
                   </Descriptions.Item>
                 </Descriptions>
               )}

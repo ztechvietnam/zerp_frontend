@@ -11,6 +11,7 @@ import {
   Input,
   Pagination,
   Row,
+  Spin,
   Table,
   TableColumnsType,
   Tag,
@@ -21,19 +22,51 @@ import { PatientForm, PatientFormRef } from "./PatientForm";
 import { FilterOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { useSidebar } from "../../context/SidebarContext";
+import { customersService } from "../../common/services/patient/customersService";
+import CustomPagination from "../../components/common/CustomPagination";
 
 const ListPatients = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [counterFilter, setCounterFilter] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [listPatients, setListPatients] = useState<PatientEntity[]>([]);
-  const [listData, setListData] = useState<PatientEntity[]>([]);
+  const [hasNextPage, setHasNextPage] = useState<boolean>(false);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const patientFormRef = useRef<PatientFormRef>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  const { isMobileOpen } = useSidebar();
   const [form] = useForm();
+
+  const getDataPatients = useCallback(
+    async (formValues?: any) => {
+      try {
+        setLoading(true);
+        const results = await customersService.get({
+          params: {
+            page: pageIndex,
+            limit: pageSize,
+          },
+        });
+        if (results) {
+          setHasNextPage(results.hasNextPage);
+          setListPatients(results.data);
+        } else {
+          setHasNextPage(false);
+          setListPatients([]);
+        }
+        setLoading(false);
+      } catch (e) {
+        setLoading(false);
+        console.log(e);
+      }
+    },
+    [pageIndex, pageSize]
+  );
+
+  useEffect(() => {
+    (async () => await getDataPatients())();
+  }, [getDataPatients]);
 
   const columns: TableColumnsType<PatientEntity> = [
     {
@@ -47,16 +80,16 @@ const ListPatients = () => {
               patientFormRef.current?.show(record);
             }}
           >
-            {record.fullName}
+            {record.name}
           </span>
         );
       },
       showSorterTooltip: false,
-      sorter: (a, b) => a.fullName.localeCompare(b.fullName),
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
-    { title: "Di động", dataIndex: "mobile" },
+    { title: "Di động", dataIndex: "phone" },
+    { title: "Email", dataIndex: "email" },
     { title: "Địa chỉ", dataIndex: "address" },
-    { title: "Khoa điều trị", dataIndex: "department" },
   ];
 
   const calculateCounterFilter = (formValues?: any) => {
@@ -79,13 +112,10 @@ const ListPatients = () => {
     if (formValues && formValues["keyword"]) {
       dataFilter = dataPatients.filter((patient) => {
         return (
-          patient.fullName
+          patient.name
             .toLowerCase()
             .includes(formValues["keyword"]?.toLowerCase()) ||
           patient.address
-            .toLowerCase()
-            .includes(formValues["keyword"]?.toLowerCase()) ||
-          patient.department
             .toLowerCase()
             .includes(formValues["keyword"]?.toLowerCase())
         );
@@ -95,20 +125,6 @@ const ListPatients = () => {
     }
     setListPatients(dataFilter);
   }, []);
-
-  useEffect(() => {
-    (async () => {
-      searchData();
-    })();
-  }, [searchData]);
-
-  useEffect(() => {
-    const data = listPatients.slice(
-      pageSize * (pageIndex - 1),
-      pageSize * pageIndex
-    );
-    setListData(data);
-  }, [pageSize, pageIndex, listPatients]);
 
   return (
     <PageContainer
@@ -149,53 +165,42 @@ const ListPatients = () => {
       }
     >
       <div className="flex flex-col gap-[10px] w-full h-[calc(100%-61.2px)]">
-        <div ref={tableRef} className="flex h-full">
-          <Table
-            rowKey="id"
-            columns={columns}
-            dataSource={listData}
-            pagination={false}
-            scroll={
-              window.innerWidth < 768
-                ? (tableRef.current?.offsetHeight ?? 0) >=
-                  window.innerHeight - 265
-                  ? { y: window.innerHeight - 265 }
+        <Spin spinning={loading}>
+          <div ref={tableRef} className="flex h-full">
+            <Table
+              rowKey="id"
+              columns={columns}
+              dataSource={listPatients}
+              pagination={false}
+              scroll={
+                window.innerWidth < 768
+                  ? (tableRef.current?.offsetHeight ?? 0) >=
+                    window.innerHeight - 265
+                    ? { y: window.innerHeight - 265 }
+                    : undefined
+                  : (tableRef.current?.offsetHeight ?? 0) >=
+                    window.innerHeight - 255
+                  ? { y: window.innerHeight - 255 }
                   : undefined
-                : (tableRef.current?.offsetHeight ?? 0) >=
-                  window.innerHeight - 255
-                ? { y: window.innerHeight - 255 }
-                : undefined
-            }
-            style={{
-              boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
-              borderRadius: "8px",
-              width: "100%",
-              height: "fit-content",
-            }}
-          />
-        </div>
-        <div className="flex items-center justify-between lg:mt-[10px]">
-          <div className="flex items-center justify-between gap-[5px]">
-            <span className="hidden lg:flex">Đang hiển thị</span>
-            <span className="text-[#108ee9] font-medium">
-              {`${pageSize * (pageIndex - 1) + 1} - ${
-                pageSize * pageIndex >= listPatients.length
-                  ? listPatients.length
-                  : pageSize * pageIndex
-              } / ${listPatients.length}`}
-            </span>
-            bệnh nhân
+              }
+              style={{
+                boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
+                borderRadius: "8px",
+                width: "100%",
+                height: "fit-content",
+              }}
+            />
           </div>
-          <Pagination
-            pageSize={pageSize}
-            total={listPatients.length}
-            current={pageIndex}
-            onChange={(page) => {
-              setPageIndex(page);
-            }}
-            align="end"
-          />
-        </div>
+          <div className="flex items-center justify-end lg:mt-[10px]">
+            <CustomPagination
+              hasNextPage={hasNextPage}
+              pageIndex={pageIndex}
+              onChange={(page) => {
+                setPageIndex(page);
+              }}
+            />
+          </div>
+        </Spin>
       </div>
 
       <Drawer
@@ -205,7 +210,7 @@ const ListPatients = () => {
         onClose={() => {
           setShowFilter(false);
         }}
-        width={window.innerWidth < 768 ? window.innerWidth*70/100 : 400}
+        width={window.innerWidth < 768 ? (window.innerWidth * 70) / 100 : 400}
         open={showFilter}
       >
         <Form layout="horizontal" form={form} style={{ padding: 12 }}>
@@ -224,11 +229,11 @@ const ListPatients = () => {
                   onPressEnter={async () => {
                     try {
                       const formValues = form.getFieldsValue();
-                      await searchData(formValues);
+                      await getDataPatients(formValues);
                       setPageIndex(1);
                       setShowFilter(false);
                     } catch (e) {
-                      await searchData();
+                      await getDataPatients();
                       setPageIndex(1);
                     }
                   }}
@@ -244,11 +249,11 @@ const ListPatients = () => {
                   onClick={async () => {
                     try {
                       const formValues = form.getFieldsValue();
-                      await searchData(formValues);
+                      await getDataPatients(formValues);
                       setPageIndex(1);
                       setShowFilter(false);
                     } catch (e) {
-                      await searchData();
+                      await getDataPatients();
                       setPageIndex(1);
                     }
                   }}
@@ -258,7 +263,7 @@ const ListPatients = () => {
                 <Button
                   onClick={async () => {
                     form.resetFields();
-                    await searchData();
+                    await getDataPatients();
                     setPageIndex(1);
                     setShowFilter(false);
                   }}
