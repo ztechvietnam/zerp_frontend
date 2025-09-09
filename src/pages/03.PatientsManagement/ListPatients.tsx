@@ -3,12 +3,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
+  App,
   Breadcrumb,
   Button,
   Col,
   Drawer,
   Form,
   Input,
+  InputRef,
   Pagination,
   Row,
   Spin,
@@ -19,23 +21,35 @@ import {
 import { dataPatients } from "../../components/constant/constant";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { PatientForm, PatientFormRef } from "./PatientForm";
-import { FilterOutlined } from "@ant-design/icons";
+import {
+  FilterOutlined,
+  SearchOutlined,
+  SyncOutlined,
+} from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { useSidebar } from "../../context/SidebarContext";
 import { customersService } from "../../common/services/patient/customersService";
 import CustomPagination from "../../components/common/CustomPagination";
+import { debounce } from "lodash";
+import Highlighter from "react-highlight-words";
+import { patientService } from "../../common/services/patient/patientService";
 
 const ListPatients = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [counterFilter, setCounterFilter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [keyword, setKeyword] = useState<string>("");
   const [showFilter, setShowFilter] = useState<boolean>(false);
+  const [filterOpen, setFilterOpen] = useState<boolean>(false);
   const [listPatients, setListPatients] = useState<PatientEntity[]>([]);
+  const [dataFilter, setDataFilter] = useState<PatientEntity[]>([]);
   const [hasNextPage, setHasNextPage] = useState<boolean>(false);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const patientFormRef = useRef<PatientFormRef>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<InputRef>(null);
+  const { message } = App.useApp();
   const [form] = useForm();
 
   const getDataPatients = useCallback(
@@ -68,6 +82,74 @@ const ListPatients = () => {
     (async () => await getDataPatients())();
   }, [getDataPatients]);
 
+  const removeVietnameseTones = (str: string) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // bỏ dấu
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  };
+
+  const highlightText = (text: string) => (
+    <Highlighter
+      highlightStyle={{ backgroundColor: "#ffff00", padding: 0 }}
+      searchWords={[keyword]}
+      autoEscape
+      textToHighlight={text || ""}
+      findChunks={({ textToHighlight, searchWords }) => {
+        const text = removeVietnameseTones(textToHighlight.toLowerCase());
+        const searchWord =
+          typeof searchWords[0] === "string" ? searchWords[0] : "";
+        const search = removeVietnameseTones(searchWord.toLowerCase());
+        if (!search) return [];
+
+        const chunks: { start: number; end: number }[] = [];
+        let startIndex = 0;
+
+        while (true) {
+          const index = text.indexOf(search, startIndex);
+          if (index === -1) break;
+          chunks.push({ start: index, end: index + search.length });
+          startIndex = index + search.length;
+        }
+
+        return chunks;
+      }}
+    />
+  );
+
+  useEffect(() => {
+    inputRef?.current?.focus();
+  }, [filterOpen]);
+
+  useEffect(() => {
+    if (keyword) {
+      const dataAfterFilter = listPatients.filter((patient) => {
+        return (
+          (patient.name &&
+            removeVietnameseTones(patient.name)
+              .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
+          (patient.phone &&
+            removeVietnameseTones(patient.phone)
+              .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
+          (patient.email &&
+            removeVietnameseTones(patient.email)
+              .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
+          (patient.address &&
+            removeVietnameseTones(patient.address)
+              .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase())))
+        );
+      });
+      setDataFilter(dataAfterFilter);
+    } else {
+      setDataFilter(listPatients);
+    }
+  }, [keyword, listPatients]);
+
   const columns: TableColumnsType<PatientEntity> = [
     {
       title: "Họ và tên",
@@ -80,16 +162,50 @@ const ListPatients = () => {
               patientFormRef.current?.show(record);
             }}
           >
-            {record.name}
+            {highlightText(record.name)}
           </span>
         );
       },
-      showSorterTooltip: false,
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      // showSorterTooltip: false,
+      // sorter: (a, b) => a.name.localeCompare(b.name),
+      onFilterDropdownOpenChange: (visible) => {
+        if (visible) {
+          setTimeout(() => {
+            inputRef.current?.focus();
+          }, 0);
+        }
+      },
+      filterDropdown: () => (
+        <div
+          className="flex flex-col gap-2 p-2"
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-0.5">
+            <Input
+              ref={inputRef}
+              onChange={debounce((e) => setKeyword(e.target.value), 500)}
+              allowClear
+              autoFocus
+            />
+          </div>
+        </div>
+      ),
     },
-    { title: "Di động", dataIndex: "phone" },
-    { title: "Email", dataIndex: "email" },
-    { title: "Địa chỉ", dataIndex: "address" },
+    {
+      title: "Di động",
+      dataIndex: "phone",
+      render: (value: string) => highlightText(value),
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      render: (value: string) => highlightText(value),
+    },
+    {
+      title: "Địa chỉ",
+      dataIndex: "address",
+      render: (value: string) => highlightText(value),
+    },
   ];
 
   const calculateCounterFilter = (formValues?: any) => {
@@ -106,25 +222,23 @@ const ListPatients = () => {
     }
   };
 
-  const searchData = useCallback(async (formValues?: any) => {
-    let dataFilter: PatientEntity[] = [];
-    calculateCounterFilter(formValues);
-    if (formValues && formValues["keyword"]) {
-      dataFilter = dataPatients.filter((patient) => {
-        return (
-          patient.name
-            .toLowerCase()
-            .includes(formValues["keyword"]?.toLowerCase()) ||
-          patient.address
-            .toLowerCase()
-            .includes(formValues["keyword"]?.toLowerCase())
-        );
-      });
-    } else {
-      dataFilter = dataPatients;
+  const syncData = async () => {
+    try {
+      setLoading(true);
+      const result = await patientService.syncData();
+      if (result.success) {
+        message.success(result.message);
+        await getDataPatients();
+      } else {
+        message.error(result.message);
+      }
+      setLoading(false);
+    } catch (e) {
+      setLoading(false);
+      console.log(e);
+      message.error("Có lỗi xảy ra trong quá trình đồng bộ");
     }
-    setListPatients(dataFilter);
-  }, []);
+  };
 
   return (
     <PageContainer
@@ -148,7 +262,17 @@ const ListPatients = () => {
         </div>
       }
       toolbarRight={
-        <div>
+        <div className="flex items-center gap-4">
+          <Button
+            type="primary"
+            className="flex !gap-[5px] items-center justify-center cursor-pointer"
+            onClick={async () => {
+              await syncData();
+            }}
+          >
+            <SyncOutlined />
+            <span className="hidden lg:flex">Đồng bộ bệnh nhân</span>
+          </Button>
           <Button
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
@@ -165,42 +289,44 @@ const ListPatients = () => {
       }
     >
       <div className="flex flex-col gap-[10px] w-full h-[calc(100%-61.2px)]">
-        <Spin spinning={loading}>
-          <div ref={tableRef} className="flex h-full">
-            <Table
-              rowKey="id"
-              columns={columns}
-              dataSource={listPatients}
-              pagination={false}
-              scroll={
-                window.innerWidth < 768
+        <div ref={tableRef} className="flex h-full">
+          <Table
+            rowKey="id"
+            loading={loading}
+            columns={columns}
+            dataSource={dataFilter}
+            pagination={false}
+            scroll={
+              window.innerWidth < 1025
+                ? window.innerWidth < 544
                   ? (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 265
-                    ? { y: window.innerHeight - 265 }
+                    window.innerHeight - 244
+                    ? { y: window.innerHeight - 244 }
                     : undefined
                   : (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 255
-                  ? { y: window.innerHeight - 255 }
+                    window.innerHeight - 221
+                  ? { y: window.innerHeight - 221 }
                   : undefined
-              }
-              style={{
-                boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
-                borderRadius: "8px",
-                width: "100%",
-                height: "fit-content",
-              }}
-            />
-          </div>
-          <div className="flex items-center justify-end lg:mt-[10px]">
-            <CustomPagination
-              hasNextPage={hasNextPage}
-              pageIndex={pageIndex}
-              onChange={(page) => {
-                setPageIndex(page);
-              }}
-            />
-          </div>
-        </Spin>
+                : (tableRef.current?.offsetHeight ?? 0) >=
+                  window.innerHeight - 233
+                ? { y: window.innerHeight - 233 }
+                : undefined
+            }
+            style={{
+              boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
+              borderRadius: "8px",
+              width: "100%",
+              height: "fit-content",
+            }}
+          />
+        </div>
+        <CustomPagination
+          hasNextPage={hasNextPage}
+          pageIndex={pageIndex}
+          onChange={(page) => {
+            setPageIndex(page);
+          }}
+        />
       </div>
 
       <Drawer

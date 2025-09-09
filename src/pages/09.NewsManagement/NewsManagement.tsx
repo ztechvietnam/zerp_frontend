@@ -195,62 +195,50 @@ const NewsManagement = () => {
         </div>
       }
     >
-      <Spin spinning={loading}>
-        <div
-          className={`flex flex-col gap-[10px] w-full h-[calc(100%-61.2px)]`}
-        >
-          <div ref={tableRef} className="flex h-full">
-            <>
-              {console.log(
-                "a",
-                window.innerWidth,
-                window.innerHeight,
-                tableRef.current?.offsetHeight
-              )}
-            </>
-            <Table
-              rowKey="id"
-              columns={columns}
-              dataSource={listData}
-              pagination={false}
-              rowSelection={{
-                selectedRowKeys,
-                onChange: (e) => {
-                  setSelectedRowKeys(e);
-                },
-              }}
-              scroll={
-                window.innerWidth < 768
-                  ? (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 265
-                    ? { y: window.innerHeight - 265 }
-                    : undefined
-                  : (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 255
-                  ? { y: window.innerHeight - 255 }
+      <div className={`flex flex-col gap-[10px] w-full h-[calc(100%-61.2px)]`}>
+        <div ref={tableRef} className="flex h-full">
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={listData}
+            pagination={false}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (e) => {
+                setSelectedRowKeys(e);
+              },
+            }}
+            scroll={
+              window.innerWidth < 768
+                ? (tableRef.current?.offsetHeight ?? 0) >=
+                  window.innerHeight - 265
+                  ? { y: window.innerHeight - 265 }
                   : undefined
-              }
-              style={{
-                boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
-                borderRadius: "8px",
-                width: "100%",
-                height: "fit-content",
-              }}
-            />
-          </div>
-          <div className={`flex items-center justify-end lg:mt-[10px]`}>
-            <Pagination
-              pageSize={pageSize}
-              total={listNews.length}
-              current={pageIndex}
-              onChange={(page) => {
-                setPageIndex(page);
-              }}
-              align="end"
-            />
-          </div>
+                : (tableRef.current?.offsetHeight ?? 0) >=
+                  window.innerHeight - 255
+                ? { y: window.innerHeight - 255 }
+                : undefined
+            }
+            style={{
+              boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
+              borderRadius: "8px",
+              width: "100%",
+              height: "fit-content",
+            }}
+          />
         </div>
-      </Spin>
+        <div className={`flex items-center justify-end lg:mt-[10px]`}>
+          <Pagination
+            pageSize={pageSize}
+            total={listNews.length}
+            current={pageIndex}
+            onChange={(page) => {
+              setPageIndex(page);
+            }}
+            align="end"
+          />
+        </div>
+      </div>
 
       <Drawer
         title="Bộ lọc"
