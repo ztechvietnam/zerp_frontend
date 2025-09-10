@@ -96,7 +96,17 @@ export default function SignInForm() {
                       },
                     ]}
                   >
-                    <Input.Password className="h-[40px]" />
+                    <Input.Password
+                      className="h-[40px]"
+                      onPressEnter={async () => {
+                        try {
+                          const formValues = await form.validateFields();
+                          handleLogin(formValues);
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
+                    />
                   </Form.Item>
                 </Col>
               </Row>

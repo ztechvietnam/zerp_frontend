@@ -381,7 +381,15 @@ const AppSidebar: React.FC = () => {
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear">
+      <div
+        className={`flex flex-col overflow-y-auto duration-300 ease-linear ${
+          isExpanded || isMobileOpen
+            ? "max-h-[calc(100vh-74.64px-46.8px)]"
+            : isHovered
+            ? "max-h-[calc(100vh-74.64px)]"
+            : "max-h-[calc(100vh-74.64px-46.8px)]"
+        } lg:max-h-[calc(100vh-74.64px)]`}
+      >
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             {subSystem === SUB_SYSTEM.CUSTOMER_SUPPORT && (
