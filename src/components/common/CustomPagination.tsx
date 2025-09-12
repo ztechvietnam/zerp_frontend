@@ -1,20 +1,26 @@
-import { Button } from "antd";
+import { Button, Select } from "antd";
 import { nextSvg, previousSvg } from "../IconSvg/iconSvg";
 
 interface CustomPaginationProps {
   pageIndex: number;
   hasNextPage: boolean;
   onChange: (page: number) => void;
+  defaultPageSize?: number;
+  sizeChanger?: number[];
+  setPageSize?: (e: number) => void;
 }
 
 const CustomPagination: React.FC<CustomPaginationProps> = ({
   pageIndex,
   hasNextPage,
   onChange,
+  defaultPageSize,
+  sizeChanger,
+  setPageSize,
 }) => {
   const pages = Array.from({ length: pageIndex }, (_, i) => i + 1);
   return (
-    <div className="flex items-center gap-2 mt-4 justify-end">
+    <div className="flex items-center gap-2 justify-end">
       <Button
         disabled={pageIndex === 1}
         onClick={() => onChange(pageIndex - 1)}
@@ -58,6 +64,23 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
       >
         {nextSvg(12)}
       </Button>
+      {sizeChanger && sizeChanger?.length > 0 && (
+        <Select
+          // dropdownClassName="!max-h-[150px] !overflow-auto"
+          defaultValue={defaultPageSize}
+          options={sizeChanger.map((size) => {
+            return {
+              value: size,
+              label: size.toString(),
+            };
+          })}
+          onChange={(e) => {
+            if (setPageSize) {
+              setPageSize(e);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

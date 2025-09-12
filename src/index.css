@@ -782,3 +782,13 @@ span.flatpickr-weekday,
   margin-bottom: 0 !important;
   border-bottom: 1px solid #f0f0f0 !important;
 }
+
+.paginationCustom {
+  .ant-pagination-item-active {
+    background-color: #1677ff;
+    border-color: #ffffff;
+    a {
+      color: #ffffff;
+    }
+  }
+}

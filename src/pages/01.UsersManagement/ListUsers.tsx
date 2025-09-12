@@ -1,26 +1,45 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
-import { App, Button, Spin, Table, TableColumnsType, Tag } from "antd";
-import { UserForm, UserFormRef } from "./UserForm";
 import {
-  DEFAULT_PAGE_SIZE,
-  MEASSAGE,
-} from "../../components/constant/constant";
+  App,
+  Breadcrumb,
+  Button,
+  Input,
+  InputRef,
+  Pagination,
+  Table,
+  TableColumnsType,
+  Tag,
+} from "antd";
+import { UserForm, UserFormRef } from "./UserForm";
+import { MEASSAGE } from "../../components/constant/constant";
 import { iconClose } from "../../components/IconSvg/iconSvg";
 import { userService } from "../../common/services/user/user-service";
 import { UserEntity } from "../../common/services/user/user";
-import CustomPagination from "../../components/common/CustomPagination";
 import "./usersManagement.css";
+import { debounce } from "lodash";
+import Highlighter from "react-highlight-words";
+import { Role } from "../../common/services/role/role";
+import "../../index.css";
+
+const RoleUser: Record<Role, string> = {
+  [Role.Admin]: "Quản trị viên",
+  [Role.User]: "Người dùng",
+};
 
 const ListUsers = () => {
-  const pageSize = DEFAULT_PAGE_SIZE || 10;
+  const [pageSize, setPageSize] = useState<number>(10);
   const [pageIndex, setPageIndex] = useState<number>(1);
-  const [hasNextPage, setHasNextPage] = useState<boolean>(false);
+  const [totalData, setTotalData] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [dataUsers, setDataUsers] = useState<UserEntity[]>([]);
+  const [dataFilter, setDataFilter] = useState<UserEntity[]>([]);
+  const [keyword, setKeyword] = useState<string>("");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const { message, modal } = App.useApp();
   const pageContainerRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<InputRef>(null);
   const userFormRef = useRef<UserFormRef>(null);
 
   const getDataUser = useCallback(async () => {
@@ -33,10 +52,10 @@ const ListUsers = () => {
         },
       });
       if (results) {
-        setHasNextPage(results.hasNextPage);
+        setTotalData(results.total);
         setDataUsers(results.data);
       } else {
-        setHasNextPage(false);
+        setTotalData(0);
         setDataUsers([]);
       }
       setLoading(false);
@@ -47,8 +66,70 @@ const ListUsers = () => {
   }, [pageIndex, pageSize]);
 
   useEffect(() => {
-    getDataUser();
+    (async () => {
+      await getDataUser();
+    })();
   }, [getDataUser]);
+
+  const removeVietnameseTones = (str: string) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // bỏ dấu
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  };
+
+  const highlightText = (text: string) => (
+    <Highlighter
+      highlightStyle={{ backgroundColor: "#ffff00", padding: 0 }}
+      searchWords={[keyword]}
+      autoEscape
+      textToHighlight={text || ""}
+      findChunks={({ textToHighlight, searchWords }) => {
+        const text = removeVietnameseTones(textToHighlight.toLowerCase());
+        const searchWord =
+          typeof searchWords[0] === "string" ? searchWords[0] : "";
+        const search = removeVietnameseTones(searchWord.toLowerCase());
+        if (!search) return [];
+
+        const chunks: { start: number; end: number }[] = [];
+        let startIndex = 0;
+
+        while (true) {
+          const index = text.indexOf(search, startIndex);
+          if (index === -1) break;
+          chunks.push({ start: index, end: index + search.length });
+          startIndex = index + search.length;
+        }
+
+        return chunks;
+      }}
+    />
+  );
+
+  useEffect(() => {
+    if (keyword) {
+      const dataAfterFilter = dataUsers.filter((user) => {
+        return (
+          (user.firstName &&
+            removeVietnameseTones(user.firstName)
+              .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
+          (user.lastName &&
+            removeVietnameseTones(user.lastName)
+              .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
+          (user.email &&
+            removeVietnameseTones(user.email)
+              .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase())))
+        );
+      });
+      setDataFilter(dataAfterFilter);
+    } else {
+      setDataFilter(dataUsers);
+    }
+  }, [keyword, dataUsers]);
 
   const columns: TableColumnsType<UserEntity> = [
     {
@@ -61,23 +142,56 @@ const ListUsers = () => {
               userFormRef.current?.show(record);
             }}
           >
-            {record.lastName} {record.firstName}
+            {highlightText(
+              `${record?.lastName || ""} ${record?.firstName || ""}`.trim()
+            )}
           </span>
         );
       },
-      sorter: (a, b) => {
-        if (a.lastName && b.lastName) {
-          const sortLastName = a.lastName.localeCompare(b.lastName);
-          if (sortLastName == 0) {
-            return a.firstName.localeCompare(b.firstName);
-          }
-          return sortLastName;
-        } else {
-          return 1;
+      onFilterDropdownOpenChange: (visible) => {
+        if (visible) {
+          setTimeout(() => {
+            inputRef.current?.focus();
+          }, 0);
         }
       },
+      filterDropdown: () => (
+        <div
+          className="flex flex-col gap-2 p-2"
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-0.5">
+            <Input
+              ref={inputRef}
+              onChange={debounce((e) => setKeyword(e.target.value), 500)}
+              allowClear
+              autoFocus
+            />
+          </div>
+        </div>
+      ),
     },
-    { title: "Địa chỉ email", dataIndex: "email" },
+    {
+      title: "Địa chỉ email",
+      dataIndex: "email",
+      render: (value, record: UserEntity) => (
+        <span
+          className="cursor-pointer"
+          onClick={() => {
+            userFormRef.current?.show(record);
+          }}
+        >
+          {highlightText(value)}
+        </span>
+      ),
+    },
+    {
+      title: "Vai trò",
+      dataIndex: "role",
+      render(value) {
+        return <Tag color="processing">{RoleUser[value?.name as Role]}</Tag>;
+      },
+    },
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -94,12 +208,29 @@ const ListUsers = () => {
   return (
     <PageContainer
       ref={pageContainerRef}
+      toolbarLeft={
+        <div>
+          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-[28px]">
+            Quản lý người dùng
+          </h1>
+          <Breadcrumb
+            items={[
+              {
+                href: "/",
+                title: <span>Trang chủ</span>,
+              },
+              {
+                title: <Tag color="#108ee9">Quản lý người dùng</Tag>,
+              },
+            ]}
+          />
+        </div>
+      }
       toolbarRight={
         <div className="flex items-center gap-4">
           <Button
             type="primary"
             size="middle"
-            style={{ marginLeft: 16 }}
             onClick={() => {
               userFormRef.current?.show();
             }}
@@ -108,9 +239,10 @@ const ListUsers = () => {
           </Button>
           {selectedRowKeys.length > 0 && (
             <Button
-              type="dashed"
+              // type="dashed"
+              color="red"
+              variant="solid"
               size="middle"
-              style={{ marginLeft: 16 }}
               onClick={() => {
                 modal.confirm({
                   title: MEASSAGE.CONFIRM_DELETE,
@@ -139,7 +271,7 @@ const ListUsers = () => {
             </Button>
           )}
 
-          {selectedRowKeys.length > 0 ? (
+          {selectedRowKeys.length > 0 && (
             <Button
               icon={iconClose}
               onClick={() => {
@@ -148,15 +280,14 @@ const ListUsers = () => {
             >
               Đã chọn {selectedRowKeys.length} bản ghi
             </Button>
-          ) : (
-            ""
           )}
         </div>
       }
     >
-      <Spin spinning={loading} wrapperClassName="spinContainer">
-        <div className="flex flex-col justify-between h-full">
+      <div className="flex flex-col gap-[10px] w-full h-[calc(100%-60px)]">
+        <div ref={tableRef} className="flex h-full">
           <Table
+            loading={loading}
             rowSelection={{
               selectedRowKeys,
               onChange: (e) => {
@@ -166,22 +297,69 @@ const ListUsers = () => {
             pagination={false}
             rowKey="id"
             columns={columns}
-            dataSource={dataUsers}
-            scroll={{ y: window.innerHeight - 255 }}
-          />
-          <CustomPagination
-            hasNextPage={hasNextPage}
-            pageIndex={pageIndex}
-            onChange={(page) => {
-              setPageIndex(page);
+            dataSource={dataFilter}
+            scroll={
+              window.innerWidth < 1025
+                ? window.innerWidth < 544
+                  ? (tableRef.current?.offsetHeight ?? 0) >=
+                    window.innerHeight - 244
+                    ? { y: window.innerHeight - 244 }
+                    : undefined
+                  : (tableRef.current?.offsetHeight ?? 0) >=
+                    window.innerHeight - 221
+                  ? { y: window.innerHeight - 221 }
+                  : undefined
+                : (tableRef.current?.offsetHeight ?? 0) >=
+                  window.innerHeight - 233
+                ? { y: window.innerHeight - 233 }
+                : undefined
+            }
+            style={{
+              boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
+              borderRadius: "8px",
+              width: "100%",
+              height: "fit-content",
             }}
           />
         </div>
-      </Spin>
+        <div className="flex items-center justify-between">
+          {totalData > 0 && (
+            <div className="flex items-center justify-between gap-[5px]">
+              <span className="hidden lg:flex">Đang hiển thị</span>
+              <span className="text-[#108ee9] font-medium">
+                {`${
+                  pageSize * (pageIndex - 1) + 1 >= totalData
+                    ? totalData
+                    : pageSize * (pageIndex - 1) + 1
+                } - ${
+                  pageSize * pageIndex >= totalData
+                    ? totalData
+                    : pageSize * pageIndex
+                } / ${totalData}`}
+              </span>
+              người dùng
+            </div>
+          )}
+          <Pagination
+            className="paginationCustom"
+            total={totalData}
+            current={pageIndex}
+            pageSize={pageSize}
+            showSizeChanger
+            pageSizeOptions={[10, 20, 30, 50]}
+            onShowSizeChange={(current: number, size: number) => {
+              setPageSize(size);
+            }}
+            onChange={(currentPage) => {
+              setPageIndex(currentPage);
+            }}
+          />
+        </div>
+      </div>
       <UserForm
         ref={userFormRef}
-        resetData={() => {
-          setPageIndex(1);
+        resetData={async () => {
+          await getDataUser();
         }}
       />
     </PageContainer>

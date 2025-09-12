@@ -23,8 +23,8 @@ export default function SignInForm() {
         formValues.password
       );
       setShowMessage("SUCCESS");
-      setTimeout(() => {
-        login(resultLogin);
+      setTimeout(async () => {
+        await login(resultLogin);
         navigate("/");
         setLoading(false);
       }, 2000);

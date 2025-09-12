@@ -6,7 +6,10 @@ import { createContext, useState, useContext, useEffect } from "react";
 import { UserEntity } from "../common/services/user/user";
 import { AuthEntity } from "../common/services/auth/auth";
 import { ServiceBase } from "../common/services/servicebase";
-import { parseJwt, scheduleTokenRefresh } from "../common/function/commonFunction";
+import {
+  parseJwt,
+  scheduleTokenRefresh,
+} from "../common/function/commonFunction";
 import { authService } from "../common/services/auth/authService";
 
 interface AuthContextType {
@@ -39,9 +42,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const now = Date.now();
 
         if (exp * 1000 > now) {
-          setToken(savedToken);
-          setCurrentUser(JSON.parse(savedUser));
-          scheduleTokenRefresh(savedToken);
+          try {
+            const currentUser = JSON.parse(savedUser);
+            setToken(savedToken);
+            setCurrentUser(currentUser);
+            scheduleTokenRefresh(savedToken);
+          } catch (e) {
+            console.log(e);
+          }
         } else {
           if (refreshToken) {
             try {
@@ -78,15 +86,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("currentUser", JSON.stringify(curUser));
   };
 
-  const login = (dataLogin: AuthEntity) => {
+  const login = async (dataLogin: AuthEntity) => {
     setToken(dataLogin.token);
-    setCurrentUser(dataLogin.user);
     ServiceBase.setToken(dataLogin.token);
     localStorage.setItem("access_token", dataLogin.token);
     localStorage.setItem("refresh_token", dataLogin.refreshToken);
-    localStorage.setItem("currentUser", JSON.stringify(dataLogin.user));
+    try {
+      const currentUser = await authService.me();
+      setCurrentUser(currentUser);
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    } catch (e) {
+      console.log("Không lấy được thông tin user", e);
+      setCurrentUser(dataLogin.user);
+      localStorage.setItem("currentUser", JSON.stringify(dataLogin.user));
+    }
 
     scheduleTokenRefresh(dataLogin.token);
+
+    ServiceBase.setTokenRefresher(async () => {
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (!refreshToken) return;
+      const res = await authService.refresh(refreshToken);
+
+      ServiceBase.setToken(res.token);
+      setToken(res.token);
+
+      localStorage.setItem("access_token", res.token);
+      localStorage.setItem("refresh_token", res.refreshToken);
+
+      scheduleTokenRefresh(res.token);
+    });
   };
 
   const logout = async () => {
