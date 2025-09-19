@@ -792,3 +792,11 @@ span.flatpickr-weekday,
     }
   }
 }
+
+.icon-download{
+  svg {
+    width: 32px;
+    height: 32px;
+    fill: #fff;
+  }
+}

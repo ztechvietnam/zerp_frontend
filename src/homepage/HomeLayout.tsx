@@ -14,7 +14,6 @@ export default function HomeLayout() {
       label: (
         <Link
           to="/dashboard"
-          target="_blank"
           rel="noopener noreferrer"
           className="hover:text-red-600"
         >

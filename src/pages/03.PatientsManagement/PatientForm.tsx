@@ -8,6 +8,7 @@ import {
   Table,
   TableColumnsType,
   Tabs,
+  Tag,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, {
@@ -18,9 +19,13 @@ import React, {
 } from "react";
 import { pick } from "lodash";
 import { PatientEntity } from "../../common/services/patient/patient";
-import { MessageEntity } from "../../common/services/message/message";
 import dayjs from "dayjs";
-import { dataMessages } from "../../components/constant/constant";
+import { zaloMessageService } from "../../common/services/customer-zalo-messages/zalo-mesage-service";
+import {
+  ZaloMessageEntity,
+  ZaloMessageType,
+} from "../../common/services/customer-zalo-messages/zalo-mesage";
+import { TypeZaloMessage } from "../04.MessagesManagement/ListZaloMessages";
 
 export interface PatientFormRef {
   show(currentItem?: PatientEntity): Promise<void>;
@@ -36,7 +41,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     const [currentPatient, setCurrentPatient] = useState<
       PatientEntity | undefined
     >(undefined);
-    const [listMessages, setListMessages] = useState<MessageEntity[]>([]);
+    const [listMessages, setListMessages] = useState<ZaloMessageEntity[]>([]);
     const [form] = useForm();
 
     useImperativeHandle(
@@ -63,14 +68,39 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       []
     );
 
-    const columns: TableColumnsType<MessageEntity> = [
-      { title: "Nội dung tin nhắn", dataIndex: "content", width: 400 },
+    const columns: TableColumnsType<ZaloMessageEntity> = [
+      {
+        title: "Nội dung tin nhắn",
+        dataIndex: "content",
+        width: 400,
+        render(value) {
+          return (
+            <p
+              dangerouslySetInnerHTML={{
+                __html: value.replace(/\r\n/g, "<br />"),
+              }}
+            />
+          );
+        },
+      },
+      {
+        title: "Loại tin nhắn",
+        dataIndex: "message_type",
+        width: 100,
+        render(value) {
+          return (
+            <Tag color="processing">
+              {TypeZaloMessage[value as ZaloMessageType]}
+            </Tag>
+          );
+        },
+      },
       {
         title: "Thời điểm gửi",
-        dataIndex: "time",
+        dataIndex: "sent_time",
         width: 100,
         render: (value) => {
-          return dayjs(value, "HH:mm DD/MM/YYYY").format("HH:mm DD/MM/YYYY");
+          return dayjs(value).format("HH:mm DD/MM/YYYY");
         },
       },
     ];
@@ -78,18 +108,10 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     const getDataMessage = useCallback(async () => {
       setLoading(true);
       if (currentPatient) {
-        const listMessageCurrentPatient = dataMessages.filter((data) => {
-          return data.patient === currentPatient?.id;
-        });
-        const sortListMessage = [
-          ...listMessageCurrentPatient,
-          ...listMessageCurrentPatient,
-        ].sort(
-          (a, b) =>
-            dayjs(b.time, "HH:mm DD/MM/YYYY").valueOf() -
-            dayjs(a.time, "HH:mm DD/MM/YYYY").valueOf()
+        const message = await zaloMessageService.getMessageByCustomerId(
+          currentPatient.id
         );
-        setListMessages(sortListMessage ?? []);
+        setListMessages(message ?? []);
       } else {
         setListMessages([]);
       }
@@ -100,6 +122,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       setShowModal(false);
       setTabActive("profile");
       setCurrentPatient(undefined);
+      setListMessages([])
       form.resetFields();
     };
 
@@ -119,7 +142,8 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       >
         <Spin spinning={loading}>
           <Tabs
-            accessKey={tabActive}
+            activeKey={tabActive}
+            defaultActiveKey="profile"
             onChange={async (e) => {
               setTabActive(e);
               if (e === "historyMessage") {
@@ -150,7 +174,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                 rowKey="id"
                 columns={columns}
                 dataSource={listMessages}
-                scroll={{ y: window.innerHeight - 500 }}
+                scroll={{ y: window.innerHeight - 430 }}
               />
             </Tabs.TabPane>
           </Tabs>
