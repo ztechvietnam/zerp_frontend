@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -17,11 +17,37 @@ import HomeLayout from "./homepage/HomeLayout";
 import { NewDetail } from "./homepage/NewDetail";
 import HomeContent from "./homepage/HomeContent";
 import NewsManagement from "./pages/09.NewsManagement/NewsManagement";
+import { useEffect } from "react";
+
+const TITLES: Record<string, string> = {
+  ["/dashboard"]: "Trang chủ",
+  ["/dashboard/users-management"]: "Quản lý người dùng",
+  ["/dashboard/roles-management"]: "Quản lý phân quyền",
+  ["/dashboard/patients-management"]: "Quản lý bệnh nhân",
+  ["/dashboard/messages-management"]: "Lịch sử gửi tin nhắn ZNS",
+  ["/dashboard/list-reviews"]: "Danh sách đánh giá",
+  ["/dashboard/department-management"]: "Danh sách đơn vị",
+  ["/dashboard/news"]: "Tin hoạt động",
+  ["/dashboard/document-category"]: "Danh mục văn bản",
+  ["/dashboard/document-management"]: "Quản lý văn bản",
+};
+
+function TitleManager() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const defaultTitle = "Bệnh viện đa khoa";
+    document.title = TITLES[location.pathname] || defaultTitle;
+  }, [location.pathname]);
+
+  return null; // không render gì
+}
 
 export default function App() {
   return (
     <Router>
       <ScrollToTop />
+      <TitleManager />
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route
@@ -47,10 +73,7 @@ export default function App() {
         >
           <Route index element={<Home />} />
 
-          <Route
-            path={SIDE_BAR.NEWS}
-            element={<NewsManagement />}
-          />
+          <Route path={SIDE_BAR.NEWS} element={<NewsManagement />} />
 
           <Route
             path={SIDE_BAR.DEPARTMENT_MANAGEMENT}

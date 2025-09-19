@@ -29,6 +29,7 @@ type NavItem = {
   icon?: React.ReactNode;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subSystem?: string;
 };
 
 const customerCareNavItems: NavItem[] = [
@@ -39,16 +40,19 @@ const customerCareNavItems: NavItem[] = [
     icon: <SolutionOutlined />,
     name: "Quản lý bệnh nhân",
     path: SIDE_BAR.PATIENTS_MANAGEMENT,
+    subSystem: SUB_SYSTEM.CUSTOMER_SUPPORT,
   },
   {
     icon: <CommentOutlined />,
     name: "Lịch sử gửi tin nhắn ZNS",
     path: SIDE_BAR.MESSAGES_MANAGEMENT,
+    subSystem: SUB_SYSTEM.CUSTOMER_SUPPORT,
   },
   {
     icon: <FileDoneOutlined />,
     name: "Danh sách đánh giá",
     path: SIDE_BAR.LIST_REVIEWS,
+    subSystem: SUB_SYSTEM.CUSTOMER_SUPPORT,
   },
 ];
 
@@ -71,11 +75,13 @@ const documentManagementNavItems: NavItem[] = [
     icon: <BookOutlined />,
     name: "Danh mục văn bản",
     path: SIDE_BAR.DOCUMENT_CATEGORY,
+    subSystem: SUB_SYSTEM.MANAGEMENT,
   },
   {
     icon: <BookOutlined />,
     name: "Quản lý văn bản",
     path: SIDE_BAR.DOCUMENT_MANAGEMENT,
+    subSystem: SUB_SYSTEM.MANAGEMENT,
   },
 ];
 
@@ -87,22 +93,31 @@ const systemAdminNavItems: NavItem[] = [
     icon: <BarsOutlined />,
     name: "Danh sách đơn vị",
     path: SIDE_BAR.DEPARTMENT_MANAGEMENT,
+    subSystem: SUB_SYSTEM.MANAGEMENT,
   },
   {
     icon: <UserOutlined />,
     name: "Quản lý người dùng",
     path: SIDE_BAR.USERS_MANAGEMENT,
+    subSystem: SUB_SYSTEM.MANAGEMENT,
   },
   {
     icon: <UnlockOutlined />,
     name: "Quản lý phân quyền",
     path: SIDE_BAR.ROLES_MANAGEMENT,
+    subSystem: SUB_SYSTEM.MANAGEMENT,
   },
 ];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered, subSystem } =
-    useSidebar();
+  const {
+    isExpanded,
+    isMobileOpen,
+    isHovered,
+    setIsHovered,
+    subSystem,
+    setSubSystem,
+  } = useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -119,6 +134,19 @@ const AppSidebar: React.FC = () => {
     [location.pathname]
   );
 
+  useEffect(() => {
+    const matched = [
+      ...customerCareNavItems,
+      ...documentLookupNavItems,
+      ...systemAdminNavItems,
+      ...documentManagementNavItems,
+    ].find((item) => item.path && location.pathname.includes(item.path || ""));
+
+    if (matched?.subSystem && subSystem !== matched.subSystem) {
+      setSubSystem(matched.subSystem);
+    }
+  }, [location.pathname]);
+
   const documentLookupNavItems: NavItem[] = useMemo(() => {
     const treeData = buildCategoryTree(documentCategories);
 
@@ -132,12 +160,14 @@ const AppSidebar: React.FC = () => {
             path: `${SIDE_BAR.DOCUMENT}/${child.item.id}`,
             pro: false,
           })),
+          subSystem: SUB_SYSTEM.LIBRARY,
         };
       } else {
         return {
           icon: <HddOutlined />,
           name: data.item.name,
           path: `${SIDE_BAR.DOCUMENT}/${data.item.id}`,
+          subSystem: SUB_SYSTEM.LIBRARY,
         };
       }
     });
@@ -151,6 +181,7 @@ const AppSidebar: React.FC = () => {
         icon: <PlaySquareOutlined />,
         name: "Clip bài giảng",
         path: SIDE_BAR.LECTURE_VIDEO,
+        subSystem: SUB_SYSTEM.LIBRARY,
       },
     ];
   }, [documentCategories]);

@@ -13,26 +13,23 @@ import {
   InputRef,
   Pagination,
   Row,
-  Spin,
   Table,
   TableColumnsType,
   Tag,
 } from "antd";
-import { dataPatients } from "../../components/constant/constant";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { PatientForm, PatientFormRef } from "./PatientForm";
 import {
   FilterOutlined,
-  SearchOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
-import { useSidebar } from "../../context/SidebarContext";
 import { customersService } from "../../common/services/patient/customersService";
-import CustomPagination from "../../components/common/CustomPagination";
 import { debounce } from "lodash";
 import Highlighter from "react-highlight-words";
 import { patientService } from "../../common/services/patient/patientService";
+import dayjs from "dayjs";
+import '../../index.css';
 
 const ListPatients = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
@@ -41,10 +38,9 @@ const ListPatients = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [keyword, setKeyword] = useState<string>("");
   const [showFilter, setShowFilter] = useState<boolean>(false);
-  const [filterOpen, setFilterOpen] = useState<boolean>(false);
   const [listPatients, setListPatients] = useState<PatientEntity[]>([]);
   const [dataFilter, setDataFilter] = useState<PatientEntity[]>([]);
-  const [hasNextPage, setHasNextPage] = useState<boolean>(false);
+  const [totalData, setTotalData] = useState<number>(0);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const patientFormRef = useRef<PatientFormRef>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -63,11 +59,11 @@ const ListPatients = () => {
           },
         });
         if (results) {
-          setHasNextPage(results.hasNextPage);
           setListPatients(results.data);
+          setTotalData(results.total || 0);
         } else {
-          setHasNextPage(false);
           setListPatients([]);
+          setTotalData(0);
         }
         setLoading(false);
       } catch (e) {
@@ -117,10 +113,6 @@ const ListPatients = () => {
       }}
     />
   );
-
-  useEffect(() => {
-    inputRef?.current?.focus();
-  }, [filterOpen]);
 
   useEffect(() => {
     if (keyword) {
@@ -205,7 +197,7 @@ const ListPatients = () => {
       title: "Địa chỉ",
       dataIndex: "address",
       render: (value: string) => highlightText(value),
-    },
+    }
   ];
 
   const calculateCounterFilter = (formValues?: any) => {
@@ -288,7 +280,7 @@ const ListPatients = () => {
         </div>
       }
     >
-      <div className="flex flex-col gap-[10px] w-full h-[calc(100%-61.2px)]">
+      <div className="flex flex-col gap-[10px] w-full h-[calc(100%-60px)]">
         <div ref={tableRef} className="flex h-full">
           <Table
             rowKey="id"
@@ -320,13 +312,39 @@ const ListPatients = () => {
             }}
           />
         </div>
-        <CustomPagination
-          hasNextPage={hasNextPage}
-          pageIndex={pageIndex}
-          onChange={(page) => {
-            setPageIndex(page);
-          }}
-        />
+        <div className="flex items-center justify-between">
+          {totalData > 0 && (
+            <div className="flex items-center justify-between gap-[5px]">
+              <span className="hidden lg:flex">Đang hiển thị</span>
+              <span className="text-[#108ee9] font-medium">
+                {`${
+                  pageSize * (pageIndex - 1) + 1 >= totalData
+                    ? totalData
+                    : pageSize * (pageIndex - 1) + 1
+                } - ${
+                  pageSize * pageIndex >= totalData
+                    ? totalData
+                    : pageSize * pageIndex
+                } / ${totalData}`}
+              </span>
+              bệnh nhân
+            </div>
+          )}
+          <Pagination
+            className="paginationCustom"
+            total={totalData}
+            current={pageIndex}
+            pageSize={pageSize}
+            showSizeChanger
+            pageSizeOptions={[10, 20, 30, 50]}
+            onShowSizeChange={(current: number, size: number) => {
+              setPageSize(size);
+            }}
+            onChange={(currentPage) => {
+              setPageIndex(currentPage);
+            }}
+          />
+        </div>
       </div>
 
       <Drawer

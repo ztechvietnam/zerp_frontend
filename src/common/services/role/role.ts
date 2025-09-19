@@ -3,3 +3,8 @@ export interface RoleEntity {
   name: string;
   description?: string;
 }
+
+export enum Role {
+  Admin = "Admin",
+  User = "User",
+}
