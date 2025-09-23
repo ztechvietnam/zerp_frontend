@@ -6,7 +6,7 @@ import Home from "./pages/Dashboard/Home";
 import { SIDE_BAR } from "./components/constant/constant";
 import ListUsers from "./pages/01.UsersManagement/ListUsers";
 import ListPatients from "./pages/03.PatientsManagement/ListPatients";
-import ListMessages from "./pages/04.MessagesManagement/ListMessages";
+import ListZaloMessages from "./pages/04.MessagesManagement/ListZaloMessages";
 import ListRoles from "./pages/02.RolesManagement/ListRoles";
 import DocumentsManagement from "./pages/06.DocumentsManagement/DocumentsManagement";
 import DocumentCategories from "./pages/05.DocumentCategory/DocumentCategories";
@@ -87,7 +87,7 @@ export default function App() {
           />
           <Route
             path={SIDE_BAR.MESSAGES_MANAGEMENT}
-            element={<ListMessages />}
+            element={<ListZaloMessages />}
           />
           <Route path={SIDE_BAR.LIST_REVIEWS} element={<ListReviews />} />
           <Route
