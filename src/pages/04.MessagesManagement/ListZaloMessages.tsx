@@ -259,7 +259,7 @@ const ListZaloMessages = () => {
     {
       title: "Người nhận",
       dataIndex: "customer",
-      width: 150,
+      width: 100,
       render(value) {
         return (
           <div className="cursor-pointer w-fit flex items-center px-[6px] py-[2px] border border-transparent hover:border-gray-300 hover:rounded transition-all duration-200">
@@ -283,6 +283,18 @@ const ListZaloMessages = () => {
       },
     },
     {
+      title: "Trạng thái",
+      width: 80,
+      dataIndex: "sent",
+      render: (value) => {
+        return (
+          <Tag color={value ? "success" : "error"}>
+            {value ? "Đã gửi" : "Chưa gửi"}
+          </Tag>
+        );
+      },
+    },
+    {
       title: "Thời điểm gửi",
       width: 100,
       dataIndex: "sent_time",
@@ -295,7 +307,7 @@ const ListZaloMessages = () => {
             <DatePicker
               value={startSendMessage}
               format="DD/MM/YYYY"
-              onChange={(e) => setStartSendMessage(e.startOf('day'))}
+              onChange={(e) => setStartSendMessage(e.startOf("day"))}
               placeholder="Từ ngày"
               disabledDate={(date) => {
                 return !!endSendMessage && date.isAfter(endSendMessage, "day");
@@ -305,7 +317,7 @@ const ListZaloMessages = () => {
             <DatePicker
               value={endSendMessage}
               format="DD/MM/YYYY"
-              onChange={(e) => setEndSendMessage(e.endOf('day'))}
+              onChange={(e) => setEndSendMessage(e.endOf("day"))}
               placeholder="Đến ngày"
               disabledDate={(date) => {
                 return (
@@ -351,7 +363,7 @@ const ListZaloMessages = () => {
         </div>
       ),
       render: (value) => {
-        return dayjs(value).format("HH:mm DD/MM/YYYY");
+        return value ? dayjs(value).format("HH:mm DD/MM/YYYY") : "";
       },
     },
   ];

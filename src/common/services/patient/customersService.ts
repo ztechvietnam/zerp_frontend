@@ -13,6 +13,12 @@ export class CustomersService extends CrudServiceBase<PatientEntity> {
       ],
     });
   }
+
+  async getLinkZaloAuthorization(customer_id: string): Promise<string> {
+    return this.get<string>({
+      endpoint: `zalo/authorization/${customer_id}`,
+    });
+  }
 }
 
 export const customersService = new CustomersService();
