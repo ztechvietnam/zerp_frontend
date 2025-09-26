@@ -19,17 +19,14 @@ import {
 } from "antd";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { PatientForm, PatientFormRef } from "./PatientForm";
-import {
-  FilterOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
+import { FilterOutlined, SyncOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { customersService } from "../../common/services/patient/customersService";
 import { debounce } from "lodash";
 import Highlighter from "react-highlight-words";
 import { patientService } from "../../common/services/patient/patientService";
 import dayjs from "dayjs";
-import '../../index.css';
+import "../../index.css";
 
 const ListPatients = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
@@ -189,15 +186,17 @@ const ListPatients = () => {
       render: (value: string) => highlightText(value),
     },
     {
-      title: "Email",
-      dataIndex: "email",
-      render: (value: string) => highlightText(value),
-    },
-    {
       title: "Địa chỉ",
       dataIndex: "address",
       render: (value: string) => highlightText(value),
-    }
+    },
+    {
+      title: "Đã ủy quyền ZERP",
+      dataIndex: "zalo_user_id",
+      render: (value: string) => {
+        return <Tag color={value ? 'success': 'error'}>{value ? 'Đã ủy quyền': 'Chưa ủy quyền'}</Tag>;
+      },
+    },
   ];
 
   const calculateCounterFilter = (formValues?: any) => {

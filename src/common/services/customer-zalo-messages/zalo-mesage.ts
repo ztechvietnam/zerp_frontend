@@ -7,6 +7,7 @@ export interface ZaloMessageEntity extends EntityBase {
   customer_id: string;
   customer: PatientEntity;
   message_type: string;
+  sent: number;
   sent_time: string;
 }
 

@@ -800,3 +800,12 @@ span.flatpickr-weekday,
     fill: #fff;
   }
 }
+
+.qr-code-container {
+  .ant-descriptions-view .ant-descriptions-row .ant-descriptions-item-content{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px !important;
+  }
+}

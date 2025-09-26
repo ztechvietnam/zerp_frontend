@@ -8,6 +8,7 @@ export interface PatientEntity extends EntityBase {
   customerneed: string;
   afford: string;
   source: string;
+  zalo_user_id: string;
   project_id: string;
   created_id: string;
   customer_id: string;
