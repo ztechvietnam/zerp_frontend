@@ -198,11 +198,14 @@ const ListZaloMessages = () => {
     } else {
       setDataFilter(listMessages);
     }
-  }, [keyword, listMessages]);
+  }, [endSendMessage, keyword, listMessages, startSendMessage]);
 
   const renderPatient = (patient: PatientEntity) => {
     return (
       <Descriptions column={2} bordered size="middle">
+        <Descriptions.Item label="Mã Y Tế" span={2}>
+          {patient.customer_id}
+        </Descriptions.Item>
         <Descriptions.Item label="Họ tên" span={2}>
           {patient.name}
         </Descriptions.Item>

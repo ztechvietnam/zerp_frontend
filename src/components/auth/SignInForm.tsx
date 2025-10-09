@@ -2,7 +2,7 @@
 import { Col, Form, Row, Input, Button, Spin } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { authService } from "../../common/services/auth/authService";
 import { useState } from "react";
 

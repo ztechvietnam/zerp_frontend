@@ -793,7 +793,7 @@ span.flatpickr-weekday,
   }
 }
 
-.icon-download{
+.icon-download {
   svg {
     width: 32px;
     height: 32px;
@@ -802,10 +802,33 @@ span.flatpickr-weekday,
 }
 
 .qr-code-container {
-  .ant-descriptions-view .ant-descriptions-row .ant-descriptions-item-content{
+  .ant-descriptions-view .ant-descriptions-row .ant-descriptions-item-content {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 5px !important;
+  }
+  .ant-qrcode {
+    padding: 0;
+  }
+}
+
+.description-patient {
+  .ant-descriptions-item-label {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 16px 24px !important;
+  }
+
+  .ant-descriptions-item-content {
+    font-size: 16px;
+  }
+}
+
+.iconHomepage {
+  svg {
+    height: 32px;
+    width: 32px;
   }
 }

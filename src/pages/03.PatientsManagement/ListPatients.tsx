@@ -141,6 +141,12 @@ const ListPatients = () => {
 
   const columns: TableColumnsType<PatientEntity> = [
     {
+      title: "Mã Y Tế",
+      dataIndex: "customer_id",
+      width: 120,
+      render: (value: string) => highlightText(value),
+    },
+    {
       title: "Họ và tên",
       dataIndex: "fullName",
       render: (value, record: PatientEntity) => {
@@ -191,10 +197,21 @@ const ListPatients = () => {
       render: (value: string) => highlightText(value),
     },
     {
+      title: "Thời điểm đồng bộ",
+      dataIndex: "createdAt",
+      render: (value: string) => {
+        return dayjs(value).format("HH:mm DD/MM/YYYY");
+      },
+    },
+    {
       title: "Đã ủy quyền ZERP",
       dataIndex: "zalo_user_id",
       render: (value: string) => {
-        return <Tag color={value ? 'success': 'error'}>{value ? 'Đã ủy quyền': 'Chưa ủy quyền'}</Tag>;
+        return (
+          <Tag color={value ? "success" : "error"}>
+            {value ? "Đã ủy quyền" : "Chưa ủy quyền"}
+          </Tag>
+        );
       },
     },
   ];

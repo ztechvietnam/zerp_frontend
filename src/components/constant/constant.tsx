@@ -1,3 +1,8 @@
+import {
+  ReadOutlined,
+  SettingOutlined,
+  SolutionOutlined,
+} from "@ant-design/icons";
 import { CategoryNewsEntity } from "../../common/services/category-news/categoryNews";
 import {
   CategoryEntity,
@@ -27,9 +32,30 @@ export enum SIDE_BAR {
 
 export enum SUB_SYSTEM {
   CUSTOMER_SUPPORT = "CUSTOMER_SUPPORT",
-  LIBRARY = "LIBRARYLIBRARY",
+  LIBRARY = "LIBRARY",
   MANAGEMENT = "MANAGEMENT",
 }
+
+export const environments = [
+  {
+    key: SUB_SYSTEM.CUSTOMER_SUPPORT,
+    title: "Chăm sóc khách hàng",
+    path: "/dashboard/customer-support",
+    icon: <SolutionOutlined width={32} height={32} />,
+  },
+  {
+    key: SUB_SYSTEM.LIBRARY,
+    title: "Thư viện điện tử",
+    path: "/dashboard/library",
+    icon: <ReadOutlined width={32} height={32} />,
+  },
+  {
+    key: SUB_SYSTEM.MANAGEMENT,
+    title: "Quản trị hệ thống",
+    path: "/dashboard/management",
+    icon: <SettingOutlined width={32} height={32} />,
+  },
+];
 
 export enum MEASSAGE {
   "SAVE" = "Lưu",

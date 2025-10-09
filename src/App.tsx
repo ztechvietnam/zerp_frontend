@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import SignIn from "./pages/AuthPages/SignIn";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -18,6 +23,7 @@ import { NewDetail } from "./homepage/NewDetail";
 import HomeContent from "./homepage/HomeContent";
 import NewsManagement from "./pages/09.NewsManagement/NewsManagement";
 import { useEffect } from "react";
+import DashboardHome from "./pages/DashboardHome/DashboardHome";
 
 const TITLES: Record<string, string> = {
   ["/dashboard"]: "Trang chủ",
@@ -65,6 +71,14 @@ export default function App() {
         </Route>
         <Route
           path="/dashboard"
+          element={
+            <PrivateRoute>
+              <DashboardHome />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard/:environment/*"
           element={
             <PrivateRoute>
               <AppLayout />

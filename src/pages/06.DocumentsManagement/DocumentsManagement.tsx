@@ -44,7 +44,7 @@ import { useForm } from "antd/es/form/Form";
 import { DocumentEntity } from "../../common/services/document/document";
 import dayjs from "dayjs";
 import ModalPlayVideo, { ModalPlayVideoRef } from "./ModalPlayVideo";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import { CategoryEntity } from "../../common/services/category/category";
 import { DocumentForm, DocumentFormRef } from "./DocumentsForm";
 import {
