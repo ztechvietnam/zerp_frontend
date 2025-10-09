@@ -1,6 +1,6 @@
 import { Drawer, Layout, Menu } from "antd";
 import { Header } from "antd/es/layout/layout";
-import { Link, Outlet } from "react-router";
+import { Link, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { CloseOutlined, MenuOutlined } from "@ant-design/icons";
 

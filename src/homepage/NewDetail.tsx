@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import { contentTemplate, dataNews } from "../components/constant/constant";
 import { App, List, Skeleton } from "antd";
 import { NewsEntity } from "../common/services/news/news";

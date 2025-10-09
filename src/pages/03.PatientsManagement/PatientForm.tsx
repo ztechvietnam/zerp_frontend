@@ -1,22 +1,22 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  App,
   Button,
   Descriptions,
   Modal,
+  QRCode,
   Spin,
   Table,
   TableColumnsType,
   Tabs,
   Tag,
+  Tooltip,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, {
   forwardRef,
   useCallback,
   useImperativeHandle,
-  useRef,
   useState,
 } from "react";
 import { pick } from "lodash";
@@ -29,8 +29,8 @@ import {
 } from "../../common/services/customer-zalo-messages/zalo-mesage";
 import { TypeZaloMessage } from "../04.MessagesManagement/ListZaloMessages";
 import { customersService } from "../../common/services/patient/customersService";
-import QRCode from "qrcode";
 import "../../index.css";
+import { DownloadOutlined } from "@ant-design/icons";
 
 export interface PatientFormRef {
   show(currentItem?: PatientEntity): Promise<void>;
@@ -48,9 +48,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     >(undefined);
     const [listMessages, setListMessages] = useState<ZaloMessageEntity[]>([]);
     const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [form] = useForm();
-    const { message } = App.useApp();
 
     useImperativeHandle(
       ref,
@@ -61,6 +59,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
           if (currentItem) {
             setCurrentPatient(currentItem);
             const formControlValues = pick(currentItem, [
+              "customer_id",
               "name",
               "phone",
               "email",
@@ -71,52 +70,13 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
             }, 0);
             const linkZaloAuthorization =
               await customersService.getLinkZaloAuthorization(currentItem.id);
-            await generateQr(linkZaloAuthorization);
+            setQrDataUrl(linkZaloAuthorization);
           }
           setLoading(false);
         },
       }),
       []
     );
-
-    const generateQr = async (url: string) => {
-      try {
-        setLoading(true);
-        const fixed = url.match(/^https?:\/\//) ? url : `https://${url}`;
-        const opts = {
-          errorCorrectionLevel: "H" as const,
-          type: "image/png" as const,
-          margin: 1,
-          color: { dark: "#000000", light: "#FFFFFF" },
-          width: 131,
-          height: 131,
-        };
-        const qrUrl = await QRCode.toDataURL(fixed, opts);
-        setQrDataUrl(qrUrl);
-        if (canvasRef.current) {
-          await QRCode.toCanvas(canvasRef.current, fixed, {
-            ...opts,
-          });
-        }
-      } catch (err) {
-        console.log(err);
-        message.error("Tạo mã QR thất bại");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const downloadPng = () => {
-      if (!qrDataUrl) return;
-      const link = document.createElement("a");
-      if (canvasRef.current) {
-        link.href = canvasRef.current.toDataURL("image/png");
-      } else {
-        link.href = qrDataUrl;
-      }
-      link.download = "qrcode.png";
-      link.click();
-    };
 
     const columns: TableColumnsType<ZaloMessageEntity> = [
       {
@@ -168,6 +128,36 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       setLoading(false);
     }, [currentPatient]);
 
+    const downloadQRCodePNG = async () => {
+      const svgEl = document.querySelector("#myqrcode svg") as SVGSVGElement;
+      if (!svgEl) return;
+
+      const serializer = new XMLSerializer();
+      const svgStr = serializer.serializeToString(svgEl);
+
+      const img = new Image();
+      img.src = "data:image/svg+xml;base64," + btoa(svgStr);
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const scale = 4;
+        canvas.width = 222 * scale;
+        canvas.height = 222 * scale;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const url = canvas.toDataURL("image/png");
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "QRCode.png";
+        a.click();
+      };
+    };
+
     const closeModal = () => {
       setShowModal(false);
       setTabActive("profile");
@@ -208,10 +198,13 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                     column={2}
                     bordered
                     size="middle"
-                    className="w-[calc(100%-199.59px)]"
+                    className="w-[calc(100%-242px)] description-patient"
                   >
                     <Descriptions.Item label="Họ tên" span={2}>
                       {currentPatient.name}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Mã Y Tế" span={2}>
+                      {currentPatient.customer_id}
                     </Descriptions.Item>
                     <Descriptions.Item label="Số điện thoại" span={2}>
                       {currentPatient.phone}
@@ -229,10 +222,29 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                   bordered
                   size="middle"
                   layout="vertical"
-                  className="qr-code-container"
+                  className="qr-code-container description-patient"
+                  id="myqrcode"
                 >
                   <Descriptions.Item label="QR cấp phép Zalo App" span={1}>
-                    <canvas ref={canvasRef} />
+                    <div
+                      className="relative w-[222px] h-[222px] cursor-pointer group"
+                      onClick={downloadQRCodePNG}
+                    >
+                      <QRCode
+                        value={qrDataUrl || ""}
+                        size={222}
+                        errorLevel="L"
+                        type="svg"
+                        // bordered={false}
+                      />
+                      <Tooltip
+                        title="Click để tải xuống"
+                        placement="bottom"
+                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+                      >
+                        <DownloadOutlined className="icon-download" />
+                      </Tooltip>
+                    </div>
                   </Descriptions.Item>
                 </Descriptions>
               </div>

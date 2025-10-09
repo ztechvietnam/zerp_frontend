@@ -1,6 +1,6 @@
 import React from "react";
 import { NewsEntity } from "../common/services/news/news";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { SIDE_BAR } from "../components/constant/constant";
 
 interface NewsItemProps {

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 
 import { useSidebar } from "../context/SidebarContext";
 import {
@@ -110,14 +110,7 @@ const systemAdminNavItems: NavItem[] = [
 ];
 
 const AppSidebar: React.FC = () => {
-  const {
-    isExpanded,
-    isMobileOpen,
-    isHovered,
-    setIsHovered,
-    subSystem,
-    setSubSystem,
-  } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -130,21 +123,24 @@ const AppSidebar: React.FC = () => {
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
-    (path: string) => location.pathname === `/dashboard/${path}`,
+    (path: string) => location.pathname.includes(path),
     [location.pathname]
   );
 
-  useEffect(() => {
-    const matched = [
-      ...customerCareNavItems,
-      ...documentLookupNavItems,
-      ...systemAdminNavItems,
-      ...documentManagementNavItems,
-    ].find((item) => item.path && location.pathname.includes(item.path || ""));
+  const subSystem = useMemo(() => {
+    const pathname = location.pathname.toLowerCase();
 
-    if (matched?.subSystem && subSystem !== matched.subSystem) {
-      setSubSystem(matched.subSystem);
+    if (pathname.includes("customer-support")) {
+      return SUB_SYSTEM.CUSTOMER_SUPPORT;
     }
+    if (pathname.includes("library")) {
+      return SUB_SYSTEM.LIBRARY;
+    }
+    if (pathname.includes("management")) {
+      return SUB_SYSTEM.MANAGEMENT;
+    }
+
+    return null;
   }, [location.pathname]);
 
   const documentLookupNavItems: NavItem[] = useMemo(() => {
@@ -384,7 +380,12 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to="/">
+        <Link
+          to="/dashboard"
+          onClick={() => {
+            localStorage.removeItem("selectedEnvironment");
+          }}
+        >
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
