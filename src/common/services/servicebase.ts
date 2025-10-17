@@ -22,7 +22,7 @@ export type RefreshTokenInvoker = () => Promise<void>;
 export abstract class ServiceBase {
   private static token?: string;
 
-  private static baseUrl: string;
+  public static baseUrl: string;
 
   private static refreshTokenInvoking = false;
 

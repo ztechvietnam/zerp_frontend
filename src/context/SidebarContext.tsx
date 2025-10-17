@@ -1,4 +1,13 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { documentCategoriesService } from "../common/services/document-categories/documentCategoriesService";
+import { buildCategoryTree } from "../components/constant/constant";
+import { DocumentCategoriesEntity } from "../common/services/document-categories/documentCategories";
 
 type SidebarContextType = {
   isExpanded: boolean;
@@ -7,11 +16,13 @@ type SidebarContextType = {
   isHovered: boolean;
   activeItem: string | null;
   openSubmenu: string | null;
+  listDocumentCategories: DocumentCategoriesEntity[];
   toggleSidebar: () => void;
   toggleMobileSidebar: () => void;
   setIsHovered: (isHovered: boolean) => void;
   setActiveItem: (item: string | null) => void;
   toggleSubmenu: (item: string) => void;
+  setListDocumentCategories: (item: DocumentCategoriesEntity[]) => void;
 };
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -33,6 +44,9 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const [listDocumentCategories, setListDocumentCategories] = useState<
+    DocumentCategoriesEntity[]
+  >([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -50,6 +64,25 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const getDocumentCategories = useCallback(async () => {
+    try {
+      const results = await documentCategoriesService.get({
+        params: {
+          limit: 100,
+        },
+      });
+      const categories = results?.data || [];
+      setListDocumentCategories(categories);
+    } catch (e) {
+      console.log(e);
+      setListDocumentCategories([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    getDocumentCategories();
+  }, [getDocumentCategories]);
 
   const toggleSidebar = () => {
     setIsExpanded((prev) => !prev);
@@ -77,6 +110,8 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsHovered,
         setActiveItem,
         toggleSubmenu,
+        listDocumentCategories,
+        setListDocumentCategories,
       }}
     >
       {children}

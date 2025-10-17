@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   Breadcrumb,
@@ -52,6 +46,7 @@ import {
   DepartmentTreeNode,
 } from "../../common/services/department/department";
 import { UserEntity } from "../../common/services/user/user";
+import { documentService } from "../../common/services/document/documentService";
 
 export interface TreeSelectNode {
   title: string;
@@ -215,15 +210,44 @@ const DocumentsManagement = () => {
   }, [idCategory]);
 
   useEffect(() => {
-    setTreeData(buildCategoryTree(documentCategories));
+    // setTreeData(buildCategoryTree(documentCategories));
+    setTreeData([]);
     const treeDep = buildDepartmentTree(dataDepartments);
     setDepartmentTree(
       mapUsersToDepartments(treeDep, dataUsers, dataDepartments)
     );
   }, []);
 
+  const getDocuments = useCallback(
+    async (formValues?: any) => {
+      try {
+        setLoading(true);
+        const results = await documentService.get({
+          params: {
+            page: pageIndex,
+            limit: pageSize,
+          },
+        });
+        if (results) {
+          setListDocuments(results.data);
+        } else {
+          setListDocuments([]);
+        }
+        setLoading(false);
+      } catch (e) {
+        setLoading(false);
+        console.log(e);
+      }
+    },
+    [pageSize, pageIndex]
+  );
+
+  useEffect(() => {
+    getDocuments();
+  }, [getDocuments]);
+
   const columns: TableColumnsType<DocumentEntity> = [
-    { title: "Tên văn bản", dataIndex: "name", width: 200, fixed: "left" },
+    { title: "Tên văn bản", dataIndex: "title", width: 200, fixed: "left" },
     { title: "Mã kí hiệu", dataIndex: "code", width: 80 },
     {
       title: "Biểu mẫu",
@@ -263,7 +287,7 @@ const DocumentsManagement = () => {
     { title: "Người tạo", dataIndex: "createdBy", width: 100 },
     {
       title: "Ngày tạo",
-      dataIndex: "created",
+      dataIndex: "createdAt",
       width: 100,
       render(value) {
         return <span>{dayjs(value).format("DD/MM/YYYY")}</span>;
@@ -467,65 +491,71 @@ const DocumentsManagement = () => {
         </div>
       }
     >
-      <Spin spinning={loading}>
-        <div
-          className={`flex flex-col gap-[10px] w-full h-[calc(100%-61.2px)]`}
-        >
-          <div ref={tableRef} className="flex h-full">
-            <Table
-              rowKey="id"
-              columns={columns}
-              dataSource={listData}
-              pagination={false}
-              scroll={
-                window.innerWidth < 768
+      <div className={`flex flex-col gap-[10px] w-full h-[calc(100%-61.2px)]`}>
+        <div ref={tableRef} className="flex h-full">
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={listData}
+            pagination={false}
+            scroll={
+              window.innerWidth < 1025
+                ? window.innerWidth < 544
                   ? (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 265
-                    ? { y: window.innerHeight - 265 }
+                    window.innerHeight - 244
+                    ? { y: window.innerHeight - 244 }
                     : undefined
                   : (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 255
-                  ? { y: window.innerHeight - 255 }
+                    window.innerHeight - 221
+                  ? { y: window.innerHeight - 221 }
                   : undefined
-              }
-              style={{
-                boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
-                borderRadius: "8px",
-                width: "100%",
-                height: "fit-content",
-              }}
-            />
-          </div>
-          <div
-            className={`flex items-center ${
-              listDocuments.length > 0 ? "justify-between" : "justify-end"
-            } lg:mt-[10px]`}
-          >
-            {listDocuments.length > 0 && (
-              <div className="flex items-center justify-between gap-[5px]">
-                <span className="hidden lg:flex">Đang hiển thị</span>
-                <span className="text-[#108ee9] font-medium">
-                  {`${pageSize * (pageIndex - 1) + 1} - ${
-                    pageSize * pageIndex >= listDocuments.length
-                      ? listDocuments.length
-                      : pageSize * pageIndex
-                  } / ${listDocuments.length}`}
-                </span>
-                văn bản
-              </div>
-            )}
-            <Pagination
-              pageSize={pageSize}
-              total={listDocuments.length}
-              current={pageIndex}
-              onChange={(page) => {
-                setPageIndex(page);
-              }}
-              align="end"
-            />
-          </div>
+                : (tableRef.current?.offsetHeight ?? 0) >=
+                  window.innerHeight - 233
+                ? { y: window.innerHeight - 233 }
+                : undefined
+            }
+            style={{
+              boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
+              borderRadius: "8px",
+              width: "100%",
+              height: "fit-content",
+            }}
+          />
         </div>
-      </Spin>
+        <div className="flex items-center justify-between">
+          {listDocuments.length > 0 && (
+            <div className="flex items-center justify-between gap-[5px]">
+              <span className="hidden lg:flex">Đang hiển thị</span>
+              <span className="text-[#108ee9] font-medium">
+                {`${
+                  pageSize * (pageIndex - 1) + 1 >= listDocuments.length
+                    ? listDocuments.length
+                    : pageSize * (pageIndex - 1) + 1
+                } - ${
+                  pageSize * pageIndex >= listDocuments.length
+                    ? listDocuments.length
+                    : pageSize * pageIndex
+                } / ${listDocuments.length}`}
+              </span>
+              văn bản
+            </div>
+          )}
+          <Pagination
+            className="paginationCustom"
+            total={listDocuments.length}
+            current={pageIndex}
+            pageSize={pageSize}
+            showSizeChanger
+            pageSizeOptions={[10, 20, 30, 50]}
+            onShowSizeChange={(current: number, size: number) => {
+              setPageSize(size);
+            }}
+            onChange={(currentPage) => {
+              setPageIndex(currentPage);
+            }}
+          />
+        </div>
+      </div>
 
       <Drawer
         title="Bộ lọc"

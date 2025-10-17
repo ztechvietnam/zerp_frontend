@@ -43,8 +43,8 @@ export default function DashboardHome() {
           </div>
         </div>
       </header>
-      <div className="flex flex-col items-center justify-center h-screen px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl bg-white border-[1px] border-solid border-[#E8E8E8] rounded-xl p-[40px]">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-55.6px)] px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl bg-[#ffffffc9] border-[1px] border-solid border-[#E8E8E8] rounded-xl p-[40px]">
           {environments.map((env) => (
             <div
               key={env.key}

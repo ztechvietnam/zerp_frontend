@@ -832,3 +832,11 @@ span.flatpickr-weekday,
     width: 32px;
   }
 }
+
+.menu-item-inactive {
+  .menu-item-icon-active,
+  .menu-item-text,
+  .anticon.anticon-down {
+    color: #344054 !important;
+  }
+}

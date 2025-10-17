@@ -25,7 +25,7 @@ export default function SignInForm() {
       setShowMessage("SUCCESS");
       setTimeout(async () => {
         await login(resultLogin);
-        navigate("/");
+        navigate("/dashboard");
         setLoading(false);
       }, 2000);
     } catch (e) {
