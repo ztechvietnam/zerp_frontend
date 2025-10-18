@@ -72,6 +72,20 @@ const ListPatients = () => {
   );
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (pageIndex === 1) {
+      intervalId = setInterval(() => {
+        getDataPatients();
+      }, 5 * 60 * 1000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [pageIndex, getDataPatients]);
+
+  useEffect(() => {
     (async () => await getDataPatients())();
   }, [getDataPatients]);
 

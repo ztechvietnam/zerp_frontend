@@ -14,6 +14,7 @@ import { MessageEntity } from "../../common/services/message/message";
 import { NewsEntity } from "../../common/services/news/news";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { QuestionEntity } from "../../common/services/question/question";
+import { DocumentCategoriesEntity } from "../../common/services/document-categories/documentCategories";
 
 export enum SIDE_BAR {
   LECTURE_VIDEO = "lecture-video",
@@ -791,27 +792,40 @@ export const generateDataDocuments = (): DocumentEntity[] => {
 
 export const dataDocuments: DocumentEntity[] = generateDataDocuments();
 
-export const buildCategoryTree = (categories: CategoryEntity[]): TreeNode[] => {
-  const categoryMap = new Map<string, TreeNode>();
-  categories.forEach((category) => {
-    categoryMap.set(category.code, {
+export const buildCategoryTree = (
+  categories: DocumentCategoriesEntity[],
+  sidebar?: boolean
+): TreeNode[] => {
+  const filteredCategories = categories.filter((c) => {
+    return sidebar
+      ? c.parent_category_id !== 0 && c.status !== 0
+      : c.id_category !== 1;
+  });
+
+  const categoryMap = new Map<number, TreeNode>();
+
+  filteredCategories.forEach((category) => {
+    categoryMap.set(category.id_category, {
+      title: category.name,
+      value: category.id_category.toString(),
       item: category,
-      key: category.code,
+      key: category.id_category.toString(),
       children: [],
     });
   });
 
   const tree: TreeNode[] = [];
-  categories.forEach((category) => {
-    const node = categoryMap.get(category.code)!;
 
-    if (category.parentCode) {
-      const parentNode = categoryMap.get(category.parentCode);
+  filteredCategories.forEach((category) => {
+    const node = categoryMap.get(category.id_category)!;
+
+    if (category.parent_category_id) {
+      const parentNode = categoryMap.get(category.parent_category_id);
       if (parentNode) {
         parentNode.children!.push(node);
       } else {
         console.warn(
-          `⚠️ Không tìm thấy parent với code: '${category.parentCode}' cho node '${category.code}'`
+          `⚠️ Không tìm thấy parent với id: '${category.parent_category_id}' cho node '${category.id_category}'`
         );
         tree.push(node);
       }
@@ -828,7 +842,6 @@ export const buildCategoryTree = (categories: CategoryEntity[]): TreeNode[] => {
       }
     });
   };
-
   cleanEmptyChildren(tree);
   return tree;
 };

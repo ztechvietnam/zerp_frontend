@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
-import { Breadcrumb, Button, Table, Tag, Tooltip } from "antd";
+import { App, Breadcrumb, Button, Modal, Table, Tag, Tooltip } from "antd";
 import {
   DocumentCategoryForm,
   DocumentCategoryFormRef,
 } from "./DocumentCategoryForm";
-import { CategoryEntity, TreeNode } from "../../common/services/category/category";
-import { buildCategoryTree, documentCategories } from "../../components/constant/constant";
+import { TreeNode } from "../../common/services/category/category";
+import {
+  buildCategoryTree,
+  MEASSAGE,
+} from "../../components/constant/constant";
 import { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import {
@@ -16,30 +19,149 @@ import {
   CloseCircleOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import { documentCategoriesService } from "../../common/services/document-categories/documentCategoriesService";
+import { useSidebar } from "../../context/SidebarContext";
 
 const DocumentCategories = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const documentCategoryFormRef = useRef<DocumentCategoryFormRef>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const { listDocumentCategories, setListDocumentCategories } = useSidebar();
+  const { message, modal } = App.useApp();
+
+  const getDocumentCategories = useCallback(async (formValues?: any) => {
+    try {
+      setLoading(true);
+      const results = await documentCategoriesService.get({
+        params: {
+          limit: 100,
+        },
+      });
+      if (results) {
+        setListDocumentCategories(results.data);
+      } else {
+        setListDocumentCategories([]);
+      }
+      setLoading(false);
+    } catch (e) {
+      setLoading(false);
+      console.log(e);
+    }
+  }, []);
 
   useEffect(() => {
     setLoading(true);
-    const treeCate = buildCategoryTree(documentCategories);
+    const treeCate = buildCategoryTree(listDocumentCategories);
     setTreeData(treeCate);
+    setExpandedKeys(treeCate.map((item) => item.key));
     setLoading(false);
-  }, []);
+  }, [listDocumentCategories]);
+
+  const findParentPath = useCallback(
+    (
+      nodes: TreeNode[],
+      targetId: number,
+      path: number[] = []
+    ): number[] | null => {
+      for (const node of nodes) {
+        const newPath = [...path, node.item.id_category];
+        if (node.item.id_category === targetId) return newPath;
+        if (node.children) {
+          const result = findParentPath(node.children, targetId, newPath);
+          if (result) return result;
+        }
+      }
+      return null;
+    },
+    []
+  );
+
+  const updateStatus = useCallback(
+    async (record: TreeNode, status: number) => {
+      if (status === 1) {
+        const parentPath = findParentPath(treeData, record.item.id_category);
+        if (parentPath && parentPath.length > 1) {
+          const parentIds = parentPath.slice(0, -1);
+          for (const parentId of parentIds) {
+            await documentCategoriesService.patch(
+              { status },
+              { endpoint: `/${parentId}` }
+            );
+          }
+        }
+        await documentCategoriesService.patch(
+          { status },
+          { endpoint: `/${record.item.id_category}` }
+        );
+        if (record.children && record.children.length) {
+          for (const child of record.children) {
+            await updateStatus(child, status);
+          }
+        }
+      } else {
+        await documentCategoriesService.patch(
+          {
+            status: status,
+          },
+          {
+            endpoint: `/${record.item.id_category.toString()}`,
+          }
+        );
+        if (record.children && record.children.length) {
+          for (let i = 0; i < record.children.length; i++) {
+            const child = record.children[i];
+            await updateStatus(child, status);
+          }
+        } else {
+          return;
+        }
+      }
+    },
+    [findParentPath, treeData]
+  );
+
+  const stopWorking = async (record: TreeNode) => {
+    try {
+      setLoading(true);
+      await updateStatus(record, 0);
+      message.success("Dừng hoạt động danh mục thành công");
+      await getDocumentCategories();
+      setLoading(false);
+    } catch (e) {
+      message.success("Có lỗi xảy ra khi dừng hoạt động danh mục");
+      console.log(e);
+      setLoading(false);
+    }
+  };
+
+  const startWorking = async (record: TreeNode) => {
+    try {
+      setLoading(true);
+      await updateStatus(record, 1);
+      message.success("Bật hoạt động danh mục thành công");
+      await getDocumentCategories();
+      setLoading(false);
+    } catch (e) {
+      message.success("Có lỗi xảy ra khi bật hoạt động danh mục");
+      console.log(e);
+      setLoading(false);
+    }
+  };
 
   const columns: ColumnsType<TreeNode> = [
     {
       title: "Tên danh mục",
-      width: 250,
+      width: 200,
       render: (record) => (
         <span
-          className="cursor-pointer"
+          className={record.item.parent_category_id ? "cursor-pointer" : ""}
           onClick={() => {
-            documentCategoryFormRef.current?.show(record.item);
+            if (record.item.parent_category_id) {
+              documentCategoryFormRef.current?.show(record.item);
+            }
           }}
         >
           {record.item.name}
@@ -47,14 +169,14 @@ const DocumentCategories = () => {
       ),
     },
     {
-      title: "Mã",
-      width: 80,
-      render: (record) => <span>{record.item.code}</span>,
+      title: "Mô tả",
+      width: 100,
+      render: (record) => <span>{record.item.description}</span>,
     },
     {
       title: "Ngày tạo",
       width: 50,
-      render: (record) => dayjs(record.item.created).format("DD/MM/YYYY"),
+      render: (record) => dayjs(record.item.createdAt).format("DD/MM/YYYY"),
     },
     {
       title: "Trạng thái",
@@ -63,7 +185,7 @@ const DocumentCategories = () => {
         record.item.status ? (
           <Tag color="green">Active</Tag>
         ) : (
-          <Tag color="default">Inactive</Tag>
+          <Tag color="error">Inactive</Tag>
         ),
     },
     {
@@ -72,26 +194,76 @@ const DocumentCategories = () => {
       width: 50,
       render: (record) => (
         <div className="flex gap-2">
-          <Button
-            className="!px-[10px]"
-            variant="outlined"
-            color={record.item.status ? "red" : "green"}
-          >
-            <Tooltip
-              title={record.item.status ? "Dừng hoạt động" : "Bật hoạt động"}
+          {!!record.item.parent_category_id && (
+            <Button
+              className="!px-[10px]"
+              variant="outlined"
+              color={record.item.status ? "red" : "green"}
+              onClick={async () => {
+                if (record.item.status) {
+                  await stopWorking(record);
+                } else {
+                  await startWorking(record);
+                }
+              }}
             >
-              {record.item.status ? (
-                <CloseCircleOutlined />
-              ) : (
-                <CheckCircleOutlined />
-              )}
-            </Tooltip>
-          </Button>
-          <Button className="!px-[10px]" variant="outlined" color="red">
-            <Tooltip title="Xoá danh mục">
-              <DeleteOutlined />
-            </Tooltip>
-          </Button>
+              <Tooltip
+                title={record.item.status ? "Dừng hoạt động" : "Bật hoạt động"}
+              >
+                {record.item.status ? (
+                  <CloseCircleOutlined />
+                ) : (
+                  <CheckCircleOutlined />
+                )}
+              </Tooltip>
+            </Button>
+          )}
+          {!!record.item.parent_category_id && (
+            <Button
+              className="!px-[10px]"
+              variant="outlined"
+              color="red"
+              onClick={async () => {
+                if (record.children && record.children.length) {
+                  message.error(
+                    "Không thể xoá danh mục này do vẫn còn danh mục con"
+                  );
+                } else {
+                  modal.confirm({
+                    title: MEASSAGE.CONFIRM_DELETE,
+                    okText: MEASSAGE.OK,
+                    cancelText: MEASSAGE.NO,
+                    onOk: async () => {
+                      try {
+                        try {
+                          setLoading(true);
+                          await documentCategoriesService.deleteCategory(
+                            record.item.id_category.toString()
+                          );
+                          message.success("Xoá danh mục thành công");
+                          await getDocumentCategories();
+                          setLoading(false);
+                        } catch (e) {
+                          message.error(
+                            "Có lỗi xảy ra trong quá trình xoá danh mục"
+                          );
+                          console.log(e);
+                        }
+                      } catch (error) {
+                        console.log(error);
+                        message.error(MEASSAGE.ERROR, 3);
+                      }
+                    },
+                    onCancel() {},
+                  });
+                }
+              }}
+            >
+              <Tooltip title="Xoá danh mục">
+                <DeleteOutlined />
+              </Tooltip>
+            </Button>
+          )}
         </div>
       ),
     },
@@ -143,6 +315,8 @@ const DocumentCategories = () => {
             expandable={{
               rowExpandable: (record) =>
                 Array.isArray(record.children) && record.children.length > 0,
+              expandedRowKeys: expandedKeys,
+              onExpandedRowsChange: (keys) => setExpandedKeys(keys as string[]),
             }}
             scroll={
               window.innerWidth < 768
@@ -177,8 +351,9 @@ const DocumentCategories = () => {
 
       <DocumentCategoryForm
         ref={documentCategoryFormRef}
-        resetData={() => {
-          console.log("Reset");
+        treeDataCategories={treeData}
+        resetData={async () => {
+          await getDocumentCategories();
         }}
       />
     </PageContainer>

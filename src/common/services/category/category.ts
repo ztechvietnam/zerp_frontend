@@ -1,3 +1,5 @@
+import { DocumentCategoriesEntity } from "../document-categories/documentCategories";
+
 export interface CategoryEntity {
   id: string;
   name: string;
@@ -8,7 +10,9 @@ export interface CategoryEntity {
 }
 
 export interface TreeNode {
-  item: CategoryEntity;
+  title: string;
+  value: string;
+  item: DocumentCategoriesEntity;
   key: string;
   children?: TreeNode[];
 }

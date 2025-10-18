@@ -18,14 +18,22 @@ import {
   UploadProps,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
-import React, { forwardRef, useImperativeHandle, useState } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useState,
+} from "react";
 import { MEASSAGE } from "../../components/constant/constant";
 import { compact, pick } from "lodash";
 import { DocumentEntity } from "../../common/services/document/document";
-import { UploadOutlined } from "@ant-design/icons";
+import { InboxOutlined, PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import { TreeSelectNode } from "./DocumentsManagement";
 import { DepartmentTreeNode } from "../../common/services/department/department";
 import "./documentsManagement.css";
+import { ServiceBase } from "../../common/services/servicebase";
+import { fileService } from "../../common/services/document/fileService";
+import Dragger from "antd/es/upload/Dragger";
 
 export interface DocumentFormRef {
   show(currentItem?: DocumentEntity): Promise<void>;
@@ -47,6 +55,16 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     >(undefined);
     const { message } = App.useApp();
     const [form] = useForm();
+    const [formAttachs, setFormAttachs] = useState([
+      { id: 1, title: "", fileList: [] as any[] },
+    ]);
+
+    const handleAddFormAttach = () => {
+      setFormAttachs((prev) => [
+        ...prev,
+        { id: Date.now(), title: "", fileList: [] },
+      ]);
+    };
 
     useImperativeHandle(
       ref,
@@ -77,10 +95,27 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     );
 
     const onOK = async (valueForm: any) => {
-      console.log(valueForm);
-      message.success(
-        currentDocument ? "Chỉnh sửa thành công" : "Thêm mới thành công"
-      );
+      const fileList = valueForm.file;
+      if (!fileList || fileList.length === 0) {
+        message.warning("Vui lòng chọn file trước khi lưu");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileList.fileList[0].originFileObj);
+
+      try {
+        const res = await fileService.uploadFile(formData);
+        message.success("Upload thành công!");
+        console.log("Kết quả upload:", res.data);
+      } catch (err) {
+        console.error(err);
+        message.error("Upload thất bại!");
+      }
+
+      // message.success(
+      //   currentDocument ? "Chỉnh sửa thành công" : "Thêm mới thành công"
+      // );
       if (resetData) {
         resetData();
       }
@@ -130,19 +165,96 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     ];
 
     const uploadProps: UploadProps = {
-      beforeUpload: (file) => {
-        const isAllowed = allowedTypes.includes(file.type);
-        if (!isAllowed) {
-          message.error(
-            `${file.name} không đúng định dạng (chỉ tải lên PDF, Word, Excel)`
-          );
+      maxCount: 1,
+      accept: ".pdf,.doc,.docx,.xls,.xlsx",
+      beforeUpload: (file: File) => {
+        if (!allowedTypes.includes(file.type)) {
+          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
+          return Upload.LIST_IGNORE;
         }
-        return isAllowed || Upload.LIST_IGNORE;
-      },
-      onChange: (info) => {
-        console.log(info.fileList);
+        return false;
       },
     };
+
+    const uploadMultiProps: UploadProps = {
+      multiple: true,
+      showUploadList: false,
+      onDrop(e) {
+        const droppedFiles = Array.from(e.dataTransfer.files);
+        if (!droppedFiles.length) return;
+
+        setFormAttachs((prev) => [
+          ...prev,
+          ...droppedFiles.map((f) => ({
+            id: Date.now() + Math.random(),
+            title: f.name.replace(/\.[^/.]+$/, ""),
+            fileList: [f],
+          })),
+        ]);
+
+        message.success(`Đã thêm ${droppedFiles.length} biểu mẫu`);
+      },
+    };
+
+    const collapseItems = formAttachs.map((form, index) => ({
+      key: String(form.id),
+      label: `Biểu mẫu ${index + 1}`,
+      children: (
+        <Row gutter={24}>
+          <Col xs={24} sm={24} md={24} lg={12}>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center">
+                Tiêu đề biểu mẫu {index + 1}
+              </div>
+              <Input
+                style={{ width: "100%" }}
+                placeholder="Nhập tiêu đề biểu mẫu"
+                value={form.title}
+                onChange={(e) => {
+                  const newForms = formAttachs.map((f) =>
+                    f.id === form.id ? { ...f, title: e.target.value } : f
+                  );
+                  setFormAttachs(newForms);
+                }}
+              />
+            </div>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12}>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center">
+                Tài liệu biểu mẫu {index + 1}
+              </div>
+              <Upload
+                {...uploadProps}
+                fileList={form.fileList as any}
+                onRemove={(file) => {
+                  const newForms = formAttachs.map((f) =>
+                    f.id === form.id
+                      ? {
+                          ...f,
+                          fileList: f.fileList.filter(
+                            (fl) => fl.uid !== file.uid
+                          ),
+                        }
+                      : f
+                  );
+                  setFormAttachs(newForms);
+                }}
+                beforeUpload={(file) => {
+                  const newForms = formAttachs.map((f) =>
+                    f.id === form.id ? { ...f, fileList: [file] } : f
+                  );
+                  setFormAttachs(newForms);
+                  return false;
+                }}
+              >
+                <Button icon={<UploadOutlined />}>Chọn file</Button>
+              </Upload>
+            </div>
+          </Col>
+        </Row>
+      ),
+    }));
 
     return (
       <Modal
@@ -313,109 +425,36 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             <Row gutter={24}>
               <Col xs={24} sm={24} md={24} lg={16}>
                 <Card
-                  title="Các biểu mẫu (nếu có)"
+                  title={
+                    <div className="flex justify-between items-center">
+                      <span>Các biểu mẫu (nếu có)</span>
+                      <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={handleAddFormAttach}
+                      >
+                        Thêm biểu mẫu
+                      </Button>
+                    </div>
+                  }
                   type="inner"
                   className="shadow-[0_-2px_10px_-2px_rgba(0,0,0,0.05),-2px_0_10px_-2px_rgba(0,0,0,0.05),2px_0_10px_-2px_rgba(0,0,0,0.05)] rounded-lg"
                 >
+                  <Dragger {...uploadMultiProps} style={{ marginBottom: 24 }}>
+                    <p className="ant-upload-drag-icon">
+                      <InboxOutlined />
+                    </p>
+                    <p className="ant-upload-text">
+                      Kéo thả nhiều file vào đây để tạo biểu mẫu
+                    </p>
+                    <p className="ant-upload-hint">(PDF, Word, Excel...)</p>
+                  </Dragger>
+
                   <Collapse
-                    items={[
-                      {
-                        key: "1",
-                        label: "Biểu mẫu 1",
-                        children: (
-                          <Row gutter={24}>
-                            <Col xs={24} sm={24} md={24} lg={12}>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center">
-                                  Tiêu đề biểu mẫu 1
-                                </div>
-                                <Input
-                                  style={{ width: "100%" }}
-                                  placeholder={"Nhập tiêu đề biểu mẫu 1"}
-                                />
-                              </div>
-                            </Col>
-                            <Col xs={24} sm={24} md={24} lg={12}>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center">
-                                  Tài liệu biểu mẫu 1
-                                </div>
-                                <Upload {...uploadProps}>
-                                  <Button icon={<UploadOutlined />}>
-                                    Tải tài liệu lên (PDF, Word, Excel)
-                                  </Button>
-                                </Upload>
-                              </div>
-                            </Col>
-                          </Row>
-                        ),
-                      },
-                      {
-                        key: "2",
-                        label: "Biểu mẫu 2",
-                        children: (
-                          <Row gutter={24}>
-                            <Col xs={24} sm={24} md={24} lg={12}>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center">
-                                  Tiêu đề biểu mẫu 2
-                                </div>
-                                <Input
-                                  style={{ width: "100%" }}
-                                  placeholder={"Nhập tiêu đề biểu mẫu 2"}
-                                />
-                              </div>
-                            </Col>
-                            <Col xs={24} sm={24} md={24} lg={12}>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center">
-                                  Tài liệu biểu mẫu 2
-                                </div>
-                                <Upload {...uploadProps}>
-                                  <Button icon={<UploadOutlined />}>
-                                    Tải tài liệu lên (PDF, Word, Excel)
-                                  </Button>
-                                </Upload>
-                              </div>
-                            </Col>
-                          </Row>
-                        ),
-                      },
-                      {
-                        key: "3",
-                        label: "Biểu mẫu 3",
-                        children: (
-                          <Row gutter={24}>
-                            <Col xs={24} sm={24} md={24} lg={12}>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center">
-                                  Tiêu đề biểu mẫu 3
-                                </div>
-                                <Input
-                                  style={{ width: "100%" }}
-                                  placeholder={"Nhập tiêu đề biểu mẫu 3"}
-                                />
-                              </div>
-                            </Col>
-                            <Col xs={24} sm={24} md={24} lg={12}>
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center">
-                                  Tài liệu biểu mẫu 3
-                                </div>
-                                <Upload {...uploadProps}>
-                                  <Button icon={<UploadOutlined />}>
-                                    Tải tài liệu lên (PDF, Word, Excel)
-                                  </Button>
-                                </Upload>
-                              </div>
-                            </Col>
-                          </Row>
-                        ),
-                      },
-                    ]}
+                    items={collapseItems}
                     expandIconPosition="end"
-                    defaultActiveKey={"1"}
-                    accordion
+                    defaultActiveKey={[String(formAttachs[0]?.id)]}
+                    accordion={false}
                     className="collapseTemplate"
                   />
                 </Card>
@@ -490,7 +529,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                                     </Tag>
                                     {child.users &&
                                       child.users.length > 0 &&
-                                      child.users.map((user) => {
+                                      child.users.map((user: any) => {
                                         return (
                                           <Checkbox
                                             key={user.id}
@@ -504,7 +543,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                                               )
                                             }
                                           >
-                                            {user.name}
+                                            {user?.name}
                                           </Checkbox>
                                         );
                                       })}

@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useSidebar } from "../context/SidebarContext";
 import {
   buildCategoryTree,
-  documentCategories,
   SIDE_BAR,
   SUB_SYSTEM,
 } from "../components/constant/constant";
@@ -23,6 +22,8 @@ import {
   UnlockOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { TreeNode } from "../common/services/category/category";
+import "../index.css";
 
 type NavItem = {
   name: string;
@@ -110,7 +111,14 @@ const systemAdminNavItems: NavItem[] = [
 ];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const {
+    isExpanded,
+    isMobileOpen,
+    isHovered,
+    setIsHovered,
+    listDocumentCategories,
+  } = useSidebar();
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -143,17 +151,21 @@ const AppSidebar: React.FC = () => {
     return null;
   }, [location.pathname]);
 
-  const documentLookupNavItems: NavItem[] = useMemo(() => {
-    const treeData = buildCategoryTree(documentCategories);
+  useEffect(() => {
+    const builtTree = buildCategoryTree(listDocumentCategories, true);
+    setTreeData(builtTree);
+  }, [listDocumentCategories]);
 
+  const documentLookupNavItems: NavItem[] = useMemo(() => {
     const categoryNavItems: NavItem[] = treeData.map((data) => {
       if (data.children && data.children.length) {
         return {
           icon: <HddOutlined />,
           name: data.item.name,
+          path: `${SIDE_BAR.DOCUMENT}/${data.item.id_category}`,
           subItems: data.children.map((child) => ({
             name: child.item.name,
-            path: `${SIDE_BAR.DOCUMENT}/${child.item.id}`,
+            path: `${SIDE_BAR.DOCUMENT}/${child.item.id_category}`,
             pro: false,
           })),
           subSystem: SUB_SYSTEM.LIBRARY,
@@ -162,16 +174,14 @@ const AppSidebar: React.FC = () => {
         return {
           icon: <HddOutlined />,
           name: data.item.name,
-          path: `${SIDE_BAR.DOCUMENT}/${data.item.id}`,
+          path: `${SIDE_BAR.DOCUMENT}/${data.item.id_category}`,
           subSystem: SUB_SYSTEM.LIBRARY,
         };
       }
     });
 
     return [
-      {
-        name: "Tra cứu văn bản",
-      },
+      { name: "Tra cứu văn bản" },
       ...categoryNavItems,
       {
         icon: <PlaySquareOutlined />,
@@ -180,7 +190,7 @@ const AppSidebar: React.FC = () => {
         subSystem: SUB_SYSTEM.LIBRARY,
       },
     ];
-  }, [documentCategories]);
+  }, [treeData]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -226,77 +236,77 @@ const AppSidebar: React.FC = () => {
         <ul className="flex flex-col gap-4">
           {itemRender.map((nav, index) => (
             <li key={nav.name}>
-              {nav.subItems ? (
-                <button
-                  onClick={() => handleSubmenuToggle(index, menuType)}
-                  className={`menu-item group ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
-                      ? "menu-item-active"
-                      : "menu-item-inactive"
-                  } cursor-pointer ${
-                    !isExpanded && !isHovered
-                      ? "lg:justify-center"
-                      : "lg:justify-start"
-                  }`}
-                >
-                  <span
-                    className={`menu-item-icon-size  ${
-                      openSubmenu?.type === menuType &&
-                      openSubmenu?.index === index
-                        ? "menu-item-icon-active"
-                        : "menu-item-icon-inactive"
-                    }`}
-                  >
-                    {nav.icon}
-                  </span>
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="menu-item-text">{nav.name}</span>
-                  )}
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <DownOutlined
-                      className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                        openSubmenu?.type === menuType &&
-                        openSubmenu?.index === index
-                          ? "rotate-180 text-brand-500"
-                          : ""
-                      }`}
-                    />
-                  )}
-                </button>
-              ) : (
-                nav.path && (
-                  <Link
-                    to={nav.path}
-                    className={`menu-item group ${
-                      isActive(nav.path)
-                        ? "menu-item-active"
-                        : "menu-item-inactive"
-                    }`}
-                  >
-                    <span
-                      className={`menu-item-icon-size ${
+              {nav.subItems
+                ? nav.path && (
+                    <Link
+                      to={nav.path}
+                      onClick={() => handleSubmenuToggle(index, menuType)}
+                      className={`menu-item group ${
                         isActive(nav.path)
-                          ? "menu-item-icon-active"
-                          : "menu-item-icon-inactive"
+                          ? "menu-item-active"
+                          : "menu-item-inactive"
+                      } cursor-pointer ${
+                        !isExpanded && !isHovered
+                          ? "lg:justify-center"
+                          : "lg:justify-start"
                       }`}
                     >
-                      {nav.icon}
-                    </span>
-                    {(isExpanded || isHovered || isMobileOpen) && (
                       <span
-                        className={`menu-item-text ${
-                          isActive(nav.path)
-                            ? "text-[#1677ff]"
-                            : "text-[#344054]"
+                        className={`menu-item-icon-size  ${
+                          openSubmenu?.type === menuType &&
+                          openSubmenu?.index === index
+                            ? "menu-item-icon-active"
+                            : "menu-item-icon-inactive"
                         }`}
                       >
-                        {nav.name}
+                        {nav.icon}
                       </span>
-                    )}
-                  </Link>
-                )
-              )}
+                      {(isExpanded || isHovered || isMobileOpen) && (
+                        <span className="menu-item-text">{nav.name}</span>
+                      )}
+                      {(isExpanded || isHovered || isMobileOpen) && (
+                        <DownOutlined
+                          className={`ml-auto w-5 h-5 transition-transform duration-200 ${
+                            openSubmenu?.type === menuType &&
+                            openSubmenu?.index === index
+                              ? "rotate-180 text-brand-500"
+                              : ""
+                          }`}
+                        />
+                      )}
+                    </Link>
+                  )
+                : nav.path && (
+                    <Link
+                      to={nav.path}
+                      className={`menu-item group ${
+                        isActive(nav.path)
+                          ? "menu-item-active"
+                          : "menu-item-inactive"
+                      }`}
+                    >
+                      <span
+                        className={`menu-item-icon-size ${
+                          isActive(nav.path)
+                            ? "menu-item-icon-active"
+                            : "menu-item-icon-inactive"
+                        }`}
+                      >
+                        {nav.icon}
+                      </span>
+                      {(isExpanded || isHovered || isMobileOpen) && (
+                        <span
+                          className={`menu-item-text ${
+                            isActive(nav.path)
+                              ? "text-[#1677ff]"
+                              : "text-[#344054]"
+                          }`}
+                        >
+                          {nav.name}
+                        </span>
+                      )}
+                    </Link>
+                  )}
               {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
                 <div
                   ref={(el) => {

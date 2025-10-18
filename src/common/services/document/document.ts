@@ -1,12 +1,20 @@
-import { CategoryEntity } from "../category/category";
+import { EntityBase } from "../entity-base";
 
-export interface DocumentEntity {
-  id: string;
-  name: string;
+export interface DocumentEntity extends EntityBase {
+  id_document: number;
+  title: string;
+  description: string;
+  content: string;
+  status: number;
+  order: number;
+  image: string;
+  is_featured: number;
   code: string;
-  template: string;
-  category: CategoryEntity;
-  createdBy: string;
-  created: string;
-  status: boolean;
+  file: string;
+  id_branch: number;
+  id_department: number;
+  excel: string;
+  created_id: number;
+  updated_id: number;
+  deleted_id: number;
 }
