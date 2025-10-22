@@ -3072,3 +3072,18 @@ export const contentTemplate = `
 
   <p>Với sự kiện khai trương này, Bệnh viện Đa khoa Trung ương khẳng định cam kết mang lại dịch vụ khám chữa bệnh chất lượng cao...</p>
 `;
+
+export const document_attachment = [
+  {
+    title: "Biểu mẫu 1",
+    linkFile: "Đường dẫn file 1",
+  },
+  {
+    title: "Biểu mẫu 2",
+    linkFile: "Đường dẫn file 2",
+  },
+  {
+    title: "Biểu mẫu 3",
+    linkFile: "Đường dẫn file 3",
+  },
+];

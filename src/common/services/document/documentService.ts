@@ -13,6 +13,18 @@ export class DocumentService extends ServiceBase {
       }
     );
   }
+
+  async findAndFilter(categoryIds: number[], keyword?: string): Promise<any> {
+    return this.post(
+      {
+        keyword: keyword || "",
+        categoryIds,
+      },
+      {
+        endpoint: "/findandfilter",
+      }
+    );
+  }
 }
 
 export const documentService = new DocumentService();

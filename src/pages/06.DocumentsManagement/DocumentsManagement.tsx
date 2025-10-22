@@ -24,6 +24,7 @@ import {
   dataDocuments,
   dataTemplates,
   dataUsers,
+  document_attachment,
   documentCategories,
 } from "../../components/constant/constant";
 import {
@@ -47,6 +48,8 @@ import {
 } from "../../common/services/department/department";
 import { UserEntity } from "../../common/services/user/user";
 import { documentService } from "../../common/services/document/documentService";
+import { useSidebar } from "../../context/SidebarContext";
+import { DocumentCategoriesEntity } from "../../common/services/document-categories/documentCategories";
 
 export interface TreeSelectNode {
   title: string;
@@ -70,13 +73,14 @@ const DocumentsManagement = () => {
     []
   );
   const [currentCategory, setCurrentCategory] = useState<
-    CategoryEntity | undefined
+    DocumentCategoriesEntity | undefined
   >(undefined);
   const modalPlayVideoRef = useRef<ModalPlayVideoRef>(null);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const documentFormRef = useRef<DocumentFormRef>(null);
   const [form] = useForm();
+  const { listDocumentCategories } = useSidebar();
   const { idCategory } = useParams();
 
   const buildDepartmentTree = (
@@ -153,61 +157,30 @@ const DocumentsManagement = () => {
     return tree;
   };
 
-  const buildCategoryTree = (
-    categories: CategoryEntity[]
-  ): TreeSelectNode[] => {
-    const categoryMap = new Map<string, TreeSelectNode>();
-    categories.forEach((category) => {
-      categoryMap.set(category.code, {
-        title: category.name,
-        value: category.id,
-        key: category.id,
-        children: [],
-      });
-    });
-
-    const tree: TreeSelectNode[] = [];
-    categories.forEach((category) => {
-      const node = categoryMap.get(category.code)!;
-
-      if (category.parentCode) {
-        const parentNode = categoryMap.get(category.parentCode);
-        if (parentNode) {
-          parentNode.children!.push(node);
-        } else {
-          console.warn(
-            `⚠️ Không tìm thấy parent với code: '${category.parentCode}' cho node '${category.code}'`
-          );
-          tree.push(node);
-        }
-      } else {
-        tree.push(node);
-      }
-    });
-    const cleanEmptyChildren = (nodes: TreeSelectNode[]) => {
-      nodes.forEach((node) => {
-        if (node.children && node.children.length > 0) {
-          cleanEmptyChildren(node.children);
-        } else {
-          delete node.children;
-        }
-      });
-    };
-
-    cleanEmptyChildren(tree);
-    return tree;
-  };
-
   useEffect(() => {
-    if (idCategory) {
-      const category = documentCategories.find((cate) => {
-        return cate.id === idCategory;
-      });
-      setCurrentCategory(category);
-    } else {
-      setCurrentCategory(undefined);
-    }
-  }, [idCategory]);
+    (async () => {
+      if (idCategory) {
+        const category = listDocumentCategories.find((cate) => {
+          return cate.id_category.toString() === idCategory.toString();
+        });
+        if (category) {
+          setLoading(true);
+          const results = await documentService.findAndFilter([
+            category.id_category,
+          ]);
+          if (results) {
+            setListDocuments(results);
+          } else {
+            setListDocuments([]);
+          }
+          setLoading(false);
+        }
+        setCurrentCategory(category);
+      } else {
+        setCurrentCategory(undefined);
+      }
+    })();
+  }, [idCategory, listDocumentCategories]);
 
   useEffect(() => {
     // setTreeData(buildCategoryTree(documentCategories));
@@ -247,48 +220,84 @@ const DocumentsManagement = () => {
   }, [getDocuments]);
 
   const columns: TableColumnsType<DocumentEntity> = [
-    { title: "Tên văn bản", dataIndex: "title", width: 200, fixed: "left" },
-    { title: "Mã kí hiệu", dataIndex: "code", width: 80 },
     {
-      title: "Biểu mẫu",
-      dataIndex: "template",
-      width: 80,
-      render(value: any) {
+      title: "Tên văn bản",
+      dataIndex: "title",
+      width: 200,
+      fixed: "left",
+      render(value, record) {
         return (
-          <Tag className="w-fit !whitespace-break-spaces" color="processing">
+          <span
+            className="cursor-pointer"
+            onClick={() => documentFormRef.current?.show(record)}
+          >
             {value}
-          </Tag>
+          </span>
         );
       },
     },
-    ...(currentCategory
-      ? []
-      : [
-          {
-            title: "Danh mục",
-            dataIndex: "category",
-            width: 120,
-            render(value: any) {
-              return (
-                <>
-                  {value && (
-                    <Tag
-                      className="w-fit !whitespace-break-spaces"
-                      color="processing"
-                    >
-                      {value?.name || ""}
-                    </Tag>
-                  )}
-                </>
-              );
-            },
-          },
-        ]),
-    { title: "Người tạo", dataIndex: "createdBy", width: 100 },
+    { title: "Mã kí hiệu", dataIndex: "code", width: 80 },
+    {
+      title: "Biểu mẫu",
+      dataIndex: "document_attachment",
+      width: 100,
+      render(value: any) {
+        return (
+          <div className="flex flex-col gap-1">
+            {value && value?.length ? (
+              value.map((atm: any) => (
+                <Tag
+                  className="w-fit !whitespace-break-spaces cursor-pointer !m-0"
+                  color="processing"
+                >
+                  {atm.title}
+                </Tag>
+              ))
+            ) : (
+              <></>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Danh mục",
+      dataIndex: "category_id",
+      width: 120,
+      render(value: any) {
+        return (
+          <>
+            {value &&
+              listDocumentCategories.find(
+                (cate) => cate.id_category.toString() === value.toString()
+              ) && (
+                <Tag
+                  className="w-fit !whitespace-break-spaces"
+                  color="processing"
+                >
+                  {listDocumentCategories.find(
+                    (cate) => cate.id_category.toString() === value.toString()
+                  )?.name || ""}
+                </Tag>
+              )}
+          </>
+        );
+      },
+    },
+    {
+      title: "Người tạo",
+      dataIndex: "created_by",
+      width: 100,
+      render(value) {
+        return (
+          <span>{value ? `${value.lastName} ${value.firstName}` : ""}</span>
+        );
+      },
+    },
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
-      width: 100,
+      width: 80,
       render(value) {
         return <span>{dayjs(value).format("DD/MM/YYYY")}</span>;
       },
@@ -296,7 +305,7 @@ const DocumentsManagement = () => {
     {
       title: "Trạng thái",
       dataIndex: "status",
-      width: 80,
+      width: 75,
       render(value) {
         return (
           <Tag color={value ? "success" : "error"}>
@@ -307,47 +316,20 @@ const DocumentsManagement = () => {
     },
     {
       title: "Hoạt động",
-      width: 150,
+      width: 80,
       render(record) {
         return (
-          <div className="w-full grid grid-cols-2 gap-[5px] sm:flex sm:flex-row sm:flex-nowrap">
-            <Button
-              className="!px-[10px]"
-              color="primary"
-              variant="outlined"
-              onClick={() => {
-                documentFormRef.current?.show(record);
-              }}
-            >
-              <Tooltip title="Xem chi tiết">
-                <EyeOutlined />
-              </Tooltip>
-            </Button>
-            <Button className="!px-[10px]" color="primary" variant="outlined">
-              <Tooltip title="Tải xuống">
+          <div className="w-full grid grid-cols-2 gap-[5px] flex-row flex-nowrap">
+            <Tooltip title="Tải xuống">
+              <Button className="!px-[10px]" color="primary" variant="outlined">
                 <DownloadOutlined />
-              </Tooltip>
-            </Button>
-            <Button
-              className="!px-[10px]"
-              variant="outlined"
-              color={record.status ? "red" : "green"}
-            >
-              <Tooltip
-                title={record.status ? "Dừng hoạt động" : "Bật hoạt động"}
-              >
-                {record.status ? (
-                  <CloseCircleOutlined />
-                ) : (
-                  <CheckCircleOutlined />
-                )}
-              </Tooltip>
-            </Button>
-            <Button className="!px-[10px]" variant="outlined" color="red">
-              <Tooltip title="Xoá văn bản">
+              </Button>
+            </Tooltip>
+            <Tooltip title="Xoá văn bản">
+              <Button className="!px-[10px]" variant="outlined" color="red">
                 <DeleteOutlined />
-              </Tooltip>
-            </Button>
+              </Button>
+            </Tooltip>
           </div>
         );
       },
@@ -496,6 +478,7 @@ const DocumentsManagement = () => {
           <Table
             rowKey="id"
             columns={columns}
+            loading={loading}
             dataSource={listData}
             pagination={false}
             scroll={
@@ -699,7 +682,6 @@ const DocumentsManagement = () => {
       </Drawer>
       <DocumentForm
         ref={documentFormRef}
-        treeCategory={treeData}
         treeDepartment={departmentTree}
         resetData={() => console.log("reset")}
       />

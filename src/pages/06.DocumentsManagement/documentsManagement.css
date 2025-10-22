@@ -9,3 +9,33 @@
     padding: 5px 16px !important;
   }
 }
+
+.dragger-template-document {
+  .ant-upload.ant-upload-drag {
+    border: none;
+    .ant-upload.ant-upload-btn {
+      padding: 0;
+    }
+  }
+
+  .collapseTemplate {
+    .ant-collapse-header {
+      display: flex;
+      padding: 8px 16px !important;
+      align-items: center;
+
+      .ant-collapse-header-text {
+        text-align: start;
+      }
+    }
+    .ant-upload-wrapper {
+      text-align: start;
+      .ant-upload.ant-upload-select {
+        padding: 0;
+        .ant-upload {
+          padding: 0;
+        }
+      }
+    }
+  }
+}
