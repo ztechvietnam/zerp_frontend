@@ -8,6 +8,8 @@ export interface DocumentEntity extends EntityBase {
   status: number;
   order: number;
   image: string;
+  document_attachment: { title: string; linkFile: string }[];
+  category_id: number;
   is_featured: number;
   code: string;
   file: string;
@@ -18,3 +20,4 @@ export interface DocumentEntity extends EntityBase {
   updated_id: number;
   deleted_id: number;
 }
+

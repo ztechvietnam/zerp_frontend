@@ -6,7 +6,6 @@ import {
   useCallback,
 } from "react";
 import { documentCategoriesService } from "../common/services/document-categories/documentCategoriesService";
-import { buildCategoryTree } from "../components/constant/constant";
 import { DocumentCategoriesEntity } from "../common/services/document-categories/documentCategories";
 
 type SidebarContextType = {
