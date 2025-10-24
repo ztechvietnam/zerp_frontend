@@ -1,20 +1,34 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { App, Col, Form, Input, Modal, Row, Select, Spin } from "antd";
+import {
+  App,
+  Col,
+  Form,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Spin,
+  TreeSelect,
+} from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useState,
 } from "react";
 import { dataDepartments, MEASSAGE } from "../../components/constant/constant";
 import { pick } from "lodash";
-import { DepartmentEntity } from "../../common/services/department/department";
+import {
+  DepartmentEntity,
+  DepartmentTreeNode,
+} from "../../common/services/department/department";
 
 export enum TYPE_DEP {
-  "PARENT",
-  "CHILD",
+  "PARENT" = "PARENT",
+  "CHILD" = "CHILD",
 }
 
 export interface DepartmentFormRef {
@@ -22,13 +36,14 @@ export interface DepartmentFormRef {
 }
 
 interface DepartmentFormProps {
+  treeDataDepartment: DepartmentTreeNode[];
   resetData: () => void;
 }
 
 export const DepartmentForm = forwardRef<
   DepartmentFormRef,
   DepartmentFormProps
->(({ resetData }, ref) => {
+>(({ treeDataDepartment, resetData }, ref) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [typeDep, setTypeDep] = useState<TYPE_DEP>(TYPE_DEP.PARENT);
@@ -38,6 +53,7 @@ export const DepartmentForm = forwardRef<
   const [parentDepartments, setParrentDepartments] = useState<
     DepartmentEntity[]
   >([]);
+  const [treeData, setTreeData] = useState<DepartmentTreeNode[]>([]);
   const { message } = App.useApp();
   const [form] = useForm();
 
@@ -50,14 +66,22 @@ export const DepartmentForm = forwardRef<
         setTypeDep(type);
         if (currentItem) {
           setCurrentCategory(currentItem);
-          const formControlValues = pick(currentItem, [
-            "name",
-            "code",
-            "address",
-          ]);
+          const formControlValues = pick(currentItem, ["name", "address"]);
           setTimeout(() => {
             form.setFieldsValue(formControlValues);
-            form.setFieldValue("parentCode", currentItem.parentCode);
+            form.setFieldValue("code", currentItem.department_code);
+            if (currentItem.branch_id) {
+              form.setFieldValue(
+                "parent_department_id",
+                `branch-${currentItem.branch_id}`
+              );
+            }
+            if (currentItem.parent_department_id) {
+              form.setFieldValue(
+                "parent_department_id",
+                `department-${currentItem.parent_department_id}`
+              );
+            }
           }, 0);
         }
         setLoading(false);
@@ -66,10 +90,32 @@ export const DepartmentForm = forwardRef<
     []
   );
 
+  const removeNodeById = useCallback(
+    (nodes: DepartmentTreeNode[], currentId: string): DepartmentTreeNode[] => {
+      return nodes
+        .filter((node) => node.value !== currentId)
+        .map((node) => ({
+          ...node,
+          children: node.children
+            ? removeNodeById(node.children, currentId)
+            : undefined,
+        }));
+    },
+    []
+  );
+
   useEffect(() => {
-    const department = dataDepartments.filter((dep) => !dep.parentCode);
-    setParrentDepartments(department);
-  }, []);
+    if (currentCategory) {
+      setTreeData(
+        removeNodeById(
+          treeDataDepartment,
+          `department-${currentCategory?.id_department.toString()}`
+        )
+      );
+    } else {
+      setTreeData(treeDataDepartment);
+    }
+  }, [treeDataDepartment, currentCategory, removeNodeById]);
 
   const onOK = async (valueForm: any) => {
     console.log(valueForm);
@@ -203,25 +249,39 @@ export const DepartmentForm = forwardRef<
           )}
           {typeDep === TYPE_DEP.CHILD &&
             (!currentCategory ||
-              (currentCategory && currentCategory?.parentCode)) && (
+              (currentCategory &&
+                (currentCategory?.branch_id ||
+                  currentCategory?.parent_department_id))) && (
               <Row gutter={24}>
                 <Col span={24}>
                   <Form.Item
                     labelCol={{ span: 24 }}
                     wrapperCol={{ span: 24 }}
-                    label="Chọn đơn vị"
-                    name="parentCode"
+                    label="Đơn vị/phòng ban cha"
+                    name="parent_department_id"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường yêu cầu nhập!",
+                      },
+                    ]}
                   >
-                    <Select
-                      placeholder="Chọn đơn vị"
-                      allowClear
-                      style={{ width: "100%" }}
-                      options={parentDepartments.map((cate) => {
-                        return {
-                          label: cate.name,
-                          value: cate.code,
-                        };
-                      })}
+                    <TreeSelect
+                      treeData={treeData}
+                      showSearch
+                      placeholder="Chọn danh mục cha"
+                      styles={{
+                        popup: { root: { maxHeight: 400, overflow: "auto" } },
+                      }}
+                      filterTreeNode={(inputValue: string, treeNode: any) => {
+                        const title =
+                          typeof treeNode.title === "string"
+                            ? treeNode.title
+                            : "";
+                        return title
+                          .toLocaleLowerCase()
+                          .includes(inputValue?.trim().toLocaleLowerCase());
+                      }}
                     />
                   </Form.Item>
                 </Col>
