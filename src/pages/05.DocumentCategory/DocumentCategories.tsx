@@ -193,7 +193,7 @@ const DocumentCategories = () => {
       key: "actions",
       width: 50,
       render: (record) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 min-h-8">
           {!!record.item.parent_category_id && (
             <Button
               className="!px-[10px]"
@@ -304,7 +304,7 @@ const DocumentCategories = () => {
       }
     >
       <div className="flex gap-[10px] w-full h-[calc(100%-61.2px)] bg-[#fff] rounded-[8px]">
-        <div ref={tableRef} className="flex h-full">
+        <div ref={tableRef} className="flex h-full w-full">
           <Table
             loading={loading}
             bordered={false}

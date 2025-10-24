@@ -6,4 +6,6 @@ export interface EntityBase {
   updatedAt: Date;
 
   deletedAt: Date;
+
+  created_id: number;
 }

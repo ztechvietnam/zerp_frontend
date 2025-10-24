@@ -3,7 +3,6 @@ import {
   App,
   Button,
   Card,
-  Checkbox,
   Col,
   Collapse,
   Form,
@@ -12,7 +11,6 @@ import {
   Row,
   Spin,
   Switch,
-  Tag,
   Tooltip,
   TreeSelect,
   Upload,
@@ -29,14 +27,14 @@ import {
   buildCategoryTree,
   MEASSAGE,
 } from "../../components/constant/constant";
-import { compact, last, pick } from "lodash";
+import { last, pick } from "lodash";
 import { DocumentEntity } from "../../common/services/document/document";
 import {
   DeleteOutlined,
   PlusOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import { DepartmentTreeNode } from "../../common/services/department/department";
+import { RoleTreeNode } from "../../common/services/department/department";
 import "./documentsManagement.css";
 import { fileService } from "../../common/services/document/fileService";
 import Dragger from "antd/es/upload/Dragger";
@@ -49,18 +47,18 @@ import {
   iconPp,
   iconWord,
 } from "../../components/IconSvg/iconSvg";
+import { branchesService } from "../../common/services/department/branches-service";
 
 export interface DocumentFormRef {
   show(currentItem?: DocumentEntity): Promise<void>;
 }
 
 interface DocumentFormProps {
-  treeDepartment: DepartmentTreeNode[];
   resetData: () => void;
 }
 
 export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
-  ({ treeDepartment, resetData }, ref) => {
+  ({ resetData }, ref) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -74,6 +72,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const [formAttachs, setFormAttachs] = useState([
       { title: "", linkFile: "", fileList: [] as any[] },
     ]);
+    const [treeDepartment, setTreeDepartment] = useState<RoleTreeNode[]>([]);
     const { listDocumentCategories } = useSidebar();
 
     const handleAddFormAttach = () => {
@@ -83,9 +82,57 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       ]);
     };
 
+    const buildDepartmentTreeData = (branches: any[]): RoleTreeNode[] => {
+      if (!Array.isArray(branches)) return [];
+      return branches.map((branch) => {
+        const branchNode: RoleTreeNode = {
+          title: branch.name,
+          value: `branch-${branch.id_branch}`,
+          key: `branch-${branch.id_branch}`,
+          selectable: false,
+          children: [],
+        };
+        if (
+          Array.isArray(branch.departments) &&
+          branch.departments.length > 0
+        ) {
+          branchNode.children = branch.departments.map((dep) => {
+            const departmentNode: RoleTreeNode = {
+              title: dep.name,
+              value: `department-${dep.id_department}`,
+              key: `department-${dep.id_department}`,
+              selectable: false,
+              children: [],
+            };
+            if (Array.isArray(dep.users) && dep.users.length > 0) {
+              departmentNode.children = dep.users.map((user) => ({
+                title: `${user.lastName?.trim() || ""}${
+                  user.firstName ? " " + user.firstName : ""
+                }`.trim(),
+                value: `user-${user.id}`,
+                key: `user-${user.id}`,
+                isLeaf: true,
+                selectable: true,
+              }));
+            }
+            return departmentNode;
+          });
+        }
+        return branchNode;
+      });
+    };
+
+    useEffect(() => {
+      (async () => {
+        const dataDepartment = await branchesService.findAllWithRelations();
+        const treeData = buildDepartmentTreeData(dataDepartment.data);
+        setTreeDepartment(treeData);
+      })();
+    }, []);
+
     useEffect(() => {
       setLoading(true);
-      const treeCate = buildCategoryTree(listDocumentCategories, 1);
+      const treeCate = buildCategoryTree(listDocumentCategories, true);
       setTreeData(treeCate);
       setLoading(false);
     }, [listDocumentCategories]);
@@ -337,7 +384,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       children: (
         <Row gutter={24}>
           <Col xs={24} sm={24} md={24} lg={12}>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-[2px]">
               <div className="flex items-center">
                 Tiêu đề biểu mẫu {index + 1}
               </div>
@@ -355,7 +402,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             </div>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12}>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-[2px]">
               <div className="flex items-center">
                 Tài liệu biểu mẫu {index + 1}
               </div>
@@ -605,7 +652,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
               </Col>
             </Row>
             <Row gutter={24}>
-              <Col xs={24} sm={24} md={24} lg={16}>
+              <Col xs={24} sm={24} md={24} lg={24}>
                 <Dragger
                   {...uploadMultiProps}
                   className="dragger-template-document"
@@ -639,137 +686,26 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   </Card>
                 </Dragger>
               </Col>
-              <Col xs={24} sm={24} md={24} lg={8}>
+              <Col xs={24} sm={24} md={24} lg={24} className="mt-[24px]">
                 <Card
                   title="Phân quyền văn bản"
                   className="!mt-[10px] lg:!mt-0 shadow-[0_-2px_10px_-2px_rgba(0,0,0,0.05),-2px_0_10px_-2px_rgba(0,0,0,0.05),2px_0_10px_-2px_rgba(0,0,0,0.05)] rounded-lg"
                   type="inner"
-                  extra={
-                    <Checkbox
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          const allUserIds = treeDepartment
-                            .flatMap((node) =>
-                              node.children?.flatMap(
-                                (child) => child.users?.map((u) => u.id) || []
-                              )
-                            )
-                            .filter(Boolean);
-                          setSelectedUserIds(compact(allUserIds));
-                        } else {
-                          setSelectedUserIds([]);
-                        }
-                      }}
-                      checked={treeDepartment
-                        .flatMap((node) =>
-                          node.children?.flatMap(
-                            (child) => child.users?.map((u) => u.id) || []
-                          )
-                        )
-                        .filter(Boolean)
-                        .every((u: any) => selectedUserIds.includes(u))}
-                    >
-                      Tất cả
-                    </Checkbox>
-                  }
                 >
-                  <Collapse
-                    items={treeDepartment?.map((node, index) => {
-                      return {
-                        key: index.toString(),
-                        label: node.item.name,
-                        children: (
-                          <div className="flex flex-col justify-start">
-                            {node.children &&
-                              node.children.length &&
-                              node.children.map((child) => {
-                                return (
-                                  <div className="flex flex-col">
-                                    <Tag
-                                      color="#108ee9"
-                                      style={{
-                                        fontSize: "14px",
-                                        fontWeight: 500,
-                                        padding: "2px 5px",
-                                        margin: "5px 0",
-                                        cursor: "pointer",
-                                      }}
-                                      onClick={() => {
-                                        const allSelectedInChild =
-                                          child.users?.every((u) =>
-                                            selectedUserIds.includes(u.id)
-                                          );
-                                        handleSelectAllInChild(
-                                          child,
-                                          !allSelectedInChild
-                                        );
-                                      }}
-                                    >
-                                      {child.item.name}
-                                    </Tag>
-                                    {child.users &&
-                                      child.users.length > 0 &&
-                                      child.users.map((user: any) => {
-                                        return (
-                                          <Checkbox
-                                            key={user.id}
-                                            checked={selectedUserIds.includes(
-                                              user.id
-                                            )}
-                                            onChange={(e) =>
-                                              handleCheckboxChange(
-                                                user.id,
-                                                e.target.checked
-                                              )
-                                            }
-                                          >
-                                            {user?.name}
-                                          </Checkbox>
-                                        );
-                                      })}
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        ),
-                        extra: (
-                          <Checkbox
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              const allUserIdsInNode =
-                                node.children
-                                  ?.flatMap(
-                                    (child) =>
-                                      child.users?.map((u) => u.id) || []
-                                  )
-                                  .filter(Boolean) || [];
-                              if (checked) {
-                                setSelectedUserIds((prev) =>
-                                  compact([...prev, ...allUserIdsInNode])
-                                );
-                              } else {
-                                setSelectedUserIds((prev) =>
-                                  prev.filter(
-                                    (id) => !allUserIdsInNode.includes(id)
-                                  )
-                                );
-                              }
-                            }}
-                            checked={
-                              node.children?.every((child) =>
-                                child.users?.every((u) =>
-                                  selectedUserIds.includes(u.id)
-                                )
-                              ) || false
-                            }
-                            title="Cả công ty"
-                          />
-                        ),
-                      };
-                    })}
-                    expandIconPosition="start"
-                    className="collapseTemplate"
+                  <TreeSelect
+                    treeData={treeDepartment}
+                    value={selectedUserIds}
+                    onChange={(values) => {
+                      console.log(values);
+                      setSelectedUserIds(values);
+                    }}
+                    treeCheckable
+                    showCheckedStrategy={TreeSelect.SHOW_PARENT}
+                    placeholder="Chọn người dùng được phép truy cập"
+                    allowClear
+                    style={{ width: "100%" }}
+                    treeDefaultExpandAll
+                    maxTagCount="responsive"
                   />
                 </Card>
               </Col>

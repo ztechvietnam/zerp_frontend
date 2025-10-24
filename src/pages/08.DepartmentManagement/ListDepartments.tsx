@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import { Breadcrumb, Button, Table, Tag, Tooltip } from "antd";
 import { DepartmentForm, DepartmentFormRef, TYPE_DEP } from "./DepartmentForm";
-import { dataDepartments } from "../../components/constant/constant";
 import { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import {
@@ -13,78 +12,113 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import {
+  BranchEntity,
   DepartmentEntity,
   DepartmentTreeNode,
 } from "../../common/services/department/department";
+import { departmentService } from "../../common/services/department/department-service";
+import { branchesService } from "../../common/services/department/branches-service";
 
 const ListDepartments = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [treeData, setTreeData] = useState<DepartmentTreeNode[]>([]);
   const pageContainerRef = useRef<HTMLDivElement>(null);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const departmentFormRef = useRef<DepartmentFormRef>(null);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const buildDepartmentTree = (
+    branches: BranchEntity[],
     departments: DepartmentEntity[]
   ): DepartmentTreeNode[] => {
-    const categoryMap = new Map<string, DepartmentTreeNode>();
-    departments.forEach((department) => {
-      categoryMap.set(department.code, {
-        item: department,
-        key: department.code,
+    if (!Array.isArray(branches) || !Array.isArray(departments)) return [];
+
+    const branchMap = new Map<number, DepartmentTreeNode>();
+    const depMap = new Map<number, DepartmentTreeNode>();
+
+    branches.forEach((branch) => {
+      branchMap.set(branch.id_branch, {
+        title: branch.name,
+        item: branch,
+        value: `branch-${branch.id_branch}`,
+        key: `branch-${branch.id_branch}`,
         children: [],
       });
     });
 
-    const tree: DepartmentTreeNode[] = [];
-    departments.forEach((department) => {
-      const node = categoryMap.get(department.code)!;
+    departments.forEach((dep) => {
+      depMap.set(dep.id_department, {
+        title: dep.name,
+        item: dep,
+        value: `department-${dep.id_department}`,
+        key: `department-${dep.id_department}`,
+        children: [],
+      });
+    });
 
-      if (department.parentCode) {
-        const parentNode = categoryMap.get(department.parentCode);
+    departments.forEach((dep) => {
+      const node = depMap.get(dep.id_department)!;
+      if (dep.parent_department_id) {
+        const parentNode = depMap.get(dep.parent_department_id);
         if (parentNode) {
           parentNode.children!.push(node);
         } else {
-          console.warn(
-            `⚠️ Không tìm thấy parent với code: '${department.parentCode}' cho node '${department.code}'`
-          );
-          tree.push(node);
+          const branchNode = branchMap.get(dep.branch_id);
+          branchNode?.children?.push(node);
         }
       } else {
-        tree.push(node);
+        const branchNode = branchMap.get(dep.branch_id);
+        branchNode?.children?.push(node);
       }
     });
-    const cleanEmptyChildren = (nodes: DepartmentTreeNode[]) => {
+
+    const cleanChildren = (nodes: DepartmentTreeNode[]) => {
       nodes.forEach((node) => {
-        if (node.children && node.children.length > 0) {
-          cleanEmptyChildren(node.children);
-        } else {
-          delete node.children;
-        }
+        if (node.children && node.children.length > 0)
+          cleanChildren(node.children);
+        else delete node.children;
       });
     };
 
-    cleanEmptyChildren(tree);
-    return tree;
+    const treeData = Array.from(branchMap.values());
+    cleanChildren(treeData);
+
+    return treeData;
   };
 
   useEffect(() => {
-    setLoading(true);
-    const treeCate = buildDepartmentTree(dataDepartments);
-    setTreeData(treeCate);
-    setLoading(false);
+    (async () => {
+      setLoading(true);
+      const departments = await departmentService.get({
+        params: {
+          limit: 100,
+        },
+      });
+      const branches = await branchesService.get({
+        params: {
+          limit: 100,
+        },
+      });
+      const treeDep = buildDepartmentTree(branches.data, departments.data);
+      setExpandedKeys(treeDep.map((item) => item.key));
+      setTreeData(treeDep);
+      setLoading(false);
+    })();
   }, []);
 
   const columns: ColumnsType<DepartmentTreeNode> = [
     {
       title: "Tên đơn vị",
-      width: 200,
+      width: 150,
       render: (record) => (
         <span
-          className="cursor-pointer"
+          className={record.item.is_system ? "cursor-default" : "cursor-pointer"}
           onClick={() => {
+            if (record.item.is_system) return;
             departmentFormRef.current?.show(
-              record.children && record.children.length ? TYPE_DEP.PARENT : TYPE_DEP.CHILD,
+              record.children && record.children.length
+                ? TYPE_DEP.PARENT
+                : TYPE_DEP.CHILD,
               record.item
             );
           }}
@@ -95,12 +129,14 @@ const ListDepartments = () => {
     },
     {
       title: "Mã đơn vị",
-      width: 80,
-      render: (record) => <span>{record.item.code}</span>,
+      width: 50,
+      render: (record) => (
+        <span>{record.item.branch_code || record.item.department_code}</span>
+      ),
     },
     {
       title: "Địa chỉ",
-      width: 100,
+      width: 80,
       render: (record) => <span>{record.item.address}</span>,
     },
     {
@@ -123,27 +159,31 @@ const ListDepartments = () => {
       key: "actions",
       width: 50,
       render: (record) => (
-        <div className="flex gap-2">
-          <Button
-            className="!px-[10px]"
-            variant="outlined"
-            color={record.item.status ? "red" : "green"}
-          >
-            <Tooltip
-              title={record.item.status ? "Dừng hoạt động" : "Bật hoạt động"}
+        <div className="flex gap-2 min-h-8">
+          {record.item.is_system ? null : (
+            <Button
+              className="!px-[10px]"
+              variant="outlined"
+              color={record.item.status ? "red" : "green"}
             >
-              {record.item.status ? (
-                <CloseCircleOutlined />
-              ) : (
-                <CheckCircleOutlined />
-              )}
-            </Tooltip>
-          </Button>
-          <Button className="!px-[10px]" variant="outlined" color="red">
-            <Tooltip title="Xoá danh mục">
-              <DeleteOutlined />
-            </Tooltip>
-          </Button>
+              <Tooltip
+                title={record.item.status ? "Dừng hoạt động" : "Bật hoạt động"}
+              >
+                {record.item.status ? (
+                  <CloseCircleOutlined />
+                ) : (
+                  <CheckCircleOutlined />
+                )}
+              </Tooltip>
+            </Button>
+          )}
+          {record.item.is_system ? null : (
+            <Button className="!px-[10px]" variant="outlined" color="red">
+              <Tooltip title="Xoá danh mục">
+                <DeleteOutlined />
+              </Tooltip>
+            </Button>
+          )}
         </div>
       ),
     },
@@ -192,7 +232,7 @@ const ListDepartments = () => {
       }
     >
       <div className="flex gap-[10px] w-full h-[calc(100%-61.2px)] bg-[#fff] rounded-[8px]">
-        <div ref={tableRef} className="flex h-full">
+        <div ref={tableRef} className="flex h-full w-full">
           <Table
             loading={loading}
             bordered={false}
@@ -203,6 +243,8 @@ const ListDepartments = () => {
             expandable={{
               rowExpandable: (record) =>
                 Array.isArray(record.children) && record.children.length > 0,
+              expandedRowKeys: expandedKeys,
+              onExpandedRowsChange: (keys) => setExpandedKeys(keys as string[]),
             }}
             scroll={
               window.innerWidth < 768
@@ -237,6 +279,7 @@ const ListDepartments = () => {
 
       <DepartmentForm
         ref={departmentFormRef}
+        treeDataDepartment={treeData}
         resetData={() => {
           console.log("Reset");
         }}
