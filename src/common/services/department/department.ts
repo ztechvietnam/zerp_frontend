@@ -33,5 +33,6 @@ export interface DepartmentTreeNode {
   value: string;
   item: DepartmentEntity | BranchEntity;
   key: string;
+  selectable?: boolean;
   children?: DepartmentTreeNode[];
 }

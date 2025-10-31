@@ -1,16 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  App,
-  Col,
-  Form,
-  Input,
-  Modal,
-  Row,
-  Select,
-  Spin,
-  TreeSelect,
-} from "antd";
+import { App, Col, Form, Input, Modal, Row, Spin, TreeSelect } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, {
   forwardRef,
@@ -19,20 +9,26 @@ import React, {
   useImperativeHandle,
   useState,
 } from "react";
-import { dataDepartments, MEASSAGE } from "../../components/constant/constant";
+import { MEASSAGE } from "../../components/constant/constant";
 import { pick } from "lodash";
 import {
+  BranchEntity,
   DepartmentEntity,
   DepartmentTreeNode,
 } from "../../common/services/department/department";
+import { departmentService } from "../../common/services/department/department-service";
+import { branchesService } from "../../common/services/department/branches-service";
 
 export enum TYPE_DEP {
-  "PARENT" = "PARENT",
-  "CHILD" = "CHILD",
+  "BRANCH" = "BRANCH",
+  "DEPARTMENT" = "DEPARTMENT",
 }
 
 export interface DepartmentFormRef {
-  show(type: TYPE_DEP, currentItem?: DepartmentEntity): Promise<void>;
+  show(
+    type: TYPE_DEP,
+    currentItem?: DepartmentEntity | BranchEntity
+  ): Promise<void>;
 }
 
 interface DepartmentFormProps {
@@ -46,13 +42,10 @@ export const DepartmentForm = forwardRef<
 >(({ treeDataDepartment, resetData }, ref) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [typeDep, setTypeDep] = useState<TYPE_DEP>(TYPE_DEP.PARENT);
-  const [currentCategory, setCurrentCategory] = useState<
-    DepartmentEntity | undefined
+  const [typeDep, setTypeDep] = useState<TYPE_DEP>(TYPE_DEP.BRANCH);
+  const [currentItem, setCurrentItem] = useState<
+    DepartmentEntity | BranchEntity | undefined
   >(undefined);
-  const [parentDepartments, setParrentDepartments] = useState<
-    DepartmentEntity[]
-  >([]);
   const [treeData, setTreeData] = useState<DepartmentTreeNode[]>([]);
   const { message } = App.useApp();
   const [form] = useForm();
@@ -60,26 +53,42 @@ export const DepartmentForm = forwardRef<
   useImperativeHandle(
     ref,
     () => ({
-      show: async (type: TYPE_DEP, currentItem?: DepartmentEntity) => {
+      show: async (
+        type: TYPE_DEP,
+        currentItem?: DepartmentEntity | BranchEntity
+      ) => {
         setLoading(true);
         setShowModal(true);
         setTypeDep(type);
         if (currentItem) {
-          setCurrentCategory(currentItem);
+          setCurrentItem(currentItem);
           const formControlValues = pick(currentItem, ["name", "address"]);
           setTimeout(() => {
             form.setFieldsValue(formControlValues);
-            form.setFieldValue("code", currentItem.department_code);
-            if (currentItem.branch_id) {
+            if ((currentItem as DepartmentEntity)?.department_code) {
               form.setFieldValue(
-                "parent_department_id",
-                `branch-${currentItem.branch_id}`
+                "code",
+                (currentItem as DepartmentEntity)?.department_code
               );
             }
-            if (currentItem.parent_department_id) {
+            if ((currentItem as BranchEntity)?.branch_code) {
+              form.setFieldValue(
+                "code",
+                (currentItem as BranchEntity)?.branch_code
+              );
+            }
+            if ((currentItem as DepartmentEntity)?.branch_id) {
               form.setFieldValue(
                 "parent_department_id",
-                `department-${currentItem.parent_department_id}`
+                `branch-${(currentItem as DepartmentEntity).branch_id}`
+              );
+            }
+            if ((currentItem as DepartmentEntity)?.parent_department_id) {
+              form.setFieldValue(
+                "parent_department_id",
+                `department-${
+                  (currentItem as DepartmentEntity).parent_department_id
+                }`
               );
             }
           }, 0);
@@ -105,42 +114,159 @@ export const DepartmentForm = forwardRef<
   );
 
   useEffect(() => {
-    if (currentCategory) {
-      setTreeData(
-        removeNodeById(
-          treeDataDepartment,
-          `department-${currentCategory?.id_department.toString()}`
-        )
-      );
-    } else {
-      setTreeData(treeDataDepartment);
+    if (typeDep === TYPE_DEP.DEPARTMENT) {
+      if (currentItem) {
+        setTreeData(
+          removeNodeById(
+            treeDataDepartment,
+            `department-${(
+              currentItem as DepartmentEntity
+            )?.id_department.toString()}`
+          )
+        );
+      } else {
+        setTreeData(treeDataDepartment);
+      }
     }
-  }, [treeDataDepartment, currentCategory, removeNodeById]);
+  }, [treeDataDepartment, currentItem, removeNodeById, typeDep]);
+
+  const findBranchByDepartmentId = useCallback(
+    (departmentId: number): BranchEntity | null => {
+      for (const branchNode of treeDataDepartment) {
+        if (!branchNode.children) continue;
+
+        const stack = [...branchNode.children];
+
+        while (stack.length > 0) {
+          const node = stack.pop()!;
+          const dep = node.item as DepartmentEntity;
+
+          if (dep.id_department === departmentId) {
+            return branchNode.item as BranchEntity;
+          }
+
+          if (node.children) {
+            stack.push(...node.children);
+          }
+        }
+      }
+
+      return null;
+    },
+    [treeDataDepartment]
+  );
 
   const onOK = async (valueForm: any) => {
-    console.log(valueForm);
-    message.success(
-      currentCategory ? "Chỉnh sửa thành công" : "Thêm mới thành công"
-    );
-    if (resetData) {
-      resetData();
+    try {
+      setLoading(true);
+      if (currentItem) {
+        if (typeDep === TYPE_DEP.BRANCH) {
+          await branchesService.patch(
+            {
+              branch_code: valueForm.code,
+              name: valueForm.name,
+              address: valueForm.address,
+            },
+            {
+              endpoint: `/${(
+                currentItem as BranchEntity
+              ).id_branch.toString()}`,
+            }
+          );
+        } else {
+          const parentId = valueForm.parent_department_id.startsWith("branch-")
+            ? parseInt(valueForm.parent_department_id.replace("branch-", ""))
+            : parseInt(
+                valueForm.parent_department_id.replace("department-", "")
+              );
+          let branchId: number | null = null;
+          if (!valueForm.parent_department_id.startsWith("branch-")) {
+            branchId = findBranchByDepartmentId(parentId)?.id_branch || null;
+          }
+          await departmentService.patch(
+            {
+              department_code: valueForm.code,
+              name: valueForm.name,
+              parent_department_id: valueForm.parent_department_id.startsWith(
+                "branch-"
+              )
+                ? null
+                : parentId,
+              branch_id: valueForm.parent_department_id.startsWith("branch-")
+                ? parentId
+                : branchId,
+            },
+            {
+              endpoint: `/${(
+                currentItem as DepartmentEntity
+              ).id_department.toString()}`,
+            }
+          );
+        }
+      } else {
+        if (typeDep === TYPE_DEP.BRANCH) {
+          await branchesService.post({
+            branch_code: valueForm.code,
+            name: valueForm.name,
+            address: valueForm.address,
+            status: 1,
+            is_system: 1,
+          });
+        } else {
+          const parentId = valueForm.parent_department_id.startsWith("branch-")
+            ? parseInt(valueForm.parent_department_id.replace("branch-", ""))
+            : parseInt(
+                valueForm.parent_department_id.replace("department-", "")
+              );
+          let branchId: number | null = null;
+          if (!valueForm.parent_department_id.startsWith("branch-")) {
+            branchId = findBranchByDepartmentId(parentId)?.id_branch || null;
+          }
+          await departmentService.post({
+            department_code: valueForm.code,
+            name: valueForm.name,
+            parent_department_id: valueForm.parent_department_id.startsWith(
+              "branch-"
+            )
+              ? null
+              : parentId,
+            branch_id: valueForm.parent_department_id.startsWith("branch-")
+              ? parentId
+              : branchId,
+            is_system: 0,
+            status: 1,
+          });
+        }
+      }
+      message.success(
+        currentItem ? "Chỉnh sửa thành công" : "Thêm mới thành công"
+      );
+      closeModal();
+      if (resetData) {
+        resetData();
+      }
+      setLoading(false);
+    } catch (error) {
+      message.success(MEASSAGE.ERROR);
+      console.log("Error in onOK:", error);
+      setLoading(false);
     }
   };
 
   const closeModal = () => {
     setShowModal(false);
-    setCurrentCategory(undefined);
+    setCurrentItem(undefined);
     form.resetFields();
   };
 
   return (
     <Modal
       title={
-        currentCategory
-          ? typeDep === TYPE_DEP.PARENT
+        currentItem
+          ? typeDep === TYPE_DEP.BRANCH
             ? "Chỉnh sửa đơn vị"
             : "Chỉnh sửa khoa/phòng/ban"
-          : typeDep === TYPE_DEP.PARENT
+          : typeDep === TYPE_DEP.BRANCH
           ? "Thêm mới đơn vị"
           : "Thêm mới khoa/phòng/ban"
       }
@@ -156,8 +282,8 @@ export const DepartmentForm = forwardRef<
           console.log(e);
         }
       }}
-      okText={currentCategory ? MEASSAGE.SAVE : MEASSAGE.CREATE}
-      cancelText={currentCategory ? MEASSAGE.CANCEL : MEASSAGE.CLOSE}
+      okText={currentItem ? MEASSAGE.SAVE : MEASSAGE.CREATE}
+      cancelText={currentItem ? MEASSAGE.CANCEL : MEASSAGE.CLOSE}
       maskClosable={false}
     >
       <Spin spinning={loading}>
@@ -168,7 +294,7 @@ export const DepartmentForm = forwardRef<
                 labelCol={{ span: 24 }}
                 wrapperCol={{ span: 24 }}
                 label={
-                  typeDep === TYPE_DEP.PARENT
+                  typeDep === TYPE_DEP.BRANCH
                     ? "Tên đơn vị"
                     : "Tên khoa/phòng/ban"
                 }
@@ -183,7 +309,7 @@ export const DepartmentForm = forwardRef<
                 <Input
                   style={{ width: "100%" }}
                   placeholder={
-                    typeDep === TYPE_DEP.PARENT
+                    typeDep === TYPE_DEP.BRANCH
                       ? "Nhập tên đơn vị"
                       : "Nhập tên khoa/phòng/ban"
                   }
@@ -198,7 +324,7 @@ export const DepartmentForm = forwardRef<
                 labelCol={{ span: 24 }}
                 wrapperCol={{ span: 24 }}
                 label={
-                  typeDep === TYPE_DEP.PARENT
+                  typeDep === TYPE_DEP.BRANCH
                     ? "Mã đơn vị"
                     : "Mã khoa/phòng/ban"
                 }
@@ -211,10 +337,10 @@ export const DepartmentForm = forwardRef<
                 ]}
               >
                 <Input
-                  disabled={!!currentCategory}
+                  disabled={!!currentItem}
                   style={{ width: "100%" }}
                   placeholder={
-                    typeDep === TYPE_DEP.PARENT
+                    typeDep === TYPE_DEP.BRANCH
                       ? "Nhập mã đơn vị"
                       : "Nhập mã khoa/phòng/ban"
                   }
@@ -223,7 +349,7 @@ export const DepartmentForm = forwardRef<
               </Form.Item>
             </Col>
           </Row>
-          {typeDep === TYPE_DEP.PARENT && (
+          {typeDep === TYPE_DEP.BRANCH && (
             <Row gutter={24}>
               <Col span={24}>
                 <Form.Item
@@ -247,11 +373,12 @@ export const DepartmentForm = forwardRef<
               </Col>
             </Row>
           )}
-          {typeDep === TYPE_DEP.CHILD &&
-            (!currentCategory ||
-              (currentCategory &&
-                (currentCategory?.branch_id ||
-                  currentCategory?.parent_department_id))) && (
+          {typeDep === TYPE_DEP.DEPARTMENT &&
+            (!currentItem ||
+              (currentItem &&
+                ((currentItem as DepartmentEntity)?.branch_id ||
+                  (currentItem as DepartmentEntity)
+                    ?.parent_department_id))) && (
               <Row gutter={24}>
                 <Col span={24}>
                   <Form.Item

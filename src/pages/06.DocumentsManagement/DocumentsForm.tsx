@@ -19,6 +19,7 @@ import {
 import { useForm } from "antd/es/form/Form";
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useState,
@@ -48,6 +49,8 @@ import {
   iconWord,
 } from "../../components/IconSvg/iconSvg";
 import { branchesService } from "../../common/services/department/branches-service";
+import { documentService } from "../../common/services/document/documentService";
+import { useAuth } from "../../context/AuthContext";
 
 export interface DocumentFormRef {
   show(currentItem?: DocumentEntity): Promise<void>;
@@ -74,6 +77,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     ]);
     const [treeDepartment, setTreeDepartment] = useState<RoleTreeNode[]>([]);
     const { listDocumentCategories } = useSidebar();
+    const { currentUser } = useAuth();
 
     const handleAddFormAttach = () => {
       setFormAttachs((prev) => [
@@ -236,27 +240,104 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       []
     );
 
+    const uploadDocumentAttachment = useCallback(
+      async (attachments: any[] = formAttachs) => {
+        if (!attachments.length) return [];
+
+        const results = await Promise.all(
+          attachments.map(async (attachment) => {
+            if (attachment.fileList && attachment.fileList.length > 0) {
+              const formData = new FormData();
+              formData.append(
+                "file",
+                attachment.fileList[0].originFileObj || attachment.fileList[0]
+              );
+              const res = await fileService.uploadFile(formData);
+              return {
+                title: attachment.title,
+                linkFile: res.file.path,
+              };
+            }
+            return undefined;
+          })
+        );
+
+        return results.filter(Boolean);
+      },
+      [formAttachs]
+    );
+
     const onOK = async (valueForm: any) => {
-      const fileList = valueForm.file;
-      if (!fileList || fileList.length === 0) {
-        message.warning("Vui lòng chọn file trước khi lưu");
-        return;
-      }
+      if (currentDocument) {
+        try {
+          const oldAttachments = currentDocument.document_attachment || [];
+          const newAttachments = formAttachs.filter(
+            (a) => !a.linkFile && a.fileList && a.fileList.length > 0
+          );
+          const currentTitles = formAttachs.map((a) => a.title);
+          const keptAttachments = oldAttachments.filter((old) =>
+            currentTitles.includes(old.title)
+          );
+          const uploadedNewAttachments = await uploadDocumentAttachment(
+            newAttachments
+          );
 
-      const formData = new FormData();
-      formData.append("file", fileList.fileList[0].originFileObj);
+          const finalAttachments = [
+            ...keptAttachments,
+            ...uploadedNewAttachments,
+          ];
+          const document = {
+            ...valueForm,
+            status: valueForm.status ? 1 : 0,
+            is_featured: valueForm.is_featured ? 1 : 0,
+            category_id: parseInt(valueForm.category_id),
+            file: currentDocument.file,
+            document_attachment: finalAttachments || [],
+          };
+          await documentService.patch(document, {
+            endpoint: `/${currentDocument.id_document.toString()}`,
+          });
+          message.success("Chỉnh sửa văn bản thành công!");
+          closeModal();
+          if (resetData) {
+            resetData();
+          }
+        } catch (err) {
+          console.error(err);
+          message.error("Chỉnh sửa văn bản thất bại!");
+        }
+      } else {
+        const fileList = valueForm.file;
+        if (!fileList || fileList.length === 0) {
+          message.warning("Vui lòng chọn file trước khi lưu");
+          return;
+        }
 
-      try {
-        const res = await fileService.uploadFile(formData);
-        message.success("Upload thành công!");
-        console.log("Kết quả upload:", res.data);
-      } catch (err) {
-        console.error(err);
-        message.error("Upload thất bại!");
-      }
+        const formData = new FormData();
+        formData.append("file", fileList.fileList[0].originFileObj);
 
-      if (resetData) {
-        resetData();
+        try {
+          const res = await fileService.uploadFile(formData);
+          const documentAttachment = await uploadDocumentAttachment();
+          const document = {
+            ...valueForm,
+            status: valueForm.status ? 1 : 0,
+            is_featured: valueForm.is_featured ? 1 : 0,
+            category_id: parseInt(valueForm.category_id),
+            file: res.file.path,
+            document_attachment: documentAttachment || [],
+            id_department: currentUser?.department?.id_department || null,
+          };
+          await documentService.post(document);
+          message.success("Thêm mới văn bản thành công!");
+          closeModal();
+          if (resetData) {
+            resetData();
+          }
+        } catch (err) {
+          console.error(err);
+          message.error("Thêm mới văn bản thất bại!");
+        }
       }
     };
 
@@ -267,34 +348,6 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       setSelectedUserIds([]);
       setCurrentDocument(undefined);
       form.resetFields();
-    };
-
-    const handleCheckboxChange = (userId: string, checked: boolean) => {
-      setSelectedUserIds((prev) => {
-        let newSelected;
-        if (checked) {
-          newSelected = [...prev, userId];
-        } else {
-          newSelected = prev.filter((id) => id !== userId);
-        }
-
-        return newSelected;
-      });
-    };
-
-    const handleSelectAllInChild = (child: any, checked: boolean) => {
-      const childUserIds = (child.users || []).map((u: any) => u.id);
-
-      setSelectedUserIds((prev) => {
-        let newSelected;
-        if (checked) {
-          newSelected = Array.from(new Set([...prev, ...childUserIds]));
-        } else {
-          newSelected = prev.filter((id) => !childUserIds.includes(id));
-        }
-
-        return newSelected;
-      });
     };
 
     const allowedTypes = [
@@ -321,6 +374,13 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       multiple: true,
       showUploadList: false,
       openFileDialogOnClick: false,
+      beforeUpload: (file: File) => {
+        if (!allowedTypes.includes(file.type)) {
+          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
+          return Upload.LIST_IGNORE;
+        }
+        return false;
+      },
       onDrop(e) {
         const droppedFiles = Array.from(e.dataTransfer.files);
         if (!droppedFiles.length) return;
