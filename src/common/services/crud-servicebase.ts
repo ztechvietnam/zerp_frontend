@@ -38,15 +38,15 @@ export abstract class CrudServiceBase<
   private normalized(entity: any) {
     const processedEntity: Dictionary<any> = {};
     Object.keys(entity).forEach((key) => {
-      let value = (entity as Dictionary<any>)[key];
+      const value = (entity as Dictionary<any>)[key];
       // những property mà được khai báo là populate thì sẽ được convert thành id khi upload lên server
-      if (value && this.populateKeys.includes(key as keyof T)) {
-        if (Array.isArray(value)) {
-          value = value.map((v) => (typeof v === "object" && v.id ? v.id : v));
-        } else if (typeof value === "object") {
-          value = value.id ? value.id : value;
-        }
-      }
+      // if (value && this.populateKeys.includes(key as keyof T)) {
+      //   if (Array.isArray(value)) {
+      //     value = value.map((v) => (typeof v === "object" && v.id ? v.id : v));
+      //   } else if (typeof value === "object") {
+      //     value = value.id ? value.id : value;
+      //   }
+      // }
       processedEntity[key] = value;
     });
     return processedEntity;

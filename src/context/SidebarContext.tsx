@@ -7,6 +7,7 @@ import {
 } from "react";
 import { documentCategoriesService } from "../common/services/document-categories/documentCategoriesService";
 import { DocumentCategoriesEntity } from "../common/services/document-categories/documentCategories";
+import { DepartmentTreeNode } from "../common/services/department/department";
 
 type SidebarContextType = {
   isExpanded: boolean;
@@ -16,12 +17,14 @@ type SidebarContextType = {
   activeItem: string | null;
   openSubmenu: string | null;
   listDocumentCategories: DocumentCategoriesEntity[];
+  departmentTree: DepartmentTreeNode[];
   toggleSidebar: () => void;
   toggleMobileSidebar: () => void;
   setIsHovered: (isHovered: boolean) => void;
   setActiveItem: (item: string | null) => void;
   toggleSubmenu: (item: string) => void;
   setListDocumentCategories: (item: DocumentCategoriesEntity[]) => void;
+  setDepartmentTree: (item: DepartmentTreeNode[]) => void;
 };
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -46,6 +49,9 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [listDocumentCategories, setListDocumentCategories] = useState<
     DocumentCategoriesEntity[]
   >([]);
+  const [departmentTree, setDepartmentTree] = useState<DepartmentTreeNode[]>(
+    []
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -111,6 +117,8 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         toggleSubmenu,
         listDocumentCategories,
         setListDocumentCategories,
+        departmentTree,
+        setDepartmentTree,
       }}
     >
       {children}

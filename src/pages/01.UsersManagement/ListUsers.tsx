@@ -7,6 +7,8 @@ import {
   Input,
   InputRef,
   Pagination,
+  Popover,
+  Skeleton,
   Table,
   TableColumnsType,
   Tag,
@@ -21,6 +23,15 @@ import { debounce } from "lodash";
 import Highlighter from "react-highlight-words";
 import { Role } from "../../common/services/role/role";
 import "../../index.css";
+import { useSidebar } from "../../context/SidebarContext";
+import { departmentService } from "../../common/services/department/department-service";
+import { branchesService } from "../../common/services/department/branches-service";
+import {
+  BranchEntity,
+  DepartmentEntity,
+  DepartmentTreeNode,
+} from "../../common/services/department/department";
+import { ColumnFilterItem } from "antd/es/table/interface";
 
 const RoleUser: Record<Role, string> = {
   [Role.Admin]: "Quản trị viên",
@@ -41,6 +52,7 @@ const ListUsers = () => {
   const tableRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<InputRef>(null);
   const userFormRef = useRef<UserFormRef>(null);
+  const { departmentTree, setDepartmentTree } = useSidebar();
 
   const getDataUser = useCallback(async () => {
     try {
@@ -70,6 +82,129 @@ const ListUsers = () => {
       await getDataUser();
     })();
   }, [getDataUser]);
+
+  const buildDepartmentTree = (
+    branches: BranchEntity[],
+    departments: DepartmentEntity[]
+  ): DepartmentTreeNode[] => {
+    if (!Array.isArray(branches) || !Array.isArray(departments)) return [];
+
+    const branchMap = new Map<number, DepartmentTreeNode>();
+    const depMap = new Map<number, DepartmentTreeNode>();
+
+    branches.forEach((branch) => {
+      branchMap.set(branch.id_branch, {
+        title: branch.name,
+        item: branch,
+        value: `branch-${branch.id_branch}`,
+        key: `branch-${branch.id_branch}`,
+        selectable: false,
+        children: [],
+      });
+    });
+
+    departments.forEach((dep) => {
+      depMap.set(dep.id_department, {
+        title: dep.name,
+        item: dep,
+        value: `department-${dep.id_department}`,
+        key: `department-${dep.id_department}`,
+        selectable: true,
+        children: [],
+      });
+    });
+
+    departments.forEach((dep) => {
+      const node = depMap.get(dep.id_department)!;
+      if (dep.parent_department_id) {
+        const parentNode = depMap.get(dep.parent_department_id);
+        if (parentNode) {
+          parentNode.children!.push(node);
+        } else {
+          const branchNode = branchMap.get(dep.branch_id);
+          branchNode?.children?.push(node);
+        }
+      } else {
+        const branchNode = branchMap.get(dep.branch_id);
+        branchNode?.children?.push(node);
+      }
+    });
+
+    const cleanChildren = (nodes: DepartmentTreeNode[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length > 0)
+          cleanChildren(node.children);
+        else delete node.children;
+      });
+    };
+
+    const treeData = Array.from(branchMap.values());
+    cleanChildren(treeData);
+
+    return treeData;
+  };
+
+  const getDataDepartment = useCallback(async () => {
+    setLoading(true);
+    const departments = await departmentService.get({
+      params: {
+        limit: 100,
+      },
+    });
+    const branches = await branchesService.get({
+      params: {
+        limit: 100,
+      },
+    });
+    const treeDep = buildDepartmentTree(branches.data, departments.data);
+    setDepartmentTree(treeDep);
+    setLoading(false);
+  }, [setDepartmentTree]);
+
+  useEffect(() => {
+    (async () => {
+      if (departmentTree.length === 0) {
+        await getDataDepartment();
+      }
+    })();
+  }, [departmentTree, getDataDepartment]);
+
+  const getDepartmentBreadcrumb = useCallback(
+    (departmentId: number): string | null => {
+      const findPath = (
+        nodes: DepartmentTreeNode[],
+        targetId: number,
+        path: DepartmentTreeNode[]
+      ): DepartmentTreeNode[] | null => {
+        for (const node of nodes) {
+          const item = node.item as any;
+          const newPath = [...path, node];
+
+          if (item.id_department === targetId) {
+            return newPath;
+          }
+
+          if (node.children && node.children.length > 0) {
+            const result = findPath(node.children, targetId, newPath);
+            if (result) return result;
+          }
+        }
+        return null;
+      };
+
+      for (const branchNode of departmentTree) {
+        const path = findPath(branchNode.children || [], departmentId, [
+          branchNode,
+        ]);
+        if (path) {
+          return path.map((n) => n.title).join(" > ");
+        }
+      }
+
+      return null;
+    },
+    [departmentTree]
+  );
 
   const removeVietnameseTones = (str: string) => {
     return str
@@ -131,6 +266,19 @@ const ListUsers = () => {
     }
   }, [keyword, dataUsers]);
 
+  const convertDepartmentTreeToFilters = useCallback(
+    (tree: DepartmentTreeNode[]): ColumnFilterItem[] => {
+      return tree.map((node) => ({
+        text: node.title,
+        value: node.key,
+        children: node.children
+          ? convertDepartmentTreeToFilters(node.children)
+          : undefined,
+      }));
+    },
+    []
+  );
+
   const columns: TableColumnsType<UserEntity> = [
     {
       title: "Họ và tên",
@@ -186,10 +334,41 @@ const ListUsers = () => {
       ),
     },
     {
+      title: "Phòng ban",
+      dataIndex: "department",
+      filters: convertDepartmentTreeToFilters(departmentTree),
+      filterMode: "tree",
+      filterSearch: true,
+      onFilter: (value, record) =>
+        value
+          ? record.department?.id_department ===
+            parseInt((value as string).replace("department-", ""))
+          : true,
+      render(value) {
+        return (
+          <>
+            {departmentTree.length > 0 ? (
+              <Popover content={getDepartmentBreadcrumb(value?.id_department)}>
+                <Tag color="processing" className="cursor-pointer">
+                  {value?.name}
+                </Tag>
+              </Popover>
+            ) : (
+              <Skeleton />
+            )}
+          </>
+        );
+      },
+    },
+    {
       title: "Vai trò",
       dataIndex: "role",
       render(value) {
-        return <Tag color="processing">{RoleUser[value?.name as Role]}</Tag>;
+        return (
+          <Tag color="processing">
+            {value ? value?.role_name : "Người dùng"}
+          </Tag>
+        );
       },
     },
     {
@@ -258,6 +437,7 @@ const ListUsers = () => {
                       setSelectedRowKeys([]);
                       message.success(MEASSAGE.DELETE_SUCCESS);
                       setPageIndex(1);
+                      await getDataUser();
                     } catch (error) {
                       console.log(error);
                       message.error(MEASSAGE.ERROR, 3);
@@ -322,7 +502,7 @@ const ListUsers = () => {
             }}
           />
         </div>
-        <div className="flex items-center justify-between">
+        <div className={`flex items-center ${totalData > 0 ? 'justify-between': 'justify-end'}`}>
           {totalData > 0 && (
             <div className="flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>

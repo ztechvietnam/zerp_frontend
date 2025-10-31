@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { App, Col, Form, Input, Modal, Row, Spin } from "antd";
+import { App, Col, Form, Input, Modal, Row, Spin, TreeSelect } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { MEASSAGE } from "../../components/constant/constant";
 import { pick } from "lodash";
 import { UserEntity } from "../../common/services/user/user";
 import { userService } from "../../common/services/user/user-service";
+import { useSidebar } from "../../context/SidebarContext";
 
 export interface UserFormRef {
   show(currentItem?: UserEntity): Promise<void>;
@@ -23,6 +24,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
       undefined
     );
     const { message } = App.useApp();
+    const { departmentTree } = useSidebar();
     const [form] = useForm();
 
     useImperativeHandle(
@@ -37,10 +39,13 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
               "lastName",
               "firstName",
               "email",
-              "address",
             ]);
             setTimeout(() => {
               form.setFieldsValue(formControlValues);
+              form.setFieldValue(
+                "department",
+                `department-${currentItem.department?.id_department}`
+              );
             }, 0);
           }
           setLoading(false);
@@ -54,21 +59,32 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
         const dataSave = valueForm;
         if (currentUser) {
           dataSave.id = currentUser.id;
-          await userService.update(dataSave);
+          await userService.update({
+            id: currentUser.id,
+            firstName: dataSave.firstName,
+            lastName: dataSave.lastName,
+            email: dataSave.email,
+            id_department: dataSave.department?.startsWith("department-")
+              ? parseInt(dataSave.department.replace("department-", ""))
+              : null,
+          } as any);
           message.success("Chỉnh sửa thành công");
         } else {
-          await userService.add({
-            ...dataSave,
+          const newUser = {
+            firstName: dataSave.firstName,
+            lastName: dataSave.lastName,
+            email: dataSave.email,
+            id_department: dataSave.department?.startsWith("department-")
+              ? parseInt(dataSave.department.replace("department-", ""))
+              : null,
+            role: { id: 1 },
+            status: { id: 1 },
             provider: "email",
-            // status: {
-            //   id: 1,
-            // },
-            // role: {
-            //   id: 2,
-            // },
+            username: dataSave.email?.split("@")[0],
             password: "123456",
-          });
-          message.success("Chỉnh sửa thành công");
+          };
+          await userService.add(newUser as any);
+          message.success("Thêm mới thành công");
         }
         closeModal();
         if (resetData) {
@@ -158,6 +174,10 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                   name="email"
                   rules={[
                     {
+                      required: true,
+                      message: "Trường yêu cầu nhập!",
+                    },
+                    {
                       type: "email",
                       message: "Vui lòng nhập đúng định dạng email",
                     },
@@ -176,13 +196,32 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                 <Form.Item
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
-                  label="Địa chỉ"
-                  name="address"
-                  rules={[]}
+                  label="Phòng ban"
+                  name="department"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Trường yêu cầu nhập!",
+                    },
+                  ]}
                 >
-                  <Input
-                    style={{ width: "100%" }}
-                    placeholder={"Nhập địa chỉ"}
+                  <TreeSelect
+                    treeData={departmentTree}
+                    showSearch
+                    placeholder="Chọn phòng ban"
+                    styles={{
+                      popup: { root: { maxHeight: 400, overflow: "auto" } },
+                    }}
+                    treeDefaultExpandAll
+                    filterTreeNode={(inputValue: string, treeNode: any) => {
+                      const title =
+                        typeof treeNode.title === "string"
+                          ? treeNode.title
+                          : "";
+                      return title
+                        .toLocaleLowerCase()
+                        .includes(inputValue?.trim().toLocaleLowerCase());
+                    }}
                   />
                 </Form.Item>
               </Col>

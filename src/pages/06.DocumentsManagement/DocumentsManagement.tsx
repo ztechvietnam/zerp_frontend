@@ -20,6 +20,7 @@ import {
   TreeSelect,
 } from "antd";
 import {
+  buildCategoryTree,
   dataDepartments,
   dataDocuments,
   dataTemplates,
@@ -67,11 +68,7 @@ const DocumentsManagement = () => {
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [listDocuments, setListDocuments] = useState<DocumentEntity[]>([]);
-  const [listData, setListData] = useState<DocumentEntity[]>([]);
   const [treeData, setTreeData] = useState<TreeSelectNode[]>([]);
-  const [departmentTree, setDepartmentTree] = useState<DepartmentTreeNode[]>(
-    []
-  );
   const [currentCategory, setCurrentCategory] = useState<
     DocumentCategoriesEntity | undefined
   >(undefined);
@@ -83,140 +80,114 @@ const DocumentsManagement = () => {
   const { listDocumentCategories } = useSidebar();
   const { idCategory } = useParams();
 
-  const buildDepartmentTree = (
-    departments: DepartmentEntity[]
-  ): DepartmentTreeNode[] => {
-    const categoryMap = new Map<string, DepartmentTreeNode>();
-    departments.forEach((department) => {
-      categoryMap.set(department.code, {
-        item: department,
-        key: department.code,
-        children: [],
-        users: [],
-      });
-    });
-
-    const tree: DepartmentTreeNode[] = [];
-    departments.forEach((department) => {
-      const node = categoryMap.get(department.code)!;
-
-      if (department.parentCode) {
-        const parentNode = categoryMap.get(department.parentCode);
-        if (parentNode) {
-          parentNode.children!.push(node);
-        } else {
-          console.warn(
-            `⚠️ Không tìm thấy parent với code: '${department.parentCode}' cho node '${department.code}'`
-          );
-          tree.push(node);
-        }
-      } else {
-        tree.push(node);
-      }
-    });
-    const cleanEmptyChildren = (nodes: DepartmentTreeNode[]) => {
-      nodes.forEach((node) => {
-        if (node.children && node.children.length > 0) {
-          cleanEmptyChildren(node.children);
-        } else {
-          delete node.children;
-        }
-      });
-    };
-
-    cleanEmptyChildren(tree);
-    return tree;
-  };
-
-  const mapUsersToDepartments = (
-    tree: DepartmentTreeNode[],
-    users: UserEntity[],
-    departments: DepartmentEntity[]
-  ) => {
-    // Tạo map từ id -> code để tìm node dễ hơn
-    const idToCode = new Map(departments.map((dep) => [dep.id, dep.code]));
-
-    // Đệ quy để gán users vào node
-    const assignUsers = (nodes: DepartmentTreeNode[]) => {
-      nodes.forEach((node) => {
-        const depId = [...idToCode.entries()].find(
-          ([, code]) => code === node.key
-        )?.[0];
-
-        if (depId) {
-          node.users = users.filter((u) => u.department === depId);
-        }
-
-        if (node.children) {
-          assignUsers(node.children);
-        }
-      });
-    };
-
-    assignUsers(tree);
-    return tree;
-  };
-
   useEffect(() => {
-    (async () => {
-      if (idCategory) {
-        const category = listDocumentCategories.find((cate) => {
-          return cate.id_category.toString() === idCategory.toString();
-        });
-        if (category) {
+    setLoading(true);
+    const treeCate = buildCategoryTree(listDocumentCategories, true);
+    setTreeData(treeCate);
+    setLoading(false);
+  }, [listDocumentCategories]);
+
+  const getDocuments = useCallback(
+    async (formValues?: any) => {
+      try {
+        if (idCategory) {
+          calculateCounterFilter(formValues);
+          const category = listDocumentCategories.find((cate) => {
+            return cate.id_category.toString() === idCategory.toString();
+          });
+          const idCateFilter = category
+            ? [category]
+                .map((cate) => {
+                  const children = listDocumentCategories.filter((data) => {
+                    return data.parent_category_id === cate.id_category;
+                  });
+                  return [
+                    cate.id_category,
+                    ...children.map((child) => child.id_category),
+                  ];
+                })
+                .flat()
+            : [];
           setLoading(true);
-          const results = await documentService.findAndFilter([
-            category.id_category,
-          ]);
+          const results = await documentService.findAndFilter(
+            idCateFilter,
+            formValues && formValues["keyword"] ? formValues["keyword"] : ""
+          );
           if (results) {
             setListDocuments(results);
           } else {
             setListDocuments([]);
           }
           setLoading(false);
-        }
-        setCurrentCategory(category);
-      } else {
-        setCurrentCategory(undefined);
-      }
-    })();
-  }, [idCategory, listDocumentCategories]);
-
-  useEffect(() => {
-    // setTreeData(buildCategoryTree(documentCategories));
-    setTreeData([]);
-    const treeDep = buildDepartmentTree(dataDepartments);
-    setDepartmentTree(
-      mapUsersToDepartments(treeDep, dataUsers, dataDepartments)
-    );
-  }, []);
-
-  const getDocuments = useCallback(
-    async (formValues?: any) => {
-      try {
-        setLoading(true);
-        const results = await documentService.get({
-          params: {
-            page: pageIndex,
-            limit: pageSize,
-          },
-        });
-        if (results) {
-          setListDocuments(results.data);
+          setCurrentCategory(category);
         } else {
-          setListDocuments([]);
+          setLoading(true);
+          setCurrentCategory(undefined);
+          calculateCounterFilter(formValues);
+          if (formValues) {
+            let idCateFilter: number[] = [];
+            if (formValues["category"] && formValues["category"]?.length) {
+              const categoryFilter = listDocumentCategories.filter((data) => {
+                return formValues["category"].includes(
+                  data.id_category.toString()
+                );
+              });
+              idCateFilter = categoryFilter
+                .map((cate) => {
+                  const children = listDocumentCategories.filter((data) => {
+                    return data.parent_category_id === cate.id_category;
+                  });
+                  return [
+                    cate.id_category,
+                    ...children.map((child) => child.id_category),
+                  ];
+                })
+                .flat();
+            } else {
+              idCateFilter = listDocumentCategories.map(
+                (cate) => cate.id_category
+              );
+            }
+            const results = await documentService.findAndFilter(
+              idCateFilter,
+              formValues["keyword"] || ""
+            );
+            if (results) {
+              setListDocuments(results);
+            } else {
+              setListDocuments([]);
+            }
+          } else {
+            const results = await documentService.get({
+              params: {
+                page: pageIndex,
+                limit: pageSize,
+              },
+            });
+            if (results) {
+              setListDocuments(results.data);
+            } else {
+              setListDocuments([]);
+            }
+          }
+          setLoading(false);
         }
-        setLoading(false);
       } catch (e) {
         setLoading(false);
         console.log(e);
       }
     },
-    [pageSize, pageIndex]
+    [idCategory, listDocumentCategories, pageIndex, pageSize]
   );
 
   useEffect(() => {
-    getDocuments();
+    form.resetFields();
+  }, [idCategory]);
+
+  useEffect(() => {
+    (async () => {
+      await getDocuments();
+    })();
   }, [getDocuments]);
 
   const columns: TableColumnsType<DocumentEntity> = [
@@ -350,77 +321,6 @@ const DocumentsManagement = () => {
     }
   };
 
-  const searchData = useCallback(
-    async (formValues?: any) => {
-      let dataFilter: DocumentEntity[] = idCategory
-        ? dataDocuments.filter((doc) => {
-            return doc.category && doc.category.id === idCategory;
-          })
-        : dataDocuments;
-      calculateCounterFilter(formValues);
-      if (formValues) {
-        if (formValues["keyword"]) {
-          dataFilter = dataFilter.filter((document) => {
-            return (
-              document.name
-                .toLowerCase()
-                .includes(formValues["keyword"]?.toLowerCase()) ||
-              document.code
-                .toLowerCase()
-                .includes(formValues["keyword"]?.toLowerCase())
-            );
-          });
-        }
-        if (formValues["template"]) {
-          dataFilter = dataFilter.filter((document) => {
-            return formValues["template"]
-              .map((t: string) => t.toLowerCase())
-              .includes(document.template.toLowerCase());
-          });
-        }
-        if (formValues["category"] && formValues["category"]?.length) {
-          const categoryFilter = documentCategories.filter((data) => {
-            return formValues["category"].includes(data.id);
-          });
-          const idCateFilter = categoryFilter
-            .map((cate) => {
-              const children = documentCategories.filter((data) => {
-                return data.parentCode === cate.code;
-              });
-              return [...cate.id, ...children.map((child) => child.id)];
-            })
-            .flat();
-          dataFilter = dataFilter.filter((doc) => {
-            return doc.category && idCateFilter.includes(doc.category.id);
-          });
-        }
-        if (typeof formValues["status"] === "boolean") {
-          dataFilter = dataFilter.filter((document) => {
-            return document.status === formValues["status"];
-          });
-        }
-      }
-      setListDocuments(dataFilter);
-    },
-    [idCategory, treeData]
-  );
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await searchData();
-      setLoading(false);
-    })();
-  }, [searchData]);
-
-  useEffect(() => {
-    const data = listDocuments.slice(
-      pageSize * (pageIndex - 1),
-      pageSize * pageIndex
-    );
-    setListData(data);
-  }, [pageSize, pageIndex, listDocuments]);
-
   return (
     <PageContainer
       ref={pageContainerRef}
@@ -448,16 +348,18 @@ const DocumentsManagement = () => {
       }
       toolbarRight={
         <div className="flex items-center gap-4">
-          <Button
-            type="primary"
-            size="middle"
-            style={{ marginLeft: 16 }}
-            onClick={() => {
-              documentFormRef.current?.show();
-            }}
-          >
-            Thêm văn bản
-          </Button>
+          {!currentCategory && (
+            <Button
+              type="primary"
+              size="middle"
+              style={{ marginLeft: 16 }}
+              onClick={() => {
+                documentFormRef.current?.show();
+              }}
+            >
+              Thêm văn bản
+            </Button>
+          )}
           <Button
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
@@ -479,7 +381,7 @@ const DocumentsManagement = () => {
             rowKey="id"
             columns={columns}
             loading={loading}
-            dataSource={listData}
+            dataSource={listDocuments}
             pagination={false}
             scroll={
               window.innerWidth < 1025
@@ -505,7 +407,11 @@ const DocumentsManagement = () => {
             }}
           />
         </div>
-        <div className="flex items-center justify-between">
+        <div
+          className={`flex items-center ${
+            listDocuments.length > 0 ? "justify-between" : "justify-end"
+          }`}
+        >
           {listDocuments.length > 0 && (
             <div className="flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>
@@ -567,31 +473,14 @@ const DocumentsManagement = () => {
                   onPressEnter={async () => {
                     try {
                       const formValues = form.getFieldsValue();
-                      await searchData(formValues);
+                      await getDocuments(formValues);
                       setPageIndex(1);
                       setShowFilter(false);
                     } catch (e) {
-                      await searchData();
+                      await getDocuments();
                       setPageIndex(1);
                     }
                   }}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item
-                labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}
-                label="Biểu mẫu"
-                name="template"
-                className="!mb-[10px]"
-              >
-                <Select
-                  mode="multiple"
-                  placeholder="Chọn biểu mẫu"
-                  allowClear
-                  style={{ width: "100%" }}
-                  options={dataTemplates}
                 />
               </Form.Item>
             </Col>
@@ -627,24 +516,6 @@ const DocumentsManagement = () => {
                 </Form.Item>
               </Col>
             )}
-            <Col span={24}>
-              <Form.Item
-                labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}
-                label="Trạng thái"
-                name="status"
-              >
-                <Select
-                  placeholder="Chọn trạng thái"
-                  style={{ width: "100%" }}
-                  allowClear
-                  options={[
-                    { label: "Active", value: true },
-                    { label: "Inactive", value: false },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
           </Row>
           <Row gutter={12} className="!mt-[10px]">
             <Col span={24}>
@@ -655,10 +526,10 @@ const DocumentsManagement = () => {
                     try {
                       const formValues = form.getFieldsValue();
                       setPageIndex(1);
-                      await searchData(formValues);
+                      await getDocuments(formValues);
                       setShowFilter(false);
                     } catch (e) {
-                      await searchData();
+                      await getDocuments();
                       setPageIndex(1);
                     }
                   }}
@@ -668,7 +539,7 @@ const DocumentsManagement = () => {
                 <Button
                   onClick={async () => {
                     form.resetFields();
-                    await searchData();
+                    await getDocuments();
                     setPageIndex(1);
                     setShowFilter(false);
                   }}
@@ -682,7 +553,6 @@ const DocumentsManagement = () => {
       </Drawer>
       <DocumentForm
         ref={documentFormRef}
-        treeDepartment={departmentTree}
         resetData={() => console.log("reset")}
       />
       <ModalPlayVideo ref={modalPlayVideoRef} />

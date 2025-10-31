@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
-import { Breadcrumb, Button, Table, Tag, Tooltip } from "antd";
+import { App, Breadcrumb, Button, Table, Tag, Tooltip } from "antd";
 import { DepartmentForm, DepartmentFormRef, TYPE_DEP } from "./DepartmentForm";
 import { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -18,14 +18,19 @@ import {
 } from "../../common/services/department/department";
 import { departmentService } from "../../common/services/department/department-service";
 import { branchesService } from "../../common/services/department/branches-service";
+import { MEASSAGE } from "../../components/constant/constant";
+import { compact } from "lodash";
+import { useSidebar } from "../../context/SidebarContext";
 
 const ListDepartments = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [treeData, setTreeData] = useState<DepartmentTreeNode[]>([]);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const { message, modal } = App.useApp();
   const departmentFormRef = useRef<DepartmentFormRef>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const { setDepartmentTree } = useSidebar();
 
   const buildDepartmentTree = (
     branches: BranchEntity[],
@@ -42,6 +47,7 @@ const ListDepartments = () => {
         item: branch,
         value: `branch-${branch.id_branch}`,
         key: `branch-${branch.id_branch}`,
+        selectable: false,
         children: [],
       });
     });
@@ -52,6 +58,7 @@ const ListDepartments = () => {
         item: dep,
         value: `department-${dep.id_department}`,
         key: `department-${dep.id_department}`,
+        selectable: true,
         children: [],
       });
     });
@@ -86,25 +93,132 @@ const ListDepartments = () => {
     return treeData;
   };
 
+  const getData = useCallback(async () => {
+    setLoading(true);
+    const departments = await departmentService.get({
+      params: {
+        limit: 100,
+      },
+    });
+    const branches = await branchesService.get({
+      params: {
+        limit: 100,
+      },
+    });
+    const treeDep = buildDepartmentTree(branches.data, departments.data);
+    setExpandedKeys(treeDep.map((item) => item.key));
+    setTreeData(treeDep);
+    setDepartmentTree(treeDep);
+    setLoading(false);
+  }, [setDepartmentTree]);
+
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      const departments = await departmentService.get({
-        params: {
-          limit: 100,
-        },
-      });
-      const branches = await branchesService.get({
-        params: {
-          limit: 100,
-        },
-      });
-      const treeDep = buildDepartmentTree(branches.data, departments.data);
-      setExpandedKeys(treeDep.map((item) => item.key));
-      setTreeData(treeDep);
-      setLoading(false);
+      await getData();
     })();
-  }, []);
+  }, [getData]);
+
+  const findParentPath = useCallback(
+    (
+      nodes: DepartmentTreeNode[],
+      targetId: number,
+      path: number[] = []
+    ): number[] | null => {
+      for (const node of nodes) {
+        const newPath = [
+          ...path,
+          (node.item as DepartmentEntity).id_department,
+        ];
+        if ((node.item as DepartmentEntity).id_department === targetId)
+          return newPath;
+        if (node.children) {
+          const result = findParentPath(node.children, targetId, newPath);
+          if (result) return result;
+        }
+      }
+      return null;
+    },
+    []
+  );
+
+  const updateStatus = useCallback(
+    async (record: DepartmentTreeNode, status: number) => {
+      if (status === 1) {
+        const parentPath = compact(
+          findParentPath(
+            treeData,
+            (record.item as DepartmentEntity).id_department
+          )
+        );
+        if (parentPath && parentPath.length > 1) {
+          const parentIds = parentPath.slice(0, -1);
+          for (const parentId of parentIds) {
+            await departmentService.patch(
+              { status },
+              { endpoint: `/${parentId}` }
+            );
+          }
+        }
+        await departmentService.patch(
+          { status },
+          { endpoint: `/${(record.item as DepartmentEntity).id_department}` }
+        );
+        if (record.children && record.children.length) {
+          for (const child of record.children) {
+            await updateStatus(child, status);
+          }
+        }
+      } else {
+        await departmentService.patch(
+          {
+            status: status,
+          },
+          {
+            endpoint: `/${(
+              record.item as DepartmentEntity
+            ).id_department.toString()}`,
+          }
+        );
+        if (record.children && record.children.length) {
+          for (let i = 0; i < record.children.length; i++) {
+            const child = record.children[i];
+            await updateStatus(child, status);
+          }
+        } else {
+          return;
+        }
+      }
+    },
+    [findParentPath, treeData]
+  );
+
+  const stopWorking = async (record: DepartmentTreeNode) => {
+    try {
+      setLoading(true);
+      await updateStatus(record, 0);
+      message.success("Dừng hoạt động danh mục thành công");
+      await getData();
+      setLoading(false);
+    } catch (e) {
+      message.success("Có lỗi xảy ra khi dừng hoạt động danh mục");
+      console.log(e);
+      setLoading(false);
+    }
+  };
+
+  const startWorking = async (record: DepartmentTreeNode) => {
+    try {
+      setLoading(true);
+      await updateStatus(record, 1);
+      message.success("Bật hoạt động danh mục thành công");
+      await getData();
+      setLoading(false);
+    } catch (e) {
+      message.success("Có lỗi xảy ra khi bật hoạt động danh mục");
+      console.log(e);
+      setLoading(false);
+    }
+  };
 
   const columns: ColumnsType<DepartmentTreeNode> = [
     {
@@ -112,13 +226,15 @@ const ListDepartments = () => {
       width: 150,
       render: (record) => (
         <span
-          className={record.item.is_system ? "cursor-default" : "cursor-pointer"}
+          className={
+            record.item.is_system ? "cursor-default" : "cursor-pointer"
+          }
           onClick={() => {
             if (record.item.is_system) return;
             departmentFormRef.current?.show(
-              record.children && record.children.length
-                ? TYPE_DEP.PARENT
-                : TYPE_DEP.CHILD,
+              record.value.startsWith("branch-")
+                ? TYPE_DEP.BRANCH
+                : TYPE_DEP.DEPARTMENT,
               record.item
             );
           }}
@@ -142,7 +258,7 @@ const ListDepartments = () => {
     {
       title: "Ngày tạo",
       width: 50,
-      render: (record) => dayjs(record.item.created).format("DD/MM/YYYY"),
+      render: (record) => dayjs(record.item.createdAt).format("DD/MM/YYYY"),
     },
     {
       title: "Trạng thái",
@@ -151,7 +267,7 @@ const ListDepartments = () => {
         record.item.status ? (
           <Tag color="green">Active</Tag>
         ) : (
-          <Tag color="default">Inactive</Tag>
+          <Tag color="error">Inactive</Tag>
         ),
     },
     {
@@ -161,28 +277,74 @@ const ListDepartments = () => {
       render: (record) => (
         <div className="flex gap-2 min-h-8">
           {record.item.is_system ? null : (
-            <Button
-              className="!px-[10px]"
-              variant="outlined"
-              color={record.item.status ? "red" : "green"}
+            <Tooltip
+              title={record.item.status ? "Dừng hoạt động" : "Bật hoạt động"}
             >
-              <Tooltip
-                title={record.item.status ? "Dừng hoạt động" : "Bật hoạt động"}
+              <Button
+                className="!px-[10px]"
+                variant="outlined"
+                color={record.item.status ? "red" : "green"}
+                onClick={async () => {
+                  if (record.item.status) {
+                    await stopWorking(record);
+                  } else {
+                    await startWorking(record);
+                  }
+                }}
               >
                 {record.item.status ? (
                   <CloseCircleOutlined />
                 ) : (
                   <CheckCircleOutlined />
                 )}
-              </Tooltip>
-            </Button>
+              </Button>
+            </Tooltip>
           )}
           {record.item.is_system ? null : (
-            <Button className="!px-[10px]" variant="outlined" color="red">
-              <Tooltip title="Xoá danh mục">
+            <Tooltip title="Xoá phòng ban">
+              <Button
+                className="!px-[10px]"
+                variant="outlined"
+                color="red"
+                onClick={async () => {
+                  if (record.children && record.children.length) {
+                    message.error(
+                      "Không thể xoá phòng ban này do vẫn còn phòng ban con"
+                    );
+                  } else {
+                    modal.confirm({
+                      title: MEASSAGE.CONFIRM_DELETE,
+                      okText: MEASSAGE.OK,
+                      cancelText: MEASSAGE.NO,
+                      onOk: async () => {
+                        try {
+                          try {
+                            setLoading(true);
+                            await departmentService.deleteDepartment(
+                              record.item.id_department.toString()
+                            );
+                            message.success("Xoá phòng ban thành công");
+                            await getData();
+                            setLoading(false);
+                          } catch (e) {
+                            message.error(
+                              "Có lỗi xảy ra trong quá trình xoá phòng ban"
+                            );
+                            console.log(e);
+                          }
+                        } catch (error) {
+                          console.log(error);
+                          message.error(MEASSAGE.ERROR, 3);
+                        }
+                      },
+                      onCancel() {},
+                    });
+                  }
+                }}
+              >
                 <DeleteOutlined />
-              </Tooltip>
-            </Button>
+              </Button>
+            </Tooltip>
           )}
         </div>
       ),
@@ -215,7 +377,7 @@ const ListDepartments = () => {
           <Button
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
-              departmentFormRef.current?.show(TYPE_DEP.PARENT);
+              departmentFormRef.current?.show(TYPE_DEP.BRANCH);
             }}
           >
             Thêm đơn vị
@@ -223,7 +385,7 @@ const ListDepartments = () => {
           <Button
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
-              departmentFormRef.current?.show(TYPE_DEP.CHILD);
+              departmentFormRef.current?.show(TYPE_DEP.DEPARTMENT);
             }}
           >
             Thêm phòng ban
@@ -280,8 +442,8 @@ const ListDepartments = () => {
       <DepartmentForm
         ref={departmentFormRef}
         treeDataDepartment={treeData}
-        resetData={() => {
-          console.log("Reset");
+        resetData={async () => {
+          await getData();
         }}
       />
     </PageContainer>

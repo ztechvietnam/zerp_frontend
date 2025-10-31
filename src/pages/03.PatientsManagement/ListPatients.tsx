@@ -342,7 +342,7 @@ const ListPatients = () => {
             }}
           />
         </div>
-        <div className="flex items-center justify-between">
+        <div className={`flex items-center ${totalData > 0 ? 'justify-between': 'justify-end'}`}>
           {totalData > 0 && (
             <div className="flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>

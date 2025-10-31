@@ -1,3 +1,4 @@
+import { DepartmentEntity } from "../department/department";
 import { EntityBase } from "../entity-base";
 import { RoleEntity } from "../role/role";
 
@@ -10,6 +11,7 @@ export interface UserEntity extends EntityBase {
   role: RoleEntity;
   passWord?: string;
   status: StatusEntity;
+  department?: DepartmentEntity;
 }
 
 export interface StatusEntity {
