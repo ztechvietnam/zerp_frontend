@@ -8,4 +8,8 @@ export interface EntityBase {
   deletedAt: Date;
 
   created_id: number;
+
+  updated_id: number;
+
+  deleted_id: number;
 }

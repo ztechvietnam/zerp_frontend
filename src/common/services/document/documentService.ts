@@ -5,11 +5,11 @@ export class DocumentService extends ServiceBase {
     super({ endpoint: "/documents" });
   }
 
-  async deleteCategory(category_id: string): Promise<boolean> {
+  async deleteDocument(document_id: string): Promise<boolean> {
     return this.delete(
       {},
       {
-        endpoint: `/${category_id}`,
+        endpoint: `/${document_id}`,
       }
     );
   }

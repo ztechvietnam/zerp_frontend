@@ -8,6 +8,11 @@ import {
 import { documentCategoriesService } from "../common/services/document-categories/documentCategoriesService";
 import { DocumentCategoriesEntity } from "../common/services/document-categories/documentCategories";
 import { DepartmentTreeNode } from "../common/services/department/department";
+import { DocumentCategoryPermissionEntity } from "../common/services/document-category-permissions/document-category-permissions";
+import { useAuth } from "./AuthContext";
+import { DocumentPermissionEntity } from "../common/services/document-permissions/document-permissions";
+import { documentPermissionService } from "../common/services/document-permissions/documentPermissionsService";
+import { documentCategoryPermissionService } from "../common/services/document-category-permissions/documentCategoryPermissionsService";
 
 type SidebarContextType = {
   isExpanded: boolean;
@@ -18,8 +23,12 @@ type SidebarContextType = {
   openSubmenu: string | null;
   listDocumentCategories: DocumentCategoriesEntity[];
   departmentTree: DepartmentTreeNode[];
+  perDocumentCategories: string[];
+  perDocument: string[];
   toggleSidebar: () => void;
   toggleMobileSidebar: () => void;
+  getPerDocument: () => Promise<void>;
+  getPerDocumentCate: () => Promise<void>;
   setIsHovered: (isHovered: boolean) => void;
   setActiveItem: (item: string | null) => void;
   toggleSubmenu: (item: string) => void;
@@ -52,6 +61,11 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [departmentTree, setDepartmentTree] = useState<DepartmentTreeNode[]>(
     []
   );
+  const [perDocumentCategories, setPerDocumentCategories] = useState<string[]>(
+    []
+  );
+  const [perDocument, setPerDocument] = useState<string[]>([]);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     const handleResize = () => {
@@ -89,6 +103,55 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
     getDocumentCategories();
   }, [getDocumentCategories]);
 
+  const getPerDocument = useCallback(async () => {
+    if (currentUser && currentUser?.id) {
+      try {
+        const perDocument = await documentPermissionService.getPerByUserId(
+          currentUser?.id
+        );
+        const listDocumentCanView =
+          perDocument?.data && perDocument?.data?.length
+            ? perDocument?.data.map((per: DocumentPermissionEntity) => {
+                return per?.document_id;
+              })
+            : [];
+        setPerDocument(listDocumentCanView);
+      } catch (e) {
+        console.log(e);
+        setPerDocument([]);
+      }
+    }
+  }, [currentUser]);
+
+  const getPerDocumentCate = useCallback(async () => {
+    if (currentUser && currentUser?.id) {
+      try {
+        const perCate = await documentCategoryPermissionService.getPerByUserId(
+          currentUser?.id
+        );
+        const listCateCanView =
+          perCate?.data && perCate?.data?.length
+            ? perCate?.data.map((per: DocumentCategoryPermissionEntity) => {
+                return per?.document_category_id;
+              })
+            : [];
+        setPerDocumentCategories(listCateCanView);
+      } catch (e) {
+        console.log(e);
+        setPerDocumentCategories([]);
+      }
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser && currentUser?.id) {
+      (async () => {
+        await getPerDocument();
+        await getPerDocumentCate();
+      })();
+    }
+  }, [currentUser, getPerDocument, getPerDocumentCate]);
+
   const toggleSidebar = () => {
     setIsExpanded((prev) => !prev);
   };
@@ -110,8 +173,12 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         isHovered,
         activeItem,
         openSubmenu,
+        perDocument,
+        perDocumentCategories,
         toggleSidebar,
         toggleMobileSidebar,
+        getPerDocument,
+        getPerDocumentCate,
         setIsHovered,
         setActiveItem,
         toggleSubmenu,

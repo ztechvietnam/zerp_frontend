@@ -1,0 +1,35 @@
+.react-pdf__Page__textContent {
+  display: none !important;
+}
+
+.react-pdf__Page__annotations {
+  display: none !important;
+}
+
+#pdf-controls {
+  position: absolute;
+  top: 48px;
+  left: 25px;
+  right: 25px;
+  border-top: 12px;
+}
+
+#pdf-page-wrapper {
+  margin: 0 !important;
+}
+
+#pdf-toggle-pagination {
+  display: none;
+}
+
+.docx-preview {
+  font-family: "Times New Roman", serif;
+  line-height: 1.6;
+  color: #222;
+}
+
+.docx-preview .docx-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}

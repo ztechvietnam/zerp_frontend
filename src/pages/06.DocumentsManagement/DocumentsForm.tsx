@@ -5,6 +5,7 @@ import {
   Card,
   Col,
   Collapse,
+  DatePicker,
   Form,
   Input,
   Modal,
@@ -51,14 +52,55 @@ import {
 import { branchesService } from "../../common/services/department/branches-service";
 import { documentService } from "../../common/services/document/documentService";
 import { useAuth } from "../../context/AuthContext";
+import vi from "antd/es/date-picker/locale/vi_VN";
+import dayjs from "dayjs";
+import { documentPermissionService } from "../../common/services/document-permissions/documentPermissionsService";
+import { DocumentPermissionEntity } from "../../common/services/document-permissions/document-permissions";
 
 export interface DocumentFormRef {
   show(currentItem?: DocumentEntity): Promise<void>;
 }
 
 interface DocumentFormProps {
-  resetData: () => void;
+  resetData: () => Promise<void>;
 }
+
+export const buildDepartmentTreeData = (branches: any[]): RoleTreeNode[] => {
+  if (!Array.isArray(branches)) return [];
+  return branches.map((branch) => {
+    const branchNode: RoleTreeNode = {
+      title: branch.name,
+      value: `branch-${branch.id_branch}`,
+      key: `branch-${branch.id_branch}`,
+      selectable: false,
+      children: [],
+    };
+    if (Array.isArray(branch.departments) && branch.departments.length > 0) {
+      branchNode.children = branch.departments.map((dep: any) => {
+        const departmentNode: RoleTreeNode = {
+          title: dep.name,
+          value: `department-${dep.id_department}`,
+          key: `department-${dep.id_department}`,
+          selectable: false,
+          children: [],
+        };
+        if (Array.isArray(dep.users) && dep.users.length > 0) {
+          departmentNode.children = dep.users.map((user: any) => ({
+            title: `${user.lastName?.trim() || ""}${
+              user.firstName ? " " + user.firstName : ""
+            }`.trim(),
+            value: `user-${user.id}`,
+            key: `user-${user.id}`,
+            isLeaf: true,
+            selectable: true,
+          }));
+        }
+        return departmentNode;
+      });
+    }
+    return branchNode;
+  });
+};
 
 export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
   ({ resetData }, ref) => {
@@ -68,6 +110,9 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const [currentDocument, setCurrentDocument] = useState<
       DocumentEntity | undefined
     >(undefined);
+    const [currentDocumentPermission, setCurrentDocumentPermission] = useState<
+      DocumentPermissionEntity | undefined
+    >(undefined);
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
     const { message } = App.useApp();
     const [form] = useForm();
@@ -76,7 +121,8 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       { title: "", linkFile: "", fileList: [] as any[] },
     ]);
     const [treeDepartment, setTreeDepartment] = useState<RoleTreeNode[]>([]);
-    const { listDocumentCategories } = useSidebar();
+    const { listDocumentCategories, perDocumentCategories, getPerDocument } =
+      useSidebar();
     const { currentUser } = useAuth();
 
     const handleAddFormAttach = () => {
@@ -84,46 +130,6 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
         ...prev,
         { title: "", linkFile: "", fileList: [] },
       ]);
-    };
-
-    const buildDepartmentTreeData = (branches: any[]): RoleTreeNode[] => {
-      if (!Array.isArray(branches)) return [];
-      return branches.map((branch) => {
-        const branchNode: RoleTreeNode = {
-          title: branch.name,
-          value: `branch-${branch.id_branch}`,
-          key: `branch-${branch.id_branch}`,
-          selectable: false,
-          children: [],
-        };
-        if (
-          Array.isArray(branch.departments) &&
-          branch.departments.length > 0
-        ) {
-          branchNode.children = branch.departments.map((dep) => {
-            const departmentNode: RoleTreeNode = {
-              title: dep.name,
-              value: `department-${dep.id_department}`,
-              key: `department-${dep.id_department}`,
-              selectable: false,
-              children: [],
-            };
-            if (Array.isArray(dep.users) && dep.users.length > 0) {
-              departmentNode.children = dep.users.map((user) => ({
-                title: `${user.lastName?.trim() || ""}${
-                  user.firstName ? " " + user.firstName : ""
-                }`.trim(),
-                value: `user-${user.id}`,
-                key: `user-${user.id}`,
-                isLeaf: true,
-                selectable: true,
-              }));
-            }
-            return departmentNode;
-          });
-        }
-        return branchNode;
-      });
     };
 
     useEffect(() => {
@@ -136,10 +142,23 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
 
     useEffect(() => {
       setLoading(true);
-      const treeCate = buildCategoryTree(listDocumentCategories, true);
-      setTreeData(treeCate);
+      if (currentUser?.role?.name === "admin") {
+        const treeCate = buildCategoryTree(listDocumentCategories, true);
+        setTreeData(treeCate);
+      } else {
+        if (perDocumentCategories?.length) {
+          const treeCate = buildCategoryTree(
+            listDocumentCategories,
+            true,
+            perDocumentCategories
+          );
+          setTreeData(treeCate);
+        } else {
+          setTreeData([]);
+        }
+      }
       setLoading(false);
-    }, [listDocumentCategories]);
+    }, [currentUser?.role?.name, listDocumentCategories, perDocumentCategories]);
 
     const getIcon = (fileName?: string) => {
       const text = last(fileName?.split("."))?.toLowerCase();
@@ -193,6 +212,27 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       }
     };
 
+    const flattenPermission = (item: DocumentPermissionEntity) => {
+      type PermissionKey = "branch_id" | "department_id" | "user_id";
+
+      const mapping: Record<PermissionKey, string> = {
+        branch_id: "branch",
+        department_id: "department",
+        user_id: "user",
+      };
+
+      return (Object.keys(mapping) as PermissionKey[]).flatMap((key) => {
+        const prefix = mapping[key];
+        const ids = item[key];
+
+        if (!Array.isArray(ids)) return [];
+        const validIds = ids.filter((id): id is number => id != null);
+
+        if (validIds.length === 0) return [];
+        return validIds.map((id) => `${prefix}-${id}`);
+      });
+    };
+
     useImperativeHandle(
       ref,
       () => ({
@@ -229,10 +269,39 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             setTimeout(() => {
               form.setFieldsValue(formControlValues);
               form.setFieldValue(
+                "publish_date",
+                dayjs(currentItem.publish_date)
+              );
+              form.setFieldValue(
                 "category_id",
                 currentItem.category_id.toString()
               );
             }, 0);
+            try {
+              const permissions =
+                await documentPermissionService.getPerByDocuentId(
+                  currentItem.id_document.toString()
+                );
+              if (permissions?.data && permissions?.data?.length) {
+                const latestPermission = permissions.data
+                  .slice()
+                  .sort(
+                    (
+                      a: DocumentPermissionEntity,
+                      b: DocumentPermissionEntity
+                    ) =>
+                      new Date(b.createdAt).getTime() -
+                      new Date(a.createdAt).getTime()
+                  )[0];
+                setCurrentDocumentPermission(latestPermission);
+                setSelectedUserIds(flattenPermission(latestPermission));
+              } else {
+                setCurrentDocumentPermission(undefined);
+                setSelectedUserIds([]);
+              }
+            } catch (e) {
+              console.log(e);
+            }
           }
           setLoading(false);
         },
@@ -292,15 +361,57 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             is_featured: valueForm.is_featured ? 1 : 0,
             category_id: parseInt(valueForm.category_id),
             file: currentDocument.file,
+            file_id: currentDocument?.file_id || "",
             document_attachment: finalAttachments || [],
+            publish_date: dayjs(valueForm.publish_date).format("DD/MM/YYYY"),
           };
           await documentService.patch(document, {
             endpoint: `/${currentDocument.id_document.toString()}`,
           });
+          let permissionList: {
+            branch: number[];
+            department: number[];
+            user: number[];
+          } = {
+            branch: [],
+            department: [],
+            user: [],
+          };
+          if (selectedUserIds?.length) {
+            permissionList = selectedUserIds.reduce(
+              (acc: any, item: any) => {
+                const [key, value] = item.split("-");
+                if (acc[key]) acc[key].push(Number(value));
+                else acc[key] = [value];
+                return acc;
+              },
+              { branch: [], department: [], user: [] }
+            );
+          }
+          if (currentDocumentPermission) {
+            const permission = {
+              document_id: currentDocument.id_document,
+              user_id: permissionList.user,
+              department_id: permissionList.department,
+              branch_id: permissionList.branch,
+            };
+            await documentPermissionService.patch(permission, {
+              endpoint: `/${currentDocumentPermission.id_permission.toString()}`,
+            });
+          } else {
+            const permission = {
+              document_id: currentDocument.id_document,
+              user_id: permissionList.user,
+              department_id: permissionList.department,
+              branch_id: permissionList.branch,
+            };
+            await documentPermissionService.post(permission);
+          }
           message.success("Chỉnh sửa văn bản thành công!");
           closeModal();
+          await getPerDocument();
           if (resetData) {
-            resetData();
+            await resetData();
           }
         } catch (err) {
           console.error(err);
@@ -325,15 +436,45 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             is_featured: valueForm.is_featured ? 1 : 0,
             category_id: parseInt(valueForm.category_id),
             file: res.file.path,
+            file_id: res.file?.id || "",
             document_attachment: documentAttachment || [],
             id_department: currentUser?.department?.id_department || null,
+            publish_date: dayjs(valueForm.publish_date).format("DD/MM/YYYY"),
           };
-          await documentService.post(document);
+          const documentResults = await documentService.post(document);
+          let permissionList: {
+            branch: number[];
+            department: number[];
+            user: number[];
+          } = {
+            branch: [],
+            department: [],
+            user: [],
+          };
+          if (selectedUserIds?.length) {
+            permissionList = selectedUserIds.reduce(
+              (acc: any, item: any) => {
+                const [key, value] = item.split("-");
+                if (acc[key]) acc[key].push(Number(value));
+                else acc[key] = [value];
+                return acc;
+              },
+              { branch: [], department: [], user: [] }
+            );
+          }
+          const permission = {
+            document_id: documentResults.id_document,
+            user_id: permissionList.user,
+            department_id: permissionList.department,
+            branch_id: permissionList.branch,
+          };
+          await documentPermissionService.post(permission);
           message.success("Thêm mới văn bản thành công!");
           closeModal();
           if (resetData) {
             resetData();
           }
+          await getPerDocument();
         } catch (err) {
           console.error(err);
           message.error("Thêm mới văn bản thất bại!");
@@ -347,6 +488,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       setFormAttachs([{ title: "", linkFile: "", fileList: [] as any[] }]);
       setSelectedUserIds([]);
       setCurrentDocument(undefined);
+      setCurrentDocumentPermission(undefined);
       form.resetFields();
     };
 
@@ -617,8 +759,8 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                       },
                     ]}
                   >
-                    <Upload {...uploadProps}>
-                      <Button icon={<UploadOutlined />}>
+                    <Upload {...uploadProps} className="w-full">
+                      <Button icon={<UploadOutlined />} className="w-full">
                         Tải tài liệu lên (PDF, Word, Excel)
                       </Button>
                     </Upload>
@@ -685,10 +827,32 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   />
                 </Form.Item>
               </Col>
-              <Col xs={12} sm={12} md={12} lg={6}>
+              <Col xs={24} sm={24} md={24} lg={12}>
                 <Form.Item
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
+                  label="Ngày phát hành"
+                  name="publish_date"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Trường yêu cầu nhập!",
+                    },
+                  ]}
+                >
+                  <DatePicker
+                    locale={vi}
+                    format="DD/MM/YYYY"
+                    className="w-full"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={24}>
+              <Col xs={24} sm={24} md={24} lg={12}>
+                <Form.Item
+                  labelCol={{ span: 8, className: "!text-start" }}
+                  wrapperCol={{ span: 16 }}
                   label="Trạng thái"
                   name="status"
                   initialValue={true}
@@ -699,10 +863,10 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   />
                 </Form.Item>
               </Col>
-              <Col xs={12} sm={12} md={12} lg={6}>
+              <Col xs={24} sm={24} md={24} lg={12}>
                 <Form.Item
-                  labelCol={{ span: 24 }}
-                  wrapperCol={{ span: 24 }}
+                  labelCol={{ span: 8, className: "!text-start" }}
+                  wrapperCol={{ span: 16 }}
                   label="Tài liệu nổi bật"
                   name="is_featured"
                   initialValue={false}
@@ -766,6 +930,15 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                     style={{ width: "100%" }}
                     treeDefaultExpandAll
                     maxTagCount="responsive"
+                    filterTreeNode={(inputValue: string, treeNode: any) => {
+                      const title =
+                        typeof treeNode.title === "string"
+                          ? treeNode.title
+                          : "";
+                      return title
+                        .toLocaleLowerCase()
+                        .includes(inputValue?.trim().toLocaleLowerCase());
+                    }}
                   />
                 </Card>
               </Col>
