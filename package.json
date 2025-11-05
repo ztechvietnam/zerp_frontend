@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
+    "@cyntler/react-doc-viewer": "^1.17.1",
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/interaction": "^6.1.15",
@@ -24,6 +25,7 @@
     "axios": "^1.11.0",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
+    "docx-preview": "^0.3.7",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "flatpickr": "^4.6.13",

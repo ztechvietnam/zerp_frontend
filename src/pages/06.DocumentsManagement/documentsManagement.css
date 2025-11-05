@@ -39,3 +39,31 @@
     }
   }
 }
+
+.filter-header {
+  .ant-input {
+    background-color: transparent;
+    border-color: transparent !important;
+    border: none;
+    box-shadow: none !important;
+  }
+  .ant-input::placeholder {
+    font-size: 13px;
+  }
+
+  .ant-select.ant-tree-select {
+    .ant-select-selector {
+      background-color: transparent;
+      border-color: transparent !important;
+      border: none;
+      box-shadow: none !important;
+    }
+  }
+  .ant-select-selection-placeholder{
+    font-size: 13px;
+  }
+
+  .ant-form-item{
+    margin-bottom: 0;
+  }
+}

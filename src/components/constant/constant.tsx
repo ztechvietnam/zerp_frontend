@@ -794,13 +794,20 @@ export const dataDocuments: DocumentEntity[] = generateDataDocuments();
 
 export const buildCategoryTree = (
   categories: DocumentCategoriesEntity[],
-  sidebar?: boolean
+  sidebar?: boolean,
+  perDocumentCategories?: string[]
 ): TreeNode[] => {
-  const filteredCategories = categories.filter((c) => {
+  let filteredCategories = categories.filter((c) => {
     return sidebar
       ? c.parent_category_id !== 0 && c.status !== 0
       : c.id_category !== 1;
   });
+
+  if (perDocumentCategories?.length) {
+    filteredCategories = filteredCategories.filter((cate) => {
+      return perDocumentCategories.includes(cate.id_category.toString());
+    });
+  }
 
   const categoryMap = new Map<number, TreeNode>();
 
