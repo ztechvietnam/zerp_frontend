@@ -4,12 +4,15 @@ import {
   SolutionOutlined,
 } from "@ant-design/icons";
 import { CategoryNewsEntity } from "../../common/services/category-news/categoryNews";
-import {
-  TreeNode,
-} from "../../common/services/category/category";
+import { TreeNode } from "../../common/services/category/category";
 import { NewsEntity } from "../../common/services/news/news";
 import { QuestionEntity } from "../../common/services/question/question";
 import { DocumentCategoriesEntity } from "../../common/services/document-categories/documentCategories";
+
+export const encodeBase64 = (str: string): string =>
+  btoa(unescape(encodeURIComponent(str)));
+export const decodeBase64 = (str: string): string =>
+  decodeURIComponent(escape(atob(str)));
 
 export enum SIDE_BAR {
   LECTURE_VIDEO = "lecture-video",

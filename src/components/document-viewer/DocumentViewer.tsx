@@ -36,6 +36,23 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
           ? (firstFile as File).name
           : firstFile.split("/").pop() || "Tài liệu");
 
+      const isExcelFile =
+        fileName.toLowerCase().endsWith(".xlsx") ||
+        (typeof firstFile !== "string" &&
+          (firstFile as File).type.includes(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          ));
+
+      if (isExcelFile) {
+        const blobUrl = URL.createObjectURL(firstFile as Blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
+
       const isDocxFile =
         fileName.toLowerCase().endsWith(".docx") ||
         (typeof firstFile !== "string" &&
@@ -48,7 +65,6 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
       setVisible(true);
 
       if (isDocxFile && typeof firstFile !== "string") {
-        // DOCX render bằng docx-preview
         const docFile = firstFile as File;
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -60,7 +76,6 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
         };
         reader.readAsArrayBuffer(docFile);
       } else {
-        // Các loại file khác (pdf, ảnh, txt...)
         const formattedDocs: IDocument[] = files.map((file, idx) => {
           if (typeof file === "string") {
             return { uri: file };
@@ -75,20 +90,14 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
     },
   }));
 
-  // 🧹 Cleanup khi đóng modal
   useEffect(() => {
     if (!visible) {
-      // 1️⃣ Clear docx-preview DOM
       if (docxContainerRef.current) {
         docxContainerRef.current.innerHTML = "";
       }
-
-      // 2️⃣ Revoke blob URLs
       docs.forEach((d) => {
         if (d.uri?.startsWith("blob:")) URL.revokeObjectURL(d.uri);
       });
-
-      // 3️⃣ Reset state
       setDocs([]);
       setIsDocx(false);
     }

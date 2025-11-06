@@ -2,8 +2,10 @@
 import { App, Col, Form, Input, Modal, Row, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
-import { MEASSAGE } from "../constant/constant";
+import { decodeBase64, encodeBase64, MEASSAGE } from "../constant/constant";
 import { UserEntity } from "../../common/services/user/user";
+import { useAuth } from "../../context/AuthContext";
+import { userService } from "../../common/services/user/user-service";
 
 export interface EditPasswordModalRef {
   show(currentItem?: UserEntity): Promise<void>;
@@ -39,14 +41,38 @@ export const EditPasswordModal = forwardRef<
   );
 
   const editPassword = async (valueForm: any) => {
-    console.log(valueForm);
-    if (valueForm["oldPassword"] !== currentUser?.passWord) {
-      message.error("Mật khẩu hiện tại không khớp");
+    setLoading(true);
+    const encodedPassword = sessionStorage.getItem("user_password");
+    if (encodedPassword) {
+      if (valueForm["oldPassword"] !== decodeBase64(encodedPassword)) {
+        message.error("Mật khẩu hiện tại không khớp");
+      } else {
+        if (valueForm["oldPassword"] === valueForm["newPassword"]) {
+          message.error("Mật khẩu mới trùng với mật khẩu hiện tại");
+        } else {
+          try {
+            await userService.patch(
+              { password: valueForm["newPassword"] },
+              { endpoint: `/${currentUser?.id.toString()}` }
+            );
+            sessionStorage.setItem(
+              "user_password",
+              encodeBase64(valueForm["newPassword"])
+            );
+            closeModal();
+            message.success("Đổi mật khẩu thành công");
+            setLoading(false);
+          } catch (e) {
+            setLoading(false);
+            console.log(e);
+            message.error("Đổi mật khẩu thất bại");
+          }
+        }
+      }
     } else {
-      message.success(
-        currentUser ? "Chỉnh sửa thành công" : "Thêm mới thành công"
-      );
+      message.error("Có lỗi xảy ra trong quá trình đổi mật khẩu");
     }
+    setLoading(false);
   };
 
   const closeModal = () => {
@@ -107,10 +133,8 @@ export const EditPasswordModal = forwardRef<
                     message: "Vui lòng nhập mật khẩu mới!",
                   },
                   {
-                    pattern:
-                      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/,
-                    message:
-                      "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!",
+                    pattern: /^.{6,}$/,
+                    message: "Mật khẩu phải có ít nhất 6 ký tự!",
                   },
                 ]}
                 hasFeedback
