@@ -273,7 +273,7 @@ const ListPatients = () => {
           <Breadcrumb
             items={[
               {
-                href: "/",
+                href: "/dashboard/customer-support",
                 title: <span>Trang chủ</span>,
               },
               {

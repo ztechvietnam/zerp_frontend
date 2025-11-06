@@ -362,7 +362,7 @@ const ListDepartments = () => {
           <Breadcrumb
             items={[
               {
-                href: "/",
+                href: "/dashboard/management",
                 title: <span>Trang chủ</span>,
               },
               {
@@ -375,6 +375,7 @@ const ListDepartments = () => {
       toolbarRight={
         <div className="flex items-center gap-4">
           <Button
+            type="primary"
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
               departmentFormRef.current?.show(TYPE_DEP.BRANCH);
@@ -383,6 +384,7 @@ const ListDepartments = () => {
             Thêm đơn vị
           </Button>
           <Button
+            type="primary"
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
               departmentFormRef.current?.show(TYPE_DEP.DEPARTMENT);
