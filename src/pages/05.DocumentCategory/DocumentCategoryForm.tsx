@@ -104,16 +104,14 @@ export const DocumentCategoryForm = forwardRef<
                 currentItem.id_category.toString()
               );
             if (permissions?.data && permissions?.data?.length) {
-              const latestPermission = permissions.data
-                .slice()
-                .sort(
-                  (
-                    a: DocumentCategoryPermissionEntity,
-                    b: DocumentCategoryPermissionEntity
-                  ) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
-                )[0];
+              const latestPermission = permissions.data.sort(
+                (
+                  a: DocumentCategoryPermissionEntity,
+                  b: DocumentCategoryPermissionEntity
+                ) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+              )[0];
               setCurrentCatePermission(latestPermission);
               setSelectedUserIds(flattenPermission(latestPermission));
             } else {
@@ -251,6 +249,8 @@ export const DocumentCategoryForm = forwardRef<
   const closeModal = () => {
     setShowModal(false);
     setCurrentCategory(undefined);
+    setCurrentCatePermission(undefined);
+    setSelectedUserIds([]);
     form.resetFields();
   };
 

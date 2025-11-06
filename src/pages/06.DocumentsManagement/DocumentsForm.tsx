@@ -118,7 +118,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const [form] = useForm();
     const [linkFile, setLinkFile] = useState<string>("");
     const [formAttachs, setFormAttachs] = useState([
-      { title: "", linkFile: "", fileList: [] as any[] },
+      { file_id: "", title: "", linkFile: "", fileList: [] as any[] },
     ]);
     const [treeDepartment, setTreeDepartment] = useState<RoleTreeNode[]>([]);
     const { listDocumentCategories, perDocumentCategories, getPerDocument } =
@@ -128,7 +128,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const handleAddFormAttach = () => {
       setFormAttachs((prev) => [
         ...prev,
-        { title: "", linkFile: "", fileList: [] },
+        { file_id: "", title: "", linkFile: "", fileList: [] },
       ]);
     };
 
@@ -158,7 +158,11 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
         }
       }
       setLoading(false);
-    }, [currentUser?.role?.name, listDocumentCategories, perDocumentCategories]);
+    }, [
+      currentUser?.role?.name,
+      listDocumentCategories,
+      perDocumentCategories,
+    ]);
 
     const getIcon = (fileName?: string) => {
       const text = last(fileName?.split("."))?.toLowerCase();
@@ -302,11 +306,13 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             } catch (e) {
               console.log(e);
             }
+          } else {
+            setSelectedUserIds([`user-${currentUser?.id}`]);
           }
           setLoading(false);
         },
       }),
-      []
+      [currentUser?.id, form]
     );
 
     const uploadDocumentAttachment = useCallback(
@@ -323,7 +329,13 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
               );
               const res = await fileService.uploadFile(formData);
               return {
-                title: attachment.title,
+                file_id: res.file.id,
+                title:
+                  attachment.title ||
+                  attachment.fileList[0]?.name
+                    ?.split(".")
+                    ?.slice(0, -1)
+                    .join("."),
                 linkFile: res.file.path,
               };
             }
@@ -363,7 +375,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             file: currentDocument.file,
             file_id: currentDocument?.file_id || "",
             document_attachment: finalAttachments || [],
-            publish_date: dayjs(valueForm.publish_date).format("DD/MM/YYYY"),
+            publish_date: dayjs(valueForm.publish_date).format("MM/DD/YYYY"),
           };
           await documentService.patch(document, {
             endpoint: `/${currentDocument.id_document.toString()}`,
@@ -439,7 +451,8 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             file_id: res.file?.id || "",
             document_attachment: documentAttachment || [],
             id_department: currentUser?.department?.id_department || null,
-            publish_date: dayjs(valueForm.publish_date).format("DD/MM/YYYY"),
+            publish_date: dayjs(valueForm.publish_date).format("MM/DD/YYYY"),
+            created_id: currentUser?.id,
           };
           const documentResults = await documentService.post(document);
           let permissionList: {
@@ -485,7 +498,9 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const closeModal = () => {
       setShowModal(false);
       setLinkFile("");
-      setFormAttachs([{ title: "", linkFile: "", fileList: [] as any[] }]);
+      setFormAttachs([
+        { file_id: "", title: "", linkFile: "", fileList: [] as any[] },
+      ]);
       setSelectedUserIds([]);
       setCurrentDocument(undefined);
       setCurrentDocumentPermission(undefined);
@@ -496,16 +511,16 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       "application/pdf",
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      // "application/vnd.ms-excel",
+      // "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ];
 
     const uploadProps: UploadProps = {
       maxCount: 1,
-      accept: ".pdf,.doc,.docx,.xls,.xlsx",
+      accept: ".pdf,.doc,.docx,",
       beforeUpload: (file: File) => {
         if (!allowedTypes.includes(file.type)) {
-          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
+          message.error("Chỉ cho phép file PDF, Word!");
           return Upload.LIST_IGNORE;
         }
         return false;
@@ -518,7 +533,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       openFileDialogOnClick: false,
       beforeUpload: (file: File) => {
         if (!allowedTypes.includes(file.type)) {
-          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
+          message.error("Chỉ cho phép file PDF, Word!");
           return Upload.LIST_IGNORE;
         }
         return false;
@@ -551,6 +566,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
           if (fileIndex < droppedFiles.length) {
             const remainFiles = droppedFiles.slice(fileIndex);
             const newAttachs = remainFiles.map((f) => ({
+              file_id: "",
               title: f.name.replace(/\.[^/.]+$/, ""),
               linkFile: "",
               fileList: [f],
@@ -761,7 +777,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   >
                     <Upload {...uploadProps} className="w-full">
                       <Button icon={<UploadOutlined />} className="w-full">
-                        Tải tài liệu lên (PDF, Word, Excel)
+                        Tải tài liệu lên (PDF, Word)
                       </Button>
                     </Upload>
                   </Form.Item>

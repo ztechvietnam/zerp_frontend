@@ -439,10 +439,10 @@ const AppSidebar: React.FC = () => {
             )}
             <div>{renderMenuItems(newsNavItems, "main")}</div>
             {subSystem === SUB_SYSTEM.LIBRARY && (
-              <div>{renderMenuItems(documentManagementNavItems, "main")}</div>
+              <div>{renderMenuItems(documentLookupNavItems, "main")}</div>
             )}
             {subSystem === SUB_SYSTEM.LIBRARY && (
-              <div>{renderMenuItems(documentLookupNavItems, "main")}</div>
+              <div>{renderMenuItems(documentManagementNavItems, "main")}</div>
             )}
             {subSystem === SUB_SYSTEM.MANAGEMENT && (
               <div>{renderMenuItems(systemAdminNavItems, "main")}</div>

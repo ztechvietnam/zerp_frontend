@@ -9,7 +9,7 @@ export interface DocumentEntity extends EntityBase {
   order: number;
   image: string;
   publish_date: Date;
-  document_attachment: { title: string; linkFile: string }[];
+  document_attachment: { file_id: string; title: string; linkFile: string }[];
   category_id: number;
   is_featured: number;
   code: string;

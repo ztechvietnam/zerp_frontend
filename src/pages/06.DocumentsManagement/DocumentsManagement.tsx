@@ -287,8 +287,9 @@ const DocumentsManagement = () => {
         return (
           <div className="flex flex-col gap-1">
             {value && value?.length ? (
-              value.map((atm: any) => (
+              value.map((atm: any, index: number) => (
                 <Tag
+                  key={index}
                   className="w-fit !whitespace-break-spaces cursor-pointer !m-0"
                   color="processing"
                   onClick={async () => {
@@ -425,13 +426,7 @@ const DocumentsManagement = () => {
                     const lastPart =
                       urlParts[urlParts.length - 1] || "Tài liệu";
 
-                    const splitParts = lastPart.split("-");
-                    const guessedName =
-                      splitParts.length > 2
-                        ? splitParts.slice(2).join("-")
-                        : lastPart;
-
-                    const ext = guessedName.includes(".")
+                    const ext = lastPart.includes(".")
                       ? ""
                       : mimeType.includes("pdf")
                       ? ".pdf"
@@ -441,7 +436,7 @@ const DocumentsManagement = () => {
                       ? ".xlsx"
                       : "";
 
-                    const fileName = decodeURIComponent(guessedName + ext);
+                    const fileName = decodeURIComponent(lastPart + ext);
 
                     const file = new File([response.data], fileName, {
                       type: mimeType,
@@ -538,7 +533,7 @@ const DocumentsManagement = () => {
           <Breadcrumb
             items={[
               {
-                href: "/",
+                href: "/dashboard/library",
                 title: <span>Trang chủ</span>,
               },
               {
@@ -610,6 +605,7 @@ const DocumentsManagement = () => {
 
             <Button
               type="primary"
+              disabled={Object.keys(filterValues || {}).length === 0}
               onClick={async () => {
                 form.resetFields();
                 setFilterValues({});
@@ -617,7 +613,7 @@ const DocumentsManagement = () => {
               }}
               className="ml-2 px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] transition"
             >
-              Reset
+              Làm mới
             </Button>
           </div>
         </Form>

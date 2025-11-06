@@ -132,7 +132,7 @@ const ListReviews = () => {
               size="small"
               style={{ width: 90 }}
             >
-              Reset
+              Làm mới
             </Button>
             <Button
               type="link"
@@ -298,7 +298,7 @@ const ListReviews = () => {
           <Breadcrumb
             items={[
               {
-                href: "/",
+                href: "/dashboard/customer-support",
                 title: <span>Trang chủ</span>,
               },
               {

@@ -280,7 +280,7 @@ const DocumentCategories = () => {
           <Breadcrumb
             items={[
               {
-                href: "/",
+                href: "/dashboard/library",
                 title: <span>Trang chủ</span>,
               },
               {
@@ -293,6 +293,7 @@ const DocumentCategories = () => {
       toolbarRight={
         <div>
           <Button
+            type="primary"
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
             onClick={() => {
               documentCategoryFormRef.current?.show();
