@@ -11,11 +11,12 @@ import {
   scheduleTokenRefresh,
 } from "../common/function/commonFunction";
 import { authService } from "../common/services/auth/authService";
+import { decodeBase64, encodeBase64 } from "../components/constant/constant";
 
 interface AuthContextType {
   currentUser: UserEntity | undefined;
   token: string | undefined;
-  login: (dataLogin: AuthEntity) => void;
+  login: (dataLogin: AuthEntity, passWord: string) => Promise<void>;
   setNewCuruser: (curUser: UserEntity | undefined) => void;
   logout: () => void;
 }
@@ -35,6 +36,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const savedToken = localStorage.getItem("access_token");
     const savedUser = localStorage.getItem("currentUser");
     const refreshToken = localStorage.getItem("refresh_token");
+
+    const encodedPassword = sessionStorage.getItem("user_password");
 
     const initAuth = async () => {
       if (savedToken && savedUser) {
@@ -67,10 +70,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             } catch (e) {
               console.error("Refresh failed", e);
               localStorage.clear();
+              sessionStorage.clear();
               window.location.href = "/signin";
             }
           } else {
             localStorage.clear();
+            sessionStorage.clear();
             window.location.href = "/signin";
           }
         }
@@ -86,8 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("currentUser", JSON.stringify(curUser));
   };
 
-  const login = async (dataLogin: AuthEntity) => {
+  const login = async (dataLogin: AuthEntity, passWord: string) => {
     setToken(dataLogin.token);
+    sessionStorage.setItem("user_password", encodeBase64(passWord));
     ServiceBase.setToken(dataLogin.token);
     localStorage.setItem("access_token", dataLogin.token);
     localStorage.setItem("refresh_token", dataLogin.refreshToken);
@@ -130,11 +136,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("currentUser");
+    sessionStorage.removeItem("user_password");
   };
 
   return (
     <AuthContext.Provider
-      value={{ currentUser, token, login, logout, setNewCuruser }}
+      value={{
+        currentUser,
+        token,
+        login,
+        setNewCuruser,
+        logout,
+      }}
     >
       {!loading && children}
     </AuthContext.Provider>

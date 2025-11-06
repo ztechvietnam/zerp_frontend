@@ -24,7 +24,7 @@ export default function SignInForm() {
       );
       setShowMessage("SUCCESS");
       setTimeout(async () => {
-        await login(resultLogin);
+        await login(resultLogin, formValues.password);
         navigate("/dashboard");
         setLoading(false);
       }, 2000);
