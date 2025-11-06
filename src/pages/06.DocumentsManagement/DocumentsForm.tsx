@@ -511,16 +511,16 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       "application/pdf",
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      // "application/vnd.ms-excel",
-      // "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ];
 
     const uploadProps: UploadProps = {
       maxCount: 1,
-      accept: ".pdf,.doc,.docx,",
+      accept: ".pdf,.doc,.docx,.xls,.xlsx",
       beforeUpload: (file: File) => {
         if (!allowedTypes.includes(file.type)) {
-          message.error("Chỉ cho phép file PDF, Word!");
+          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
           return Upload.LIST_IGNORE;
         }
         return false;
@@ -533,7 +533,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       openFileDialogOnClick: false,
       beforeUpload: (file: File) => {
         if (!allowedTypes.includes(file.type)) {
-          message.error("Chỉ cho phép file PDF, Word!");
+          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
           return Upload.LIST_IGNORE;
         }
         return false;
@@ -541,6 +541,19 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       onDrop(e) {
         const droppedFiles = Array.from(e.dataTransfer.files);
         if (!droppedFiles.length) return;
+
+        const validFiles = droppedFiles.filter((f) => {
+          const isValid = allowedTypes.includes(f.type);
+          if (!isValid) {
+            message.error(`File "${f.name}" không được phép tải lên!`);
+          }
+          return isValid;
+        });
+
+        if (!validFiles.length) {
+          message.warning("Không có file hợp lệ để thêm!");
+          return;
+        }
 
         setFormAttachs((prev) => {
           const updated = [...prev];
@@ -777,7 +790,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   >
                     <Upload {...uploadProps} className="w-full">
                       <Button icon={<UploadOutlined />} className="w-full">
-                        Tải tài liệu lên (PDF, Word)
+                        Tải tài liệu lên (PDF, Word, Excel)
                       </Button>
                     </Upload>
                   </Form.Item>
