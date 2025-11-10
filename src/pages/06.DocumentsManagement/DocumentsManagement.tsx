@@ -24,7 +24,7 @@ import {
   buildCategoryTree,
   MEASSAGE,
 } from "../../components/constant/constant";
-import { DeleteOutlined, EyeOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EyeOutlined, RedoOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { DocumentEntity } from "../../common/services/document/document";
 import dayjs from "dayjs";
@@ -251,7 +251,6 @@ const DocumentsManagement = () => {
       title: "Tên văn bản",
       dataIndex: "title",
       width: 200,
-      fixed: "left",
       render(value, record) {
         return (
           <span
@@ -522,6 +521,43 @@ const DocumentsManagement = () => {
     [onFilter]
   );
 
+  const getTableScroll = () => {
+    const height = tableRef.current?.offsetHeight ?? 0;
+    const windowHeight = pageContainerRef.current?.offsetHeight ?? 0;
+    const width = window.innerWidth;
+    
+    if (width < 428) {
+      if (idCategory) {
+        return height >= windowHeight - 231
+          ? { y: windowHeight - 231, x: "max-content" }
+          : undefined;
+      }
+      return height >= windowHeight - 271
+        ? { y: windowHeight - 271, x: "max-content" }
+        : undefined;
+    }
+
+    if (width < 768 && !idCategory) {
+      return height >= windowHeight - 271
+        ? { y: windowHeight - 271, x: "max-content" }
+        : undefined;
+    }
+    if (width < 1200) {
+      return height >= windowHeight - 231
+        ? { y: windowHeight - 231, x: "max-content" }
+        : undefined;
+    }
+    if (width < 1488) {
+      return height >= windowHeight - 234
+        ? { y: windowHeight - 234, x: "max-content" }
+        : undefined;
+    }
+
+    return height >= windowHeight - 209
+      ? { y: windowHeight - 209, x: "max-content" }
+      : undefined;
+  };
+
   return (
     <PageContainer
       ref={pageContainerRef}
@@ -566,82 +602,102 @@ const DocumentsManagement = () => {
     >
       <div className="pb-[10px] filter-header">
         <Form layout="horizontal" form={form}>
-          <div className="flex flex-row items-center bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-[5px] px-2 py-1 pl-3">
-            <div className="flex items-center">{iconFilter}</div>
-            <Form.Item
-              colon={false}
-              className={!idCategory ? "w-[50%]" : "w-[100%]"}
-              name="keyword"
+          <div className="flex flex-col bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-2 px-2 py-1 md:flex-row md:flex-wrap md:items-center">
+            {/* icon + input keyword */}
+            <div
+              className={`flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center ${
+                idCategory ? "w-full" : "w-full md:w-[calc(50%-8px)]"
+              } md:flex-nowrap`}
             >
-              <Input
-                className="w-full placeholder:text-[#8c8c8c] placeholder:text-[12px] placeholder:font-normal placeholder:leading-[18px] placeholder:tracking-[-0.02em]"
-                placeholder="Nhập từ khoá để tìm kiếm..."
-                maxLength={255}
-                onChange={(e) => debouncedOnFilter("keyword", e.target?.value)}
-              />
-            </Form.Item>
-            {!idCategory && (
-              <Form.Item colon={false} className="w-[50%]" name="categoryIds">
-                <TreeSelect
-                  treeData={treeData}
-                  treeCheckable
-                  allowClear
-                  showCheckedStrategy={SHOW_PARENT}
-                  placeholder="Chọn danh mục"
-                  style={{ width: "100%" }}
-                  maxTagCount="responsive"
-                  showSearch
-                  filterTreeNode={(inputValue: string, treeNode: any) => {
-                    const title =
-                      typeof treeNode.title === "string" ? treeNode.title : "";
-                    return title
-                      .toLocaleLowerCase()
-                      .includes(inputValue?.trim().toLocaleLowerCase());
-                  }}
-                  onChange={(e) => debouncedOnFilter("categoryIds", e)}
+              <div className="flex items-center sm:w-auto">{iconFilter}</div>
+              <Form.Item
+                colon={false}
+                className="flex-1 m-0 min-w-[200px]"
+                name="keyword"
+              >
+                <Input
+                  className="w-full placeholder:text-[#8c8c8c] placeholder:text-[12px] placeholder:font-normal placeholder:leading-[18px] placeholder:tracking-[-0.02em]"
+                  placeholder="Nhập từ khoá để tìm kiếm..."
+                  maxLength={255}
+                  onChange={(e) =>
+                    debouncedOnFilter("keyword", e.target?.value)
+                  }
                 />
               </Form.Item>
+              {idCategory && (
+                <Tooltip title="Làm mới">
+                  <Button
+                    type="primary"
+                    disabled={Object.keys(filterValues || {}).length === 0}
+                    onClick={async () => {
+                      form.resetFields();
+                      setFilterValues({});
+                      setPageIndex(1);
+                    }}
+                    className="px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] transition w-fit lg:w-auto"
+                  >
+                    <RedoOutlined />
+                  </Button>
+                </Tooltip>
+              )}
+            </div>
+            {!idCategory && (
+              <div className="flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center w-full md:w-[calc(50%-8px)] md:flex-nowrap">
+                <Form.Item
+                  colon={false}
+                  className="flex-1 m-0 min-w-[200px]"
+                  name="categoryIds"
+                >
+                  <TreeSelect
+                    treeData={treeData}
+                    treeCheckable
+                    allowClear
+                    showCheckedStrategy={SHOW_PARENT}
+                    placeholder="Chọn danh mục"
+                    style={{ width: "100%" }}
+                    maxTagCount="responsive"
+                    showSearch
+                    filterTreeNode={(inputValue: string, treeNode: any) => {
+                      const title =
+                        typeof treeNode.title === "string"
+                          ? treeNode.title
+                          : "";
+                      return title
+                        .toLocaleLowerCase()
+                        .includes(inputValue?.trim().toLocaleLowerCase());
+                    }}
+                    onChange={(e) => debouncedOnFilter("categoryIds", e)}
+                  />
+                </Form.Item>
+                <Tooltip title="Làm mới">
+                  <Button
+                    type="primary"
+                    disabled={Object.keys(filterValues || {}).length === 0}
+                    onClick={async () => {
+                      form.resetFields();
+                      setFilterValues({});
+                      setPageIndex(1);
+                    }}
+                    className="px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] transition w-fit lg:w-auto"
+                  >
+                    <RedoOutlined />
+                  </Button>
+                </Tooltip>
+              </div>
             )}
-
-            <Button
-              type="primary"
-              disabled={Object.keys(filterValues || {}).length === 0}
-              onClick={async () => {
-                form.resetFields();
-                setFilterValues({});
-                setPageIndex(1);
-              }}
-              className="ml-2 px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] transition"
-            >
-              Làm mới
-            </Button>
           </div>
         </Form>
       </div>
-      <div className={`flex flex-col gap-[10px] w-full h-[calc(100%-117.2px)]`}>
-        <div ref={tableRef} className="flex h-full">
+
+      <div className={`flex flex-col gap-[10px] w-full h-[calc(100%-112px)]`}>
+        <div ref={tableRef} className="flex h-[calc(100%-32px)]">
           <Table
             rowKey="id"
             columns={columns}
             loading={loading}
             dataSource={listData}
             pagination={false}
-            scroll={
-              window.innerWidth < 1025
-                ? window.innerWidth < 544
-                  ? (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 296
-                    ? { y: window.innerHeight - 296 }
-                    : undefined
-                  : (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 273
-                  ? { y: window.innerHeight - 273 }
-                  : undefined
-                : (tableRef.current?.offsetHeight ?? 0) >=
-                  window.innerHeight - 285
-                ? { y: window.innerHeight - 285 }
-                : undefined
-            }
+            scroll={getTableScroll()}
             style={{
               boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
               borderRadius: "8px",
@@ -652,11 +708,13 @@ const DocumentsManagement = () => {
         </div>
         <div
           className={`flex items-center ${
-            listDocuments.length > 0 ? "justify-between" : "justify-end"
+            listDocuments.length > 0
+              ? "justify-end sm:justify-between"
+              : "justify-end"
           }`}
         >
           {listDocuments.length > 0 && (
-            <div className="flex items-center justify-between gap-[5px]">
+            <div className="hidden sm:flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>
               <span className="text-[#108ee9] font-medium">
                 {`${

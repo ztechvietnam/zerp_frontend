@@ -323,11 +323,11 @@ const DocumentCategories = () => {
               window.innerWidth < 768
                 ? (tableRef.current?.offsetHeight ?? 0) >=
                   window.innerHeight - 200
-                  ? { y: window.innerHeight - 200 }
+                  ? { y: window.innerHeight - 200, x: "max-content" }
                   : undefined
                 : (tableRef.current?.offsetHeight ?? 0) >=
                   window.innerHeight - 190
-                ? { y: window.innerHeight - 190 }
+                ? { y: window.innerHeight - 190, x: "max-content" }
                 : undefined
             }
             components={{
