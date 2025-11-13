@@ -433,6 +433,8 @@ const DocumentsManagement = () => {
                       ? ".docx"
                       : mimeType.includes("excel")
                       ? ".xlsx"
+                      : mimeType.includes("powerpoint")
+                      ? ".pptx"
                       : "";
 
                     const fileName = decodeURIComponent(lastPart + ext);
@@ -525,7 +527,7 @@ const DocumentsManagement = () => {
     const height = tableRef.current?.offsetHeight ?? 0;
     const windowHeight = pageContainerRef.current?.offsetHeight ?? 0;
     const width = window.innerWidth;
-    
+
     if (width < 428) {
       if (idCategory) {
         return height >= windowHeight - 231

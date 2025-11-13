@@ -513,14 +513,16 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "application/vnd.ms-excel",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     ];
 
     const uploadProps: UploadProps = {
       maxCount: 1,
-      accept: ".pdf,.doc,.docx,.xls,.xlsx",
+      accept: ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx",
       beforeUpload: (file: File) => {
         if (!allowedTypes.includes(file.type)) {
-          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
+          message.error("Chỉ cho phép file PDF, Word, Excel và PowerPoint!");
           return Upload.LIST_IGNORE;
         }
         return false;
@@ -533,7 +535,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       openFileDialogOnClick: false,
       beforeUpload: (file: File) => {
         if (!allowedTypes.includes(file.type)) {
-          message.error("Chỉ cho phép file PDF, Word hoặc Excel!");
+          message.error("Chỉ cho phép file PDF, Word, Excel và PowerPoint!");
           return Upload.LIST_IGNORE;
         }
         return false;
@@ -790,7 +792,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   >
                     <Upload {...uploadProps} className="w-full">
                       <Button icon={<UploadOutlined />} className="w-full">
-                        Tải tài liệu lên (PDF, Word, Excel)
+                        Tải tài liệu lên (PDF, Word, Excel, PowerPoint)
                       </Button>
                     </Upload>
                   </Form.Item>

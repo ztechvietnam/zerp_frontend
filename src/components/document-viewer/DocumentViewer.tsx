@@ -42,6 +42,12 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
           (firstFile as File).type.includes(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           ));
+      const isPowerpoint =
+        lower.endsWith(".pptx") ||
+        (typeof firstFile !== "string" &&
+          (firstFile as File).type.includes(
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          ));
 
       const isDocx =
         lower.endsWith(".docx") ||
@@ -55,8 +61,8 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
         (typeof firstFile !== "string" &&
           (firstFile as File).type.includes("application/pdf"));
 
-      // 🟡 Nếu là Excel → tải xuống
-      if (isExcel) {
+      // 🟡 Nếu là Excel hoặc PowerPoint → tải xuống
+      if (isExcel || isPowerpoint) {
         const blobUrl =
           typeof firstFile === "string"
             ? firstFile
@@ -113,11 +119,11 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
       onCancel={handleClose}
       footer={null}
       title={modalTitle}
-      className="!w-[90vw] !top-0"
+      className="!w-[100vw] !top-0"
       centered
       bodyStyle={{
         padding: 0,
-        height: "80vh",
+        height: "calc(100vh - 73px)",
       }}
     >
       {fileType === "docx" ? (

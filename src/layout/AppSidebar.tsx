@@ -428,7 +428,7 @@ const AppSidebar: React.FC = () => {
       <div
         className={`flex flex-col overflow-y-auto duration-300 ease-linear ${
           isExpanded || isMobileOpen
-            ? "max-h-[calc(100vh-74.64px-46.8px)]"
+            ? "max-h-[calc(100vh-74.64px-46.8px-50px)] md:max-h-[calc(100vh-74.64px-46.8px)]"
             : isHovered
             ? "max-h-[calc(100vh-74.64px)]"
             : "max-h-[calc(100vh-74.64px-46.8px)]"
