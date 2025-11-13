@@ -67,6 +67,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
             id_department: dataSave.department?.startsWith("department-")
               ? parseInt(dataSave.department.replace("department-", ""))
               : null,
+            ...(dataSave.password ? { password: dataSave.password } : {}),
           } as any);
           message.success("Chỉnh sửa thành công");
         } else {
@@ -81,7 +82,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
             status: { id: 1 },
             provider: "email",
             username: dataSave.email?.split("@")[0],
-            password: "123456",
+            password: dataSave.password ? dataSave.password : "123456",
           };
           await userService.add(newUser as any);
           message.success("Thêm mới thành công");
@@ -124,7 +125,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
         <Spin spinning={loading}>
           <Form layout="horizontal" form={form} style={{ padding: 12 }}>
             <Row gutter={24}>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={24} lg={12}>
                 <Form.Item
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
@@ -144,7 +145,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={24} lg={12}>
                 <Form.Item
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
@@ -166,7 +167,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
               </Col>
             </Row>
             <Row gutter={24}>
-              <Col span={24}>
+              <Col xs={24} sm={24} md={24} lg={12}>
                 <Form.Item
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
@@ -186,6 +187,22 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                   <Input
                     style={{ width: "100%" }}
                     placeholder={"Nhập địa chỉ email"}
+                    maxLength={255}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={12}>
+                <Form.Item
+                  labelCol={{ span: 24 }}
+                  wrapperCol={{ span: 24 }}
+                  label={currentUser ? "Mật khẩu mới" : "Mật khẩu"}
+                  name="password"
+                >
+                  <Input
+                    style={{ width: "100%" }}
+                    placeholder={
+                      currentUser ? "Nhập mật khẩu mới" : "Nhập mật khẩu"
+                    }
                     maxLength={255}
                   />
                 </Form.Item>
