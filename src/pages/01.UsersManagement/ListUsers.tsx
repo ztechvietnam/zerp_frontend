@@ -21,7 +21,6 @@ import { UserEntity } from "../../common/services/user/user";
 import "./usersManagement.css";
 import { debounce } from "lodash";
 import Highlighter from "react-highlight-words";
-import { Role } from "../../common/services/role/role";
 import "../../index.css";
 import { useSidebar } from "../../context/SidebarContext";
 import { departmentService } from "../../common/services/department/department-service";
@@ -32,11 +31,6 @@ import {
   DepartmentTreeNode,
 } from "../../common/services/department/department";
 import { ColumnFilterItem } from "antd/es/table/interface";
-
-const RoleUser: Record<Role, string> = {
-  [Role.Admin]: "Quản trị viên",
-  [Role.User]: "Người dùng",
-};
 
 const ListUsers = () => {
   const [pageSize, setPageSize] = useState<number>(10);
@@ -384,6 +378,34 @@ const ListUsers = () => {
     },
   ];
 
+  const getTableScroll = () => {
+    const height = tableRef.current?.offsetHeight ?? 0;
+    const windowHeight = pageContainerRef.current?.offsetHeight ?? 0;
+    const width = window.innerWidth;
+
+    if (width < 960) {
+      return height >= windowHeight - 179
+        ? { y: windowHeight - 179, x: "max-content" }
+        : undefined;
+    }
+
+    if (width < 1024) {
+      return height >= windowHeight - 157
+        ? { y: windowHeight - 157, x: "max-content" }
+        : undefined;
+    }
+
+    if (width < 1280) {
+      return height >= windowHeight - 179
+        ? { y: windowHeight - 179, x: "max-content" }
+        : undefined;
+    }
+
+    return height >= windowHeight - 157
+      ? { y: windowHeight - 157, x: "max-content" }
+      : undefined;
+  };
+
   return (
     <PageContainer
       ref={pageContainerRef}
@@ -478,22 +500,7 @@ const ListUsers = () => {
             rowKey="id"
             columns={columns}
             dataSource={dataFilter}
-            scroll={
-              window.innerWidth < 1025
-                ? window.innerWidth < 544
-                  ? (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 244
-                    ? { y: window.innerHeight - 244 }
-                    : undefined
-                  : (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 221
-                  ? { y: window.innerHeight - 221 }
-                  : undefined
-                : (tableRef.current?.offsetHeight ?? 0) >=
-                  window.innerHeight - 233
-                ? { y: window.innerHeight - 233 }
-                : undefined
-            }
+            scroll={getTableScroll()}
             style={{
               boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
               borderRadius: "8px",
@@ -502,7 +509,11 @@ const ListUsers = () => {
             }}
           />
         </div>
-        <div className={`flex items-center ${totalData > 0 ? 'justify-between': 'justify-end'}`}>
+        <div
+          className={`flex items-center ${
+            totalData > 0 ? "justify-between" : "justify-end"
+          }`}
+        >
           {totalData > 0 && (
             <div className="flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>

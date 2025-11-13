@@ -15,4 +15,17 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    host: true, // cho phép truy cập từ IP hoặc domain
+    port: 5173,
+    allowedHosts: ["zerp.hih.vn"],
+    hmr: {
+      host: "zerp.hih.vn", // 👈 để WebSocket trỏ đúng domain bạn đang dùng
+      protocol: "wss", // nếu bạn đang dùng HTTPS
+      clientPort: 443, // port thực tế bạn truy cập (https mặc định 443)
+    },
+  },
+  optimizeDeps: {
+    exclude: ["chunk-5QZXEGFM"]
+  },
 });

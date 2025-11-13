@@ -351,6 +351,22 @@ const ListDepartments = () => {
     },
   ];
 
+  const getTableScroll = () => {
+    const height = tableRef.current?.offsetHeight ?? 0;
+    const windowHeight = pageContainerRef.current?.offsetHeight ?? 0;
+    const width = window.innerWidth;
+
+    if (width < 768) {
+      return height >= windowHeight - 161
+        ? { y: windowHeight - 161, x: "max-content" }
+        : undefined;
+    }
+
+    return height >= windowHeight - 140
+      ? { y: windowHeight - 140, x: "max-content" }
+      : undefined;
+  };
+
   return (
     <PageContainer
       ref={pageContainerRef}
@@ -373,7 +389,7 @@ const ListDepartments = () => {
         </div>
       }
       toolbarRight={
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-4">
           <Button
             type="primary"
             className="flex !gap-[3px] items-center justify-center cursor-pointer"
@@ -410,17 +426,7 @@ const ListDepartments = () => {
               expandedRowKeys: expandedKeys,
               onExpandedRowsChange: (keys) => setExpandedKeys(keys as string[]),
             }}
-            scroll={
-              window.innerWidth < 768
-                ? (tableRef.current?.offsetHeight ?? 0) >=
-                  window.innerHeight - 200
-                  ? { y: window.innerHeight - 200 }
-                  : undefined
-                : (tableRef.current?.offsetHeight ?? 0) >=
-                  window.innerHeight - 190
-                ? { y: window.innerHeight - 190 }
-                : undefined
-            }
+            scroll={getTableScroll()}
             components={{
               body: {
                 cell: (props) => (

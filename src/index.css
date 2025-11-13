@@ -840,3 +840,32 @@ span.flatpickr-weekday,
     color: #344054 !important;
   }
 }
+
+.asideLeftBar {
+  margin-top: 68px;
+}
+.layoutBody {
+  height: calc(100vh - 71px);
+}
+@media (min-width: 539px) {
+  .asideLeftBar {
+    margin-top: 46.8px;
+  }
+  .layoutBody {
+    height: calc(100vh - 49px);
+  }
+}
+@media (min-width: 1024px) {
+  .asideLeftBar {
+    margin-top: 0px;
+  }
+  .layoutBody {
+    height: calc(100vh - 57px);
+  }
+}
+
+@media (min-width: 500px) {
+  .ant-pagination-options {
+    display: inline-block !important;
+  }
+}

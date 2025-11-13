@@ -385,18 +385,32 @@ const ListZaloMessages = () => {
     },
   ];
 
-  const calculateCounterFilter = (formValues?: any) => {
-    if (formValues) {
-      const filledCount = Object.values(formValues).filter((value) => {
-        if (Array.isArray(value)) return value.length > 0;
-        if (typeof value === "object" && value !== null)
-          return Object.keys(value).length > 0;
-        return value !== undefined && value !== null && value !== "";
-      }).length;
-      setCounterFilter(filledCount);
-    } else {
-      setCounterFilter(0);
+  const getTableScroll = () => {
+    const height = tableRef.current?.offsetHeight ?? 0;
+    const windowHeight = window.innerHeight;
+    const width = window.innerWidth;
+
+    if (width < 428) {
+      return height >= windowHeight - 316
+        ? { y: windowHeight - 316, x: "max-content" }
+        : undefined;
     }
+
+    if (width < 538) {
+      return height >= windowHeight - 288
+        ? { y: windowHeight - 288, x: "max-content" }
+        : undefined;
+    }
+
+    if (width < 1200) {
+      return height >= windowHeight - 274
+        ? { y: windowHeight - 274, x: "max-content" }
+        : undefined;
+    }
+
+    return height >= windowHeight - 234
+      ? { y: windowHeight - 234, x: "max-content" }
+      : undefined;
   };
 
   return (
@@ -440,29 +454,14 @@ const ListZaloMessages = () => {
       }
     >
       <div className="flex flex-col gap-[10px] w-full h-[calc(100%-60px)]">
-        <div ref={tableRef} className="flex h-full">
+        <div ref={tableRef} className="flex h-[calc(100%-32px)]">
           <Table
             rowKey="id"
             loading={loading}
             columns={columns}
             dataSource={dataFilter}
             pagination={false}
-            scroll={
-              window.innerWidth < 1025
-                ? window.innerWidth < 544
-                  ? (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 244
-                    ? { y: window.innerHeight - 244 }
-                    : undefined
-                  : (tableRef.current?.offsetHeight ?? 0) >=
-                    window.innerHeight - 221
-                  ? { y: window.innerHeight - 221 }
-                  : undefined
-                : (tableRef.current?.offsetHeight ?? 0) >=
-                  window.innerHeight - 233
-                ? { y: window.innerHeight - 233 }
-                : undefined
-            }
+            scroll={getTableScroll()}
             style={{
               boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
               borderRadius: "8px",
@@ -471,9 +470,13 @@ const ListZaloMessages = () => {
             }}
           />
         </div>
-        <div className={`flex items-center ${totalData > 0 ? 'justify-between': 'justify-end'}`}>
+        <div
+          className={`flex items-center ${
+            totalData > 0 ? "justify-end sm:justify-between" : "justify-end"
+          }`}
+        >
           {totalData > 0 && (
-            <div className="flex items-center justify-between gap-[5px]">
+            <div className="hidden sm:flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>
               <span className="text-[#108ee9] font-medium">
                 {`${

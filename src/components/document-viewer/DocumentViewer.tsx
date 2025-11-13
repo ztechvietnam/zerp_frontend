@@ -3,12 +3,7 @@ import React, {
   useImperativeHandle,
   useState,
   useRef,
-  useEffect,
 } from "react";
-import DocViewer, {
-  DocViewerRenderers,
-  IDocument,
-} from "@cyntler/react-doc-viewer";
 import { Modal } from "antd";
 import { renderAsync } from "docx-preview";
 import "./DocumentViewer.css";
@@ -22,9 +17,11 @@ export interface DocumentViewerRef {
 
 const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
   const [visible, setVisible] = useState(false);
-  const [docs, setDocs] = useState<IDocument[]>([]);
   const [modalTitle, setModalTitle] = useState("Xem văn bản");
-  const [isDocx, setIsDocx] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<"pdf" | "docx" | "other" | null>(
+    null
+  );
   const docxContainerRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -36,77 +33,84 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
           ? (firstFile as File).name
           : firstFile.split("/").pop() || "Tài liệu");
 
-      const isExcelFile =
-        fileName.toLowerCase().endsWith(".xlsx") ||
+      const lower = fileName.toLowerCase();
+
+      // 🎯 Xác định loại file
+      const isExcel =
+        lower.endsWith(".xlsx") ||
         (typeof firstFile !== "string" &&
           (firstFile as File).type.includes(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           ));
 
-      if (isExcelFile) {
-        const blobUrl = URL.createObjectURL(firstFile as Blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(blobUrl);
-        return;
-      }
-
-      const isDocxFile =
-        fileName.toLowerCase().endsWith(".docx") ||
+      const isDocx =
+        lower.endsWith(".docx") ||
         (typeof firstFile !== "string" &&
           (firstFile as File).type.includes(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           ));
 
-      setIsDocx(isDocxFile);
-      setModalTitle(fileName);
-      setVisible(true);
+      const isPdf =
+        lower.endsWith(".pdf") ||
+        (typeof firstFile !== "string" &&
+          (firstFile as File).type.includes("application/pdf"));
 
-      if (isDocxFile && typeof firstFile !== "string") {
-        const docFile = firstFile as File;
+      // 🟡 Nếu là Excel → tải xuống
+      if (isExcel) {
+        const blobUrl =
+          typeof firstFile === "string"
+            ? firstFile
+            : URL.createObjectURL(firstFile);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        a.click();
+        if (blobUrl.startsWith("blob:")) URL.revokeObjectURL(blobUrl);
+        return;
+      }
+
+      // 🟢 Nếu là DOCX
+      if (isDocx && typeof firstFile !== "string") {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const buffer = e.target?.result as ArrayBuffer;
           if (docxContainerRef.current) {
-            docxContainerRef.current.innerHTML = ""; // clear cũ
+            docxContainerRef.current.innerHTML = "";
             await renderAsync(buffer, docxContainerRef.current);
           }
+          setVisible(true);
+          setModalTitle(fileName);
+          setFileType("docx");
+          setFileUrl(null);
         };
-        reader.readAsArrayBuffer(docFile);
-      } else {
-        const formattedDocs: IDocument[] = files.map((file, idx) => {
-          if (typeof file === "string") {
-            return { uri: file };
-          }
-          return {
-            uri: URL.createObjectURL(file),
-            fileName: options?.titles?.[idx] || "Tài liệu",
-          };
-        });
-        setDocs(formattedDocs);
+        reader.readAsArrayBuffer(firstFile);
+        return;
       }
+
+      // 🔵 Nếu là PDF hoặc link
+      const url =
+        typeof firstFile === "string"
+          ? firstFile
+          : URL.createObjectURL(firstFile);
+      setFileUrl(url);
+      setModalTitle(fileName);
+      setFileType(isPdf ? "pdf" : "other");
+      setVisible(true);
     },
   }));
 
-  useEffect(() => {
-    if (!visible) {
-      if (docxContainerRef.current) {
-        docxContainerRef.current.innerHTML = "";
-      }
-      docs.forEach((d) => {
-        if (d.uri?.startsWith("blob:")) URL.revokeObjectURL(d.uri);
-      });
-      setDocs([]);
-      setIsDocx(false);
-    }
-  }, [visible]);
+  const handleClose = () => {
+    if (fileUrl?.startsWith("blob:")) URL.revokeObjectURL(fileUrl);
+    setVisible(false);
+    setFileUrl(null);
+    setFileType(null);
+    if (docxContainerRef.current) docxContainerRef.current.innerHTML = "";
+  };
 
   return (
     <Modal
       open={visible}
-      onCancel={() => setVisible(false)}
+      onCancel={handleClose}
       footer={null}
       title={modalTitle}
       className="!w-[90vw] !top-0"
@@ -114,36 +118,27 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
       bodyStyle={{
         padding: 0,
         height: "80vh",
-        display: "flex",
-        flexDirection: "column",
       }}
     >
-      {isDocx ? (
+      {fileType === "docx" ? (
         <div
           ref={docxContainerRef}
           className="overflow-auto h-[78vh] p-6 bg-gray-50 docx-preview rounded-md"
         />
-      ) : docs.length > 0 ? (
-        <div className="flex flex-col h-[80vh] overflow-hidden rounded-lg border border-gray-200">
-          <div className="flex-grow overflow-auto mt-[40px]">
-            <DocViewer
-              documents={docs}
-              pluginRenderers={DocViewerRenderers}
-              config={{
-                header: {
-                  disableHeader: true,
-                  disableFileName: true,
-                },
-                pdfVerticalScrollByDefault: true,
-                pdfZoom: { defaultZoom: 1.0, zoomJump: 0.2 },
-              }}
-              style={{
-                width: "100%",
-                height: "80vh",
-              }}
-            />
-          </div>
-        </div>
+      ) : fileType === "pdf" ? (
+        <iframe
+          src={fileUrl!}
+          style={{ width: "100%", height: "100%", border: "none" }}
+          title="PDF Viewer"
+        />
+      ) : fileUrl ? (
+        <iframe
+          src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+            fileUrl
+          )}`}
+          style={{ width: "100%", height: "100%", border: "none" }}
+          title="File Viewer"
+        />
       ) : null}
     </Modal>
   );
