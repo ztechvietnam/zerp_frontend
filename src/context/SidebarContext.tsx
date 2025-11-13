@@ -21,12 +21,14 @@ type SidebarContextType = {
   isHovered: boolean;
   activeItem: string | null;
   openSubmenu: string | null;
+  hiddenSidebar: boolean;
   listDocumentCategories: DocumentCategoriesEntity[];
   departmentTree: DepartmentTreeNode[];
   perDocumentCategories: string[];
   perDocument: string[];
   toggleSidebar: () => void;
   toggleMobileSidebar: () => void;
+  setHiddenSidebar: (value: boolean) => void;
   getPerDocument: () => Promise<void>;
   getPerDocumentCate: () => Promise<void>;
   setIsHovered: (isHovered: boolean) => void;
@@ -53,6 +55,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [hiddenSidebar, setHiddenSidebar] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [listDocumentCategories, setListDocumentCategories] = useState<
@@ -173,6 +176,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         isHovered,
         activeItem,
         openSubmenu,
+        hiddenSidebar,
         perDocument,
         perDocumentCategories,
         toggleSidebar,
@@ -181,6 +185,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         getPerDocumentCate,
         setIsHovered,
         setActiveItem,
+        setHiddenSidebar,
         toggleSubmenu,
         listDocumentCategories,
         setListDocumentCategories,

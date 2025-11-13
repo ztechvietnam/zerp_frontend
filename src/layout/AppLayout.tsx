@@ -7,7 +7,7 @@ import { useRef } from "react";
 import "../index.css";
 
 const LayoutContent: React.FC = () => {
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const { isMobileOpen, hiddenSidebar } = useSidebar();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -18,9 +18,9 @@ const LayoutContent: React.FC = () => {
       </div>
       <div
         className={`flex-1 transition-all duration-300 ease-in-out ${
-          isExpanded || isHovered
-            ? "lg:w-[calc(100%-290px)] lg:ml-[290px]"
-            : "lg:w-[calc(100%-90px)] lg:ml-[90px]"
+          hiddenSidebar
+            ? "!lg:w-full !lg:ml-0"
+            : "lg:w-[calc(100%-290px)] lg:ml-[290px]"
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />

@@ -4,10 +4,14 @@ import { MenuOutlined } from "@ant-design/icons";
 import { useSidebar } from "../context/SidebarContext";
 import { environments, SUB_SYSTEM } from "../components/constant/constant";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  iconHiddenSidebar,
+  iconShowSidebar,
+} from "../components/IconSvg/iconSvg";
 
 const AppHeader: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { toggleMobileSidebar } = useSidebar();
+  const { toggleMobileSidebar, setHiddenSidebar, hiddenSidebar } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -57,6 +61,19 @@ const AppHeader: React.FC = () => {
           className="p-2"
         />
       </div>
+      {hiddenSidebar ? (
+        <div className="hidden lg:flex lg:items-center lg:ml-1 cursor-pointer">
+          <div onClick={() => setHiddenSidebar(!hiddenSidebar)}>
+            {iconShowSidebar}
+          </div>
+        </div>
+      ) : (
+        <div className="hidden lg:flex lg:items-center lg:ml-1 cursor-pointer">
+          <div onClick={() => setHiddenSidebar(!hiddenSidebar)}>
+            {iconHiddenSidebar}
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between grow flex-row lg:px-6">
         <div className="flex items-center justify-between w-auto gap-2 px-3 py-[7px] border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-[11px]">
           {environments.map((env) => (

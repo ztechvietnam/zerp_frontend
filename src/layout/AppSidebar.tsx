@@ -117,6 +117,7 @@ const AppSidebar: React.FC = () => {
     isHovered,
     setIsHovered,
     listDocumentCategories,
+    hiddenSidebar,
   } = useSidebar();
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const location = useLocation();
@@ -380,8 +381,9 @@ const AppSidebar: React.FC = () => {
             ? "w-[290px]"
             : "w-[90px] mt-[46.8px]"
         }
+        ${hiddenSidebar ? "lg:-translate-x-full" : "lg:translate-x-0"}
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0`}
+       `}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

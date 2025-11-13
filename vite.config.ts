@@ -26,6 +26,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ['chunk-5QZXEGFM']
-  }
+    exclude: ["chunk-5QZXEGFM"]
+  },
 });

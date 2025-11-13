@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
-    "@cyntler/react-doc-viewer": "^1.17.1",
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/interaction": "^6.1.15",
