@@ -113,11 +113,11 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
       onCancel={handleClose}
       footer={null}
       title={modalTitle}
-      className="!w-[90vw] !top-0"
+      className="!w-[100vw] !top-0"
       centered
       bodyStyle={{
         padding: 0,
-        height: "80vh",
+        height: "calc(100vh - 73px)",
       }}
     >
       {fileType === "docx" ? (
