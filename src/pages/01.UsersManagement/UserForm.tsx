@@ -1,5 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { App, Col, Form, Input, Modal, Row, Spin, TreeSelect } from "antd";
+import {
+  App,
+  Col,
+  Form,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Spin,
+  TreeSelect,
+} from "antd";
 import { useForm } from "antd/es/form/Form";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { MEASSAGE } from "../../components/constant/constant";
@@ -7,6 +17,7 @@ import { pick } from "lodash";
 import { UserEntity } from "../../common/services/user/user";
 import { userService } from "../../common/services/user/user-service";
 import { useSidebar } from "../../context/SidebarContext";
+import { RoleEntity } from "../../common/services/role/role";
 
 export interface UserFormRef {
   show(currentItem?: UserEntity): Promise<void>;
@@ -14,10 +25,11 @@ export interface UserFormRef {
 
 interface UserFormProps {
   resetData: () => void;
+  dataRoles: RoleEntity[];
 }
 
 export const UserForm = forwardRef<UserFormRef, UserFormProps>(
-  ({ resetData }, ref) => {
+  ({ resetData, dataRoles }, ref) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [currentUser, setCurrentUser] = useState<UserEntity | undefined>(
@@ -38,6 +50,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
             const formControlValues = pick(currentItem, [
               "lastName",
               "firstName",
+              "username",
               "email",
             ]);
             setTimeout(() => {
@@ -46,12 +59,13 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                 "department",
                 `department-${currentItem.department?.id_department}`
               );
+              form.setFieldValue("role", currentItem.role?.id);
             }, 0);
           }
           setLoading(false);
         },
       }),
-      []
+      [form]
     );
 
     const onOK = async (valueForm: any) => {
@@ -63,10 +77,12 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
             id: currentUser.id,
             firstName: dataSave.firstName,
             lastName: dataSave.lastName,
+            username: dataSave.username,
             email: dataSave.email,
             id_department: dataSave.department?.startsWith("department-")
               ? parseInt(dataSave.department.replace("department-", ""))
               : null,
+            role: { id: dataSave.role },
             ...(dataSave.password ? { password: dataSave.password } : {}),
           } as any);
           message.success("Chỉnh sửa thành công");
@@ -74,14 +90,14 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
           const newUser = {
             firstName: dataSave.firstName,
             lastName: dataSave.lastName,
+            username: dataSave.username,
             email: dataSave.email,
             id_department: dataSave.department?.startsWith("department-")
               ? parseInt(dataSave.department.replace("department-", ""))
               : null,
-            role: { id: 1 },
+            role: { id: dataSave.role },
             status: { id: 1 },
             provider: "email",
-            username: dataSave.email?.split("@")[0],
             password: dataSave.password ? dataSave.password : "123456",
           };
           await userService.add(newUser as any);
@@ -171,6 +187,27 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                 <Form.Item
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
+                  label="Username"
+                  name="username"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Trường yêu cầu nhập!",
+                    },
+                  ]}
+                >
+                  <Input
+                    disabled={!!currentUser}
+                    style={{ width: "100%" }}
+                    placeholder={"Nhập username"}
+                    maxLength={255}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={12}>
+                <Form.Item
+                  labelCol={{ span: 24 }}
+                  wrapperCol={{ span: 24 }}
                   label="Địa chỉ email"
                   name="email"
                   rules={[
@@ -191,25 +228,9 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                   />
                 </Form.Item>
               </Col>
-              <Col xs={24} sm={24} md={24} lg={12}>
-                <Form.Item
-                  labelCol={{ span: 24 }}
-                  wrapperCol={{ span: 24 }}
-                  label={currentUser ? "Mật khẩu mới" : "Mật khẩu"}
-                  name="password"
-                >
-                  <Input
-                    style={{ width: "100%" }}
-                    placeholder={
-                      currentUser ? "Nhập mật khẩu mới" : "Nhập mật khẩu"
-                    }
-                    maxLength={255}
-                  />
-                </Form.Item>
-              </Col>
             </Row>
             <Row gutter={24}>
-              <Col span={24}>
+              <Col xs={24} sm={24} md={24} lg={12}>
                 <Form.Item
                   labelCol={{ span: 24 }}
                   wrapperCol={{ span: 24 }}
@@ -239,6 +260,60 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                         .toLocaleLowerCase()
                         .includes(inputValue?.trim().toLocaleLowerCase());
                     }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={12}>
+                <Form.Item
+                  labelCol={{ span: 24 }}
+                  wrapperCol={{ span: 24 }}
+                  label="Vai trò"
+                  name="role"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Trường yêu cầu nhập!",
+                    },
+                  ]}
+                >
+                  <Select
+                    options={dataRoles.map((role) => {
+                      return {
+                        value: role.id,
+                        label: role.role_name,
+                      };
+                    })}
+                    showSearch
+                    allowClear
+                    placeholder="Chọn vai trò"
+                    styles={{
+                      popup: { root: { maxHeight: 400, overflow: "auto" } },
+                    }}
+                    filterOption={(inputValue: string, node: any) => {
+                      const title =
+                        typeof node.label === "string" ? node.label : "";
+                      return title
+                        .toLocaleLowerCase()
+                        .includes(inputValue?.trim().toLocaleLowerCase());
+                    }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={24}>
+              <Col span={24}>
+                <Form.Item
+                  labelCol={{ span: 24 }}
+                  wrapperCol={{ span: 24 }}
+                  label={currentUser ? "Mật khẩu mới" : "Mật khẩu"}
+                  name="password"
+                >
+                  <Input
+                    style={{ width: "100%" }}
+                    placeholder={
+                      currentUser ? "Nhập mật khẩu mới" : "Nhập mật khẩu"
+                    }
+                    maxLength={255}
                   />
                 </Form.Item>
               </Col>

@@ -10,6 +10,7 @@ export interface UserEntity extends EntityBase {
   lastName: string;
   role: RoleEntity;
   passWord?: string;
+  username?: string;
   status: StatusEntity;
   department?: DepartmentEntity;
 }

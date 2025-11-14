@@ -19,7 +19,7 @@ import { iconClose } from "../../components/IconSvg/iconSvg";
 import { userService } from "../../common/services/user/user-service";
 import { UserEntity } from "../../common/services/user/user";
 import "./usersManagement.css";
-import { debounce } from "lodash";
+import { debounce, orderBy } from "lodash";
 import Highlighter from "react-highlight-words";
 import "../../index.css";
 import { useSidebar } from "../../context/SidebarContext";
@@ -31,12 +31,15 @@ import {
   DepartmentTreeNode,
 } from "../../common/services/department/department";
 import { ColumnFilterItem } from "antd/es/table/interface";
+import { roleService } from "../../common/services/role/role-service";
+import { RoleEntity } from "../../common/services/role/role";
 
 const ListUsers = () => {
   const [pageSize, setPageSize] = useState<number>(10);
   const [pageIndex, setPageIndex] = useState<number>(1);
   const [totalData, setTotalData] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [dataRoles, setDataRoles] = useState<RoleEntity[]>([]);
   const [dataUsers, setDataUsers] = useState<UserEntity[]>([]);
   const [dataFilter, setDataFilter] = useState<UserEntity[]>([]);
   const [keyword, setKeyword] = useState<string>("");
@@ -59,7 +62,7 @@ const ListUsers = () => {
       });
       if (results) {
         setTotalData(results.total);
-        setDataUsers(results.data);
+        setDataUsers(orderBy(results.data, ["createdAt"], ["desc"]));
       } else {
         setTotalData(0);
         setDataUsers([]);
@@ -76,6 +79,26 @@ const ListUsers = () => {
       await getDataUser();
     })();
   }, [getDataUser]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const results = await roleService.get({
+          params: {
+            page: 1,
+            limit: 50,
+          },
+        });
+        if (results) {
+          setDataRoles(results);
+        } else {
+          setDataRoles([]);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    })();
+  }, []);
 
   const buildDepartmentTree = (
     branches: BranchEntity[],
@@ -251,6 +274,10 @@ const ListUsers = () => {
           (user.email &&
             removeVietnameseTones(user.email)
               .toLocaleLowerCase()
+              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
+          (user.username &&
+            removeVietnameseTones(user.username)
+              .toLocaleLowerCase()
               .includes(removeVietnameseTones(keyword.toLocaleLowerCase())))
         );
       });
@@ -316,6 +343,20 @@ const ListUsers = () => {
     {
       title: "Địa chỉ email",
       dataIndex: "email",
+      render: (value, record: UserEntity) => (
+        <span
+          className="cursor-pointer"
+          onClick={() => {
+            userFormRef.current?.show(record);
+          }}
+        >
+          {highlightText(value)}
+        </span>
+      ),
+    },
+    {
+      title: "Username",
+      dataIndex: "username",
       render: (value, record: UserEntity) => (
         <span
           className="cursor-pointer"
@@ -428,7 +469,7 @@ const ListUsers = () => {
         </div>
       }
       toolbarRight={
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-4">
           <Button
             type="primary"
             size="middle"
@@ -472,17 +513,6 @@ const ListUsers = () => {
               Xóa
             </Button>
           )}
-
-          {selectedRowKeys.length > 0 && (
-            <Button
-              icon={iconClose}
-              onClick={() => {
-                setSelectedRowKeys([]);
-              }}
-            >
-              Đã chọn {selectedRowKeys.length} bản ghi
-            </Button>
-          )}
         </div>
       }
     >
@@ -511,11 +541,11 @@ const ListUsers = () => {
         </div>
         <div
           className={`flex items-center ${
-            totalData > 0 ? "justify-between" : "justify-end"
+            totalData > 0 ? "justify-end sm:justify-between" : "justify-end"
           }`}
         >
           {totalData > 0 && (
-            <div className="flex items-center justify-between gap-[5px]">
+            <div className="hidden sm:flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>
               <span className="text-[#108ee9] font-medium">
                 {`${
@@ -549,6 +579,7 @@ const ListUsers = () => {
       </div>
       <UserForm
         ref={userFormRef}
+        dataRoles={dataRoles}
         resetData={async () => {
           await getDataUser();
         }}
