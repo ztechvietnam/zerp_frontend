@@ -372,7 +372,7 @@ const ListDepartments = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-[28px]">
+          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
             Danh sách đơn vị
           </h1>
           <Breadcrumb
@@ -392,7 +392,7 @@ const ListDepartments = () => {
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-4">
           <Button
             type="primary"
-            className="flex !gap-[3px] items-center justify-center cursor-pointer"
+            className="flex gap-[3px]! items-center justify-center cursor-pointer"
             onClick={() => {
               departmentFormRef.current?.show(TYPE_DEP.BRANCH);
             }}
@@ -401,7 +401,7 @@ const ListDepartments = () => {
           </Button>
           <Button
             type="primary"
-            className="flex !gap-[3px] items-center justify-center cursor-pointer"
+            className="flex gap-[3px]! items-center justify-center cursor-pointer"
             onClick={() => {
               departmentFormRef.current?.show(TYPE_DEP.DEPARTMENT);
             }}
@@ -411,7 +411,7 @@ const ListDepartments = () => {
         </div>
       }
     >
-      <div className="flex gap-[10px] w-full h-[calc(100%-61.2px)] bg-[#fff] rounded-[8px]">
+      <div className="flex gap-2.5 w-full h-[calc(100%-61.2px)] bg-[#fff] rounded-lg">
         <div ref={tableRef} className="flex h-full w-full">
           <Table
             loading={loading}
