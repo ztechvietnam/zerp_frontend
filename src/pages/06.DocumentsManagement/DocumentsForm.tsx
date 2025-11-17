@@ -142,7 +142,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
 
     useEffect(() => {
       setLoading(true);
-      if (currentUser?.role?.name === "admin") {
+      if (currentUser?.role?.name !== "admin") {
         const treeCate = buildCategoryTree(listDocumentCategories, true);
         setTreeData(treeCate);
       } else {

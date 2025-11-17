@@ -17,14 +17,14 @@ const LayoutContent: React.FC = () => {
         <Backdrop />
       </div>
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
+        className={`flex-1 transition-all duration-300 ease-in-out max-w-[100vw] ${
           hiddenSidebar
             ? "!lg:w-full !lg:ml-0"
             : "lg:w-[calc(100%-290px)] lg:ml-[290px]"
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
-        <div className="layoutBody px-[15px] py-[8px]  lg:px-[30px] lg:py-[10px] mx-auto h-[calc(100vh-46.8px)] lg:h-[calc(100vh-54.8px)] bg-[#f6f9ff]">
+        <div className="layoutBody px-[15px] py-2  lg:px-[30px] lg:py-2.5 mx-auto h-[calc(100vh-46.8px)] lg:h-[calc(100vh-54.8px)] bg-[#f6f9ff]">
           <Outlet />
         </div>
       </div>

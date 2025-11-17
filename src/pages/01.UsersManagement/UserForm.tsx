@@ -11,13 +11,19 @@ import {
   TreeSelect,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
-import React, { forwardRef, useImperativeHandle, useState } from "react";
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
 import { MEASSAGE } from "../../components/constant/constant";
 import { pick } from "lodash";
 import { UserEntity } from "../../common/services/user/user";
 import { userService } from "../../common/services/user/user-service";
 import { useSidebar } from "../../context/SidebarContext";
 import { RoleEntity } from "../../common/services/role/role";
+import { DepartmentTreeNode } from "../../common/services/department/department";
 
 export interface UserFormRef {
   show(currentItem?: UserEntity): Promise<void>;
@@ -35,9 +41,20 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
     const [currentUser, setCurrentUser] = useState<UserEntity | undefined>(
       undefined
     );
+    const [treeSelect, setTreeSelect] = useState<DepartmentTreeNode[]>([]);
     const { message } = App.useApp();
     const { departmentTree } = useSidebar();
     const [form] = useForm();
+
+    useEffect(() => {
+      const tree = departmentTree.map((item) => {
+        return {
+          ...item,
+          selectable: false,
+        };
+      });
+      setTreeSelect(tree);
+    }, [departmentTree]);
 
     useImperativeHandle(
       ref,
@@ -244,7 +261,7 @@ export const UserForm = forwardRef<UserFormRef, UserFormProps>(
                   ]}
                 >
                   <TreeSelect
-                    treeData={departmentTree}
+                    treeData={treeSelect}
                     showSearch
                     placeholder="Chọn phòng ban"
                     styles={{
