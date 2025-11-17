@@ -47,7 +47,7 @@ const ListDepartments = () => {
         item: branch,
         value: `branch-${branch.id_branch}`,
         key: `branch-${branch.id_branch}`,
-        selectable: false,
+        selectable: true,
         children: [],
       });
     });

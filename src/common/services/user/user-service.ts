@@ -16,6 +16,18 @@ class UserService extends CrudServiceBase<UserEntity> {
       { endpoint: `${userId}/change-password` }
     );
   }
+
+  async findAndFilter(departmentIds?: number[], keyword?: string): Promise<any> {
+    return this.post(
+      {
+        keyword: keyword || "",
+        departmentIds,
+      },
+      {
+        endpoint: "/findandfilter",
+      }
+    );
+  }
 }
 
 export const userService = new UserService();

@@ -1,25 +1,35 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   App,
   Breadcrumb,
   Button,
+  Form,
   Input,
-  InputRef,
   Pagination,
   Popover,
   Skeleton,
   Table,
   TableColumnsType,
   Tag,
+  Tooltip,
+  TreeSelect,
 } from "antd";
 import { UserForm, UserFormRef } from "./UserForm";
 import { MEASSAGE } from "../../components/constant/constant";
-import { iconClose } from "../../components/IconSvg/iconSvg";
+import { iconFilter } from "../../components/IconSvg/iconSvg";
 import { userService } from "../../common/services/user/user-service";
 import { UserEntity } from "../../common/services/user/user";
 import "./usersManagement.css";
-import { debounce, orderBy } from "lodash";
+import { cloneDeep, debounce, set } from "lodash";
 import Highlighter from "react-highlight-words";
 import "../../index.css";
 import { useSidebar } from "../../context/SidebarContext";
@@ -33,38 +43,110 @@ import {
 import { ColumnFilterItem } from "antd/es/table/interface";
 import { roleService } from "../../common/services/role/role-service";
 import { RoleEntity } from "../../common/services/role/role";
+import { RedoOutlined } from "@ant-design/icons";
+import { useForm } from "antd/es/form/Form";
+
+interface FilterValues {
+  keyword?: string;
+  departmentIds?: string[];
+}
 
 const ListUsers = () => {
   const [pageSize, setPageSize] = useState<number>(10);
   const [pageIndex, setPageIndex] = useState<number>(1);
-  const [totalData, setTotalData] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [dataRoles, setDataRoles] = useState<RoleEntity[]>([]);
   const [dataUsers, setDataUsers] = useState<UserEntity[]>([]);
-  const [dataFilter, setDataFilter] = useState<UserEntity[]>([]);
-  const [keyword, setKeyword] = useState<string>("");
+  const [listData, setListData] = useState<UserEntity[]>([]);
+  const [filterValues, setFilterValues] = useState<FilterValues>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const { message, modal } = App.useApp();
+  const [form] = useForm();
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<InputRef>(null);
   const userFormRef = useRef<UserFormRef>(null);
   const { departmentTree, setDepartmentTree } = useSidebar();
+
+  const findNodeByCode = (
+    tree: DepartmentTreeNode[],
+    value: string
+  ): DepartmentTreeNode | null => {
+    for (const node of tree) {
+      if (node.value === value) {
+        return node;
+      }
+      if (node.children?.length) {
+        const found = findNodeByCode(node.children, value);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const getAllDeptIds = (node: DepartmentTreeNode): number[] => {
+    let ids: number[] = [];
+
+    if ((node.item as DepartmentEntity)?.id_department) {
+      ids.push((node.item as DepartmentEntity).id_department);
+    }
+
+    if (node.children?.length) {
+      for (const child of node.children) {
+        ids = ids.concat(getAllDeptIds(child));
+      }
+    }
+
+    return ids;
+  };
+
+  const getDepartmentIds = useCallback(
+    (values?: string[]) => {
+      if (!values || values.length === 0) {
+        let allIds: number[] = [];
+        for (const node of departmentTree) {
+          allIds = allIds.concat(getAllDeptIds(node));
+        }
+        return Array.from(new Set(allIds));
+      }
+
+      let resultIds: number[] = [];
+      for (const value of values) {
+        const node = findNodeByCode(departmentTree, value);
+        if (!node) continue;
+
+        if (value.startsWith("branch-")) {
+          for (const child of node.children || []) {
+            resultIds = resultIds.concat(getAllDeptIds(child));
+          }
+        } else if (value.startsWith("department-")) {
+          const id = (node.item as DepartmentEntity).id_department;
+          if (id) {
+            resultIds.push(id);
+          }
+        }
+      }
+      return Array.from(new Set(resultIds));
+    },
+    [departmentTree]
+  );
 
   const getDataUser = useCallback(async () => {
     try {
       setLoading(true);
-      const results = await userService.get({
-        params: {
-          page: pageIndex,
-          limit: pageSize,
-        },
-      });
-      if (results) {
-        setTotalData(results.total);
-        setDataUsers(orderBy(results.data, ["createdAt"], ["desc"]));
+      if (filterValues) {
+        const idCateFilter: number[] = getDepartmentIds(
+          filterValues.departmentIds
+        );
+        const results = await userService.findAndFilter(
+          idCateFilter,
+          filterValues.keyword || ""
+        );
+        if (results) {
+          setDataUsers(results);
+        } else {
+          setDataUsers([]);
+        }
       } else {
-        setTotalData(0);
         setDataUsers([]);
       }
       setLoading(false);
@@ -72,7 +154,13 @@ const ListUsers = () => {
       setLoading(false);
       console.log(e);
     }
-  }, [pageIndex, pageSize]);
+  }, [filterValues, getDepartmentIds]);
+
+  useEffect(() => {
+    const start = (pageIndex - 1) * pageSize;
+    const end = start + pageSize;
+    setListData(dataUsers.slice(start, end));
+  }, [dataUsers, pageIndex, pageSize]);
 
   useEffect(() => {
     (async () => {
@@ -234,7 +322,7 @@ const ListUsers = () => {
   const highlightText = (text: string) => (
     <Highlighter
       highlightStyle={{ backgroundColor: "#ffff00", padding: 0 }}
-      searchWords={[keyword]}
+      searchWords={[filterValues?.keyword || ""]}
       autoEscape
       textToHighlight={text || ""}
       findChunks={({ textToHighlight, searchWords }) => {
@@ -259,34 +347,6 @@ const ListUsers = () => {
     />
   );
 
-  useEffect(() => {
-    if (keyword) {
-      const dataAfterFilter = dataUsers.filter((user) => {
-        return (
-          (user.firstName &&
-            removeVietnameseTones(user.firstName)
-              .toLocaleLowerCase()
-              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
-          (user.lastName &&
-            removeVietnameseTones(user.lastName)
-              .toLocaleLowerCase()
-              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
-          (user.email &&
-            removeVietnameseTones(user.email)
-              .toLocaleLowerCase()
-              .includes(removeVietnameseTones(keyword.toLocaleLowerCase()))) ||
-          (user.username &&
-            removeVietnameseTones(user.username)
-              .toLocaleLowerCase()
-              .includes(removeVietnameseTones(keyword.toLocaleLowerCase())))
-        );
-      });
-      setDataFilter(dataAfterFilter);
-    } else {
-      setDataFilter(dataUsers);
-    }
-  }, [keyword, dataUsers]);
-
   const convertDepartmentTreeToFilters = useCallback(
     (tree: DepartmentTreeNode[]): ColumnFilterItem[] => {
       return tree.map((node) => ({
@@ -303,7 +363,7 @@ const ListUsers = () => {
   const columns: TableColumnsType<UserEntity> = [
     {
       title: "Họ và tên",
-      render: (value, record: UserEntity) => {
+      render: (record: UserEntity) => {
         return (
           <span
             className="cursor-pointer"
@@ -317,28 +377,6 @@ const ListUsers = () => {
           </span>
         );
       },
-      onFilterDropdownOpenChange: (visible) => {
-        if (visible) {
-          setTimeout(() => {
-            inputRef.current?.focus();
-          }, 0);
-        }
-      },
-      filterDropdown: () => (
-        <div
-          className="flex flex-col gap-2 p-2"
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center gap-0.5">
-            <Input
-              ref={inputRef}
-              onChange={debounce((e) => setKeyword(e.target.value), 500)}
-              allowClear
-              autoFocus
-            />
-          </div>
-        </div>
-      ),
     },
     {
       title: "Địa chỉ email",
@@ -371,14 +409,6 @@ const ListUsers = () => {
     {
       title: "Phòng ban",
       dataIndex: "department",
-      filters: convertDepartmentTreeToFilters(departmentTree),
-      filterMode: "tree",
-      filterSearch: true,
-      onFilter: (value, record) =>
-        value
-          ? record.department?.id_department ===
-            parseInt((value as string).replace("department-", ""))
-          : true,
       render(value) {
         return (
           <>
@@ -419,31 +449,55 @@ const ListUsers = () => {
     },
   ];
 
+  const onFilter = useCallback(
+    (field: keyof FilterValues, value?: string | string[]) => {
+      setFilterValues((currentFilters) => {
+        const newFilters = cloneDeep(currentFilters);
+        set(newFilters, field, value);
+        return newFilters;
+      });
+      setPageIndex(1);
+    },
+    []
+  );
+
+  const debouncedOnFilter = useMemo(
+    () =>
+      debounce((field: keyof FilterValues, value: any) => {
+        onFilter(field, value);
+      }, 1000),
+    [onFilter]
+  );
+
   const getTableScroll = () => {
     const height = tableRef.current?.offsetHeight ?? 0;
     const windowHeight = pageContainerRef.current?.offsetHeight ?? 0;
     const width = window.innerWidth;
 
-    if (width < 960) {
-      return height >= windowHeight - 179
-        ? { y: windowHeight - 179, x: "max-content" }
+    if (width < 428) {
+      return height >= windowHeight - 271
+        ? { y: windowHeight - 271, x: "max-content" }
         : undefined;
     }
 
-    if (width < 1024) {
-      return height >= windowHeight - 157
-        ? { y: windowHeight - 157, x: "max-content" }
+    if (width < 768) {
+      return height >= windowHeight - 271
+        ? { y: windowHeight - 271, x: "max-content" }
+        : undefined;
+    }
+    if (width < 1200) {
+      return height >= windowHeight - 231
+        ? { y: windowHeight - 231, x: "max-content" }
+        : undefined;
+    }
+    if (width < 1488) {
+      return height >= windowHeight - 234
+        ? { y: windowHeight - 234, x: "max-content" }
         : undefined;
     }
 
-    if (width < 1280) {
-      return height >= windowHeight - 179
-        ? { y: windowHeight - 179, x: "max-content" }
-        : undefined;
-    }
-
-    return height >= windowHeight - 157
-      ? { y: windowHeight - 157, x: "max-content" }
+    return height >= windowHeight - 209
+      ? { y: windowHeight - 209, x: "max-content" }
       : undefined;
   };
 
@@ -452,7 +506,7 @@ const ListUsers = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-[28px]">
+          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
             Quản lý người dùng
           </h1>
           <Breadcrumb
@@ -516,8 +570,73 @@ const ListUsers = () => {
         </div>
       }
     >
-      <div className="flex flex-col gap-[10px] w-full h-[calc(100%-60px)]">
-        <div ref={tableRef} className="flex h-full">
+      <div className="pb-2.5 filter-header">
+        <Form layout="horizontal" form={form}>
+          <div className="flex flex-col bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-2 px-2 py-1 md:flex-row md:flex-wrap md:items-center">
+            {/* icon + input keyword */}
+            <div className="flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center w-full md:w-[calc(50%-8px)] md:flex-nowrap">
+              <div className="flex items-center sm:w-auto">{iconFilter}</div>
+              <Form.Item
+                colon={false}
+                className="flex-1 m-0 min-w-[200px]"
+                name="keyword"
+              >
+                <Input
+                  className="w-full placeholder:text-[#8c8c8c] placeholder:text-[12px] placeholder:font-normal placeholder:leading-[18px] placeholder:tracking-[-0.02em]"
+                  placeholder="Nhập từ khoá để tìm kiếm..."
+                  maxLength={255}
+                  onChange={(e) =>
+                    debouncedOnFilter("keyword", e.target?.value)
+                  }
+                />
+              </Form.Item>
+            </div>
+            <div className="flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center w-full md:w-[calc(50%-8px)] md:flex-nowrap">
+              <Form.Item
+                colon={false}
+                className="flex-1 m-0 min-w-[200px]"
+                name="categoryIds"
+              >
+                <TreeSelect
+                  treeData={departmentTree}
+                  treeCheckable
+                  allowClear
+                  showCheckedStrategy={"SHOW_PARENT"}
+                  placeholder="Chọn phòng ban"
+                  style={{ width: "100%" }}
+                  maxTagCount="responsive"
+                  showSearch
+                  filterTreeNode={(inputValue: string, treeNode: any) => {
+                    const title =
+                      typeof treeNode.title === "string" ? treeNode.title : "";
+                    return title
+                      .toLocaleLowerCase()
+                      .includes(inputValue?.trim().toLocaleLowerCase());
+                  }}
+                  onChange={(e) => debouncedOnFilter("departmentIds", e)}
+                />
+              </Form.Item>
+              <Tooltip title="Làm mới">
+                <Button
+                  type="primary"
+                  disabled={Object.keys(filterValues || {}).length === 0}
+                  onClick={async () => {
+                    form.resetFields();
+                    setFilterValues({});
+                    setPageIndex(1);
+                  }}
+                  className="px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] transition w-fit lg:w-auto"
+                >
+                  <RedoOutlined />
+                </Button>
+              </Tooltip>
+            </div>
+          </div>
+        </Form>
+      </div>
+
+      <div className={`flex flex-col gap-2.5 w-full h-[calc(100%-112px)]`}>
+        <div ref={tableRef} className="flex h-[calc(100%-32px)]">
           <Table
             loading={loading}
             rowSelection={{
@@ -529,7 +648,7 @@ const ListUsers = () => {
             pagination={false}
             rowKey="id"
             columns={columns}
-            dataSource={dataFilter}
+            dataSource={listData}
             scroll={getTableScroll()}
             style={{
               boxShadow: "0px 0px 11px 0px rgba(1, 41, 112, 0.1)",
@@ -541,34 +660,37 @@ const ListUsers = () => {
         </div>
         <div
           className={`flex items-center ${
-            totalData > 0 ? "justify-end sm:justify-between" : "justify-end"
+            dataUsers.length > 0
+              ? "justify-end sm:justify-between"
+              : "justify-end"
           }`}
         >
-          {totalData > 0 && (
+          {dataUsers.length > 0 && (
             <div className="hidden sm:flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>
               <span className="text-[#108ee9] font-medium">
                 {`${
-                  pageSize * (pageIndex - 1) + 1 >= totalData
-                    ? totalData
+                  pageSize * (pageIndex - 1) + 1 >= dataUsers.length
+                    ? dataUsers.length
                     : pageSize * (pageIndex - 1) + 1
                 } - ${
-                  pageSize * pageIndex >= totalData
-                    ? totalData
+                  pageSize * pageIndex >= dataUsers.length
+                    ? dataUsers.length
                     : pageSize * pageIndex
-                } / ${totalData}`}
+                } / ${dataUsers.length}`}
               </span>
               người dùng
             </div>
           )}
           <Pagination
             className="paginationCustom"
-            total={totalData}
+            total={dataUsers.length}
             current={pageIndex}
             pageSize={pageSize}
             showSizeChanger
             pageSizeOptions={[10, 20, 30, 50]}
             onShowSizeChange={(current: number, size: number) => {
+              setPageIndex(current);
               setPageSize(size);
             }}
             onChange={(currentPage) => {

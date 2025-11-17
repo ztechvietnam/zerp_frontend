@@ -78,7 +78,7 @@ export default function SignInForm() {
                       },
                     ]}
                   >
-                    <Input className="h-[40px]" />
+                    <Input className="h-10" autoFocus />
                   </Form.Item>
                 </Col>
               </Row>
@@ -97,7 +97,7 @@ export default function SignInForm() {
                     ]}
                   >
                     <Input.Password
-                      className="h-[40px]"
+                      className="h-10"
                       onPressEnter={async () => {
                         try {
                           const formValues = await form.validateFields();
@@ -114,7 +114,7 @@ export default function SignInForm() {
                 <Col span={24}>
                   <Button
                     type="primary"
-                    className="w-full mt-[12px]"
+                    className="w-full mt-3"
                     style={{ height: 40 }}
                     onClick={async () => {
                       try {
