@@ -501,6 +501,16 @@ const ListUsers = () => {
       : undefined;
   };
 
+  const hasValidFilterValues = (values: any) => {
+    if (!values) return false;
+
+    return Object.values(values).some((value) => {
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === "string") return value.trim() !== "";
+      return value !== undefined && value !== null;
+    });
+  };
+
   return (
     <PageContainer
       ref={pageContainerRef}
@@ -619,7 +629,7 @@ const ListUsers = () => {
               <Tooltip title="Làm mới">
                 <Button
                   type="primary"
-                  disabled={Object.keys(filterValues || {}).length === 0}
+                  disabled={!hasValidFilterValues(filterValues)}
                   onClick={async () => {
                     form.resetFields();
                     setFilterValues({});

@@ -246,262 +246,264 @@ const DocumentsManagement = () => {
     }
   };
 
-  const columns: TableColumnsType<DocumentEntity> = [
-    {
-      title: "Tên văn bản",
-      dataIndex: "title",
-      width: 200,
-      render(value, record) {
-        return (
-          <span
-            className="cursor-pointer"
-            onClick={() => {
-              if (
-                currentUser?.role.name === "admin" ||
-                record?.created_id?.toString() === currentUser?.id?.toString()
-              ) {
-                documentFormRef.current?.show(record);
-              } else {
-                message.error("Bạn không có quyền chỉnh sửa văn bản này");
-              }
-            }}
-          >
-            <Tooltip title={highlightText(record?.description)}>
-              {highlightText(value.trim())}
-            </Tooltip>
-          </span>
-        );
+  const columns = (haveData: boolean): TableColumnsType<DocumentEntity> => {
+    return [
+      {
+        title: "Tên văn bản",
+        dataIndex: "title",
+        ...(haveData ? { width: 200 } : {}),
+        render(value, record) {
+          return (
+            <span
+              className="cursor-pointer"
+              onClick={() => {
+                if (
+                  currentUser?.role.name === "admin" ||
+                  record?.created_id?.toString() === currentUser?.id?.toString()
+                ) {
+                  documentFormRef.current?.show(record);
+                } else {
+                  message.error("Bạn không có quyền chỉnh sửa văn bản này");
+                }
+              }}
+            >
+              <Tooltip title={highlightText(record?.description)}>
+                {highlightText(value.trim())}
+              </Tooltip>
+            </span>
+          );
+        },
       },
-    },
-    {
-      title: "Mã kí hiệu",
-      dataIndex: "code",
-      width: 80,
-    },
-    {
-      title: "Biểu mẫu",
-      dataIndex: "document_attachment",
-      width: 100,
-      render(value: any) {
-        return (
-          <div className="flex flex-col gap-1">
-            {value && value?.length ? (
-              value.map((atm: any, index: number) => (
-                <Tag
-                  key={index}
-                  className="w-fit !whitespace-break-spaces cursor-pointer !m-0"
-                  color="processing"
+      {
+        title: "Mã kí hiệu",
+        dataIndex: "code",
+        ...(haveData ? { width: 80 } : {}),
+      },
+      {
+        title: "Biểu mẫu",
+        dataIndex: "document_attachment",
+        ...(haveData ? { width: 100 } : {}),
+        render(value: any) {
+          return (
+            <div className="flex flex-col gap-1">
+              {value && value?.length ? (
+                value.map((atm: any, index: number) => (
+                  <Tag
+                    key={index}
+                    className="w-fit !whitespace-break-spaces cursor-pointer !m-0"
+                    color="processing"
+                    onClick={async () => {
+                      const token = localStorage.getItem("access_token");
+
+                      try {
+                        const response = await axios.get(atm.linkFile, {
+                          responseType: "blob",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
+                        const mimeType =
+                          response.headers["content-type"] ||
+                          "application/octet-stream";
+                        const fileName =
+                          atm.title ||
+                          last(
+                            (
+                              (last(atm.linkFile.split("/")) as string) || ""
+                            ).split("-")
+                          ) ||
+                          "Tài liệu";
+                        const file = new File([response.data], fileName, {
+                          type: mimeType,
+                        });
+                        documentViewerRef.current?.show([file], {
+                          titles: [fileName],
+                        });
+                      } catch (err) {
+                        console.error(err);
+                        message.error("Có lỗi trong quá trình mở file");
+                      }
+                    }}
+                  >
+                    {atm.title ||
+                      last(
+                        ((last(atm.linkFile.split("/")) as string) || "")
+                          .split(".")[0]
+                          ?.split("-")
+                      ) ||
+                      ""}
+                  </Tag>
+                ))
+              ) : (
+                <></>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        title: "Danh mục",
+        dataIndex: "category_id",
+        ...(haveData ? { width: 120 } : {}),
+        render(value: any) {
+          return (
+            <>
+              {value &&
+                listDocumentCategories.find(
+                  (cate) => cate.id_category.toString() === value.toString()
+                ) && (
+                  <Tag
+                    className="w-fit !whitespace-break-spaces"
+                    color="processing"
+                  >
+                    {listDocumentCategories.find(
+                      (cate) => cate.id_category.toString() === value.toString()
+                    )?.name || ""}
+                  </Tag>
+                )}
+            </>
+          );
+        },
+      },
+      {
+        title: "Người tạo",
+        dataIndex: "created_by",
+        ...(haveData ? { width: 100 } : {}),
+        render(value) {
+          return (
+            <span>{value ? `${value.lastName} ${value.firstName}` : ""}</span>
+          );
+        },
+      },
+      {
+        title: "Ngày tạo",
+        dataIndex: "createdAt",
+        ...(haveData ? { width: 80 } : {}),
+        render(value) {
+          return <span>{dayjs(value).format("DD/MM/YYYY")}</span>;
+        },
+      },
+      {
+        title: "Trạng thái",
+        dataIndex: "status",
+        ...(haveData ? { width: 75 } : {}),
+        render(value) {
+          return (
+            <Tag color={value ? "success" : "error"}>
+              {value ? "Active" : "Inactive"}
+            </Tag>
+          );
+        },
+      },
+      {
+        title: "Hoạt động",
+        ...(haveData ? { width: 80 } : {}),
+        render(record) {
+          return (
+            <div className="w-full grid grid-cols-2 gap-[5px] flex-row flex-nowrap">
+              <Tooltip title="Xem văn bản">
+                <Button
+                  className="!px-[10px]"
+                  color="primary"
+                  variant="outlined"
                   onClick={async () => {
                     const token = localStorage.getItem("access_token");
 
+                    if (!record?.file) {
+                      message.warning("Không tìm thấy đường dẫn file");
+                      return;
+                    }
+
                     try {
-                      const response = await axios.get(atm.linkFile, {
+                      const response = await axios.get(record.file, {
                         responseType: "blob",
                         headers: { Authorization: `Bearer ${token}` },
                       });
+
                       const mimeType =
                         response.headers["content-type"] ||
                         "application/octet-stream";
-                      const fileName =
-                        atm.title ||
-                        last(
-                          (
-                            (last(atm.linkFile.split("/")) as string) || ""
-                          ).split("-")
-                        ) ||
-                        "Tài liệu";
+
+                      const urlParts = record.file.split("/");
+                      const lastPart =
+                        urlParts[urlParts.length - 1] || "Tài liệu";
+
+                      const ext = lastPart.includes(".")
+                        ? ""
+                        : mimeType.includes("pdf")
+                        ? ".pdf"
+                        : mimeType.includes("word")
+                        ? ".docx"
+                        : mimeType.includes("excel")
+                        ? ".xlsx"
+                        : mimeType.includes("powerpoint")
+                        ? ".pptx"
+                        : "";
+
+                      const fileName = decodeURIComponent(lastPart + ext);
+
                       const file = new File([response.data], fileName, {
                         type: mimeType,
                       });
+
                       documentViewerRef.current?.show([file], {
                         titles: [fileName],
                       });
                     } catch (err) {
-                      console.error(err);
-                      message.error("Có lỗi trong quá trình mở file");
+                      console.error("❌ Lỗi khi tải file:", err);
+                      message.error("Không thể mở tệp, vui lòng thử lại sau");
                     }
                   }}
                 >
-                  {atm.title ||
-                    last(
-                      ((last(atm.linkFile.split("/")) as string) || "")
-                        .split(".")[0]
-                        ?.split("-")
-                    ) ||
-                    ""}
-                </Tag>
-              ))
-            ) : (
-              <></>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Danh mục",
-      dataIndex: "category_id",
-      width: 120,
-      render(value: any) {
-        return (
-          <>
-            {value &&
-              listDocumentCategories.find(
-                (cate) => cate.id_category.toString() === value.toString()
-              ) && (
-                <Tag
-                  className="w-fit !whitespace-break-spaces"
-                  color="processing"
-                >
-                  {listDocumentCategories.find(
-                    (cate) => cate.id_category.toString() === value.toString()
-                  )?.name || ""}
-                </Tag>
-              )}
-          </>
-        );
-      },
-    },
-    {
-      title: "Người tạo",
-      dataIndex: "created_by",
-      width: 100,
-      render(value) {
-        return (
-          <span>{value ? `${value.lastName} ${value.firstName}` : ""}</span>
-        );
-      },
-    },
-    {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      width: 80,
-      render(value) {
-        return <span>{dayjs(value).format("DD/MM/YYYY")}</span>;
-      },
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      width: 75,
-      render(value) {
-        return (
-          <Tag color={value ? "success" : "error"}>
-            {value ? "Active" : "Inactive"}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "Hoạt động",
-      width: 80,
-      render(record) {
-        return (
-          <div className="w-full grid grid-cols-2 gap-[5px] flex-row flex-nowrap">
-            <Tooltip title="Xem văn bản">
-              <Button
-                className="!px-[10px]"
-                color="primary"
-                variant="outlined"
-                onClick={async () => {
-                  const token = localStorage.getItem("access_token");
-
-                  if (!record?.file) {
-                    message.warning("Không tìm thấy đường dẫn file");
-                    return;
-                  }
-
-                  try {
-                    const response = await axios.get(record.file, {
-                      responseType: "blob",
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
-
-                    const mimeType =
-                      response.headers["content-type"] ||
-                      "application/octet-stream";
-
-                    const urlParts = record.file.split("/");
-                    const lastPart =
-                      urlParts[urlParts.length - 1] || "Tài liệu";
-
-                    const ext = lastPart.includes(".")
-                      ? ""
-                      : mimeType.includes("pdf")
-                      ? ".pdf"
-                      : mimeType.includes("word")
-                      ? ".docx"
-                      : mimeType.includes("excel")
-                      ? ".xlsx"
-                      : mimeType.includes("powerpoint")
-                      ? ".pptx"
-                      : "";
-
-                    const fileName = decodeURIComponent(lastPart + ext);
-
-                    const file = new File([response.data], fileName, {
-                      type: mimeType,
-                    });
-
-                    documentViewerRef.current?.show([file], {
-                      titles: [fileName],
-                    });
-                  } catch (err) {
-                    console.error("❌ Lỗi khi tải file:", err);
-                    message.error("Không thể mở tệp, vui lòng thử lại sau");
-                  }
-                }}
-              >
-                <EyeOutlined />
-              </Button>
-            </Tooltip>
-            {(currentUser?.role?.name === "admin" ||
-              record?.created_id?.toString() ===
-                currentUser?.id?.toString()) && (
-              <Tooltip title="Xoá văn bản">
-                <Button
-                  className="!px-[10px]"
-                  variant="outlined"
-                  color="red"
-                  onClick={async () => {
-                    modal.confirm({
-                      title: MEASSAGE.CONFIRM_DELETE,
-                      okText: MEASSAGE.OK,
-                      cancelText: MEASSAGE.NO,
-                      onOk: async () => {
-                        try {
-                          try {
-                            setLoading(true);
-                            await documentService.deleteDocument(
-                              record.id_document
-                            );
-                            message.success("Xoá văn bản thành công");
-                            await getDocuments();
-                            setLoading(false);
-                          } catch (e) {
-                            message.error(
-                              "Có lỗi xảy ra trong quá trình xoá văn bản"
-                            );
-                            console.log(e);
-                          }
-                        } catch (error) {
-                          console.log(error);
-                          message.error(MEASSAGE.ERROR, 3);
-                        }
-                      },
-                      onCancel() {},
-                    });
-                  }}
-                >
-                  <DeleteOutlined />
+                  <EyeOutlined />
                 </Button>
               </Tooltip>
-            )}
-          </div>
-        );
+              {(currentUser?.role?.name === "admin" ||
+                record?.created_id?.toString() ===
+                  currentUser?.id?.toString()) && (
+                <Tooltip title="Xoá văn bản">
+                  <Button
+                    className="!px-[10px]"
+                    variant="outlined"
+                    color="red"
+                    onClick={async () => {
+                      modal.confirm({
+                        title: MEASSAGE.CONFIRM_DELETE,
+                        okText: MEASSAGE.OK,
+                        cancelText: MEASSAGE.NO,
+                        onOk: async () => {
+                          try {
+                            try {
+                              setLoading(true);
+                              await documentService.deleteDocument(
+                                record.id_document
+                              );
+                              message.success("Xoá văn bản thành công");
+                              await getDocuments();
+                              setLoading(false);
+                            } catch (e) {
+                              message.error(
+                                "Có lỗi xảy ra trong quá trình xoá văn bản"
+                              );
+                              console.log(e);
+                            }
+                          } catch (error) {
+                            console.log(error);
+                            message.error(MEASSAGE.ERROR, 3);
+                          }
+                        },
+                        onCancel() {},
+                      });
+                    }}
+                  >
+                    <DeleteOutlined />
+                  </Button>
+                </Tooltip>
+              )}
+            </div>
+          );
+        },
       },
-    },
-  ];
+    ];
+  };
 
   const onFilter = useCallback(
     (field: keyof FilterValues, value?: string | string[]) => {
@@ -560,6 +562,16 @@ const DocumentsManagement = () => {
       : undefined;
   };
 
+  const hasValidFilterValues = (values: any) => {
+    if (!values) return false;
+
+    return Object.values(values).some((value) => {
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === "string") return value.trim() !== "";
+      return value !== undefined && value !== null;
+    });
+  };
+
   return (
     <PageContainer
       ref={pageContainerRef}
@@ -602,10 +614,9 @@ const DocumentsManagement = () => {
         </div>
       }
     >
-      <div className="pb-[10px] filter-header">
+      <div className="pb-2.5 filter-header">
         <Form layout="horizontal" form={form}>
           <div className="flex flex-col bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-2 px-2 py-1 md:flex-row md:flex-wrap md:items-center">
-            {/* icon + input keyword */}
             <div
               className={`flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center ${
                 idCategory ? "w-full" : "w-full md:w-[calc(50%-8px)]"
@@ -630,7 +641,7 @@ const DocumentsManagement = () => {
                 <Tooltip title="Làm mới">
                   <Button
                     type="primary"
-                    disabled={Object.keys(filterValues || {}).length === 0}
+                    disabled={!hasValidFilterValues(filterValues)}
                     onClick={async () => {
                       form.resetFields();
                       setFilterValues({});
@@ -691,11 +702,11 @@ const DocumentsManagement = () => {
         </Form>
       </div>
 
-      <div className={`flex flex-col gap-[10px] w-full h-[calc(100%-112px)]`}>
+      <div className={`flex flex-col gap-2.5 w-full h-[calc(100%-112px)]`}>
         <div ref={tableRef} className="flex h-[calc(100%-32px)]">
           <Table
             rowKey="id"
-            columns={columns}
+            columns={columns(listData?.length > 0)}
             loading={loading}
             dataSource={listData}
             pagination={false}
