@@ -17,11 +17,11 @@ class UserService extends CrudServiceBase<UserEntity> {
     );
   }
 
-  async findAndFilter(departmentIds?: number[], keyword?: string): Promise<any> {
+  async findAndFilter(categoryIds?: number[], keyword?: string): Promise<any> {
     return this.post(
       {
         keyword: keyword || "",
-        departmentIds,
+        categoryIds,
       },
       {
         endpoint: "/findandfilter",
