@@ -27,15 +27,17 @@ import DashboardHome from "./pages/DashboardHome/DashboardHome";
 
 const TITLES: Record<string, string> = {
   ["/dashboard"]: "Trang chủ",
-  ["/dashboard/users-management"]: "Quản lý người dùng",
-  ["/dashboard/roles-management"]: "Quản lý phân quyền",
-  ["/dashboard/patients-management"]: "Quản lý bệnh nhân",
-  ["/dashboard/messages-management"]: "Lịch sử gửi tin nhắn ZNS",
-  ["/dashboard/list-reviews"]: "Danh sách đánh giá",
-  ["/dashboard/department-management"]: "Danh sách đơn vị",
+  ["/dashboard/management/users-management"]: "Quản lý người dùng",
+  ["/dashboard/management/roles-management"]: "Quản lý phân quyền",
+  ["/dashboard/customer-support/patients-management"]: "Quản lý bệnh nhân",
+  ["/dashboard/customer-support/messages-management"]:
+    "Lịch sử gửi tin nhắn ZNS",
+  ["/dashboard/customer-support/list-reviews"]: "Danh sách đánh giá",
+  ["/dashboard/management/department-management"]: "Danh sách đơn vị",
   ["/dashboard/news"]: "Tin hoạt động",
-  ["/dashboard/document-category"]: "Danh mục văn bản",
-  ["/dashboard/document-management"]: "Quản lý văn bản",
+  ["/dashboard/library/document-category"]: "Danh mục văn bản",
+  ["/dashboard/library/document-management"]: "Quản lý văn bản",
+  ["/dashboard/library/document"]: "Tra cứu văn bản",
 };
 
 function TitleManager() {
@@ -43,10 +45,15 @@ function TitleManager() {
 
   useEffect(() => {
     const defaultTitle = "Bệnh viện đa khoa";
-    document.title = TITLES[location.pathname] || defaultTitle;
+
+    const matchedKey = Object.keys(TITLES)
+      .sort((a, b) => b.length - a.length)
+      .find((key) => location.pathname.startsWith(key));
+
+    document.title = (matchedKey && TITLES[matchedKey]) || defaultTitle;
   }, [location.pathname]);
 
-  return null; // không render gì
+  return null;
 }
 
 export default function App() {

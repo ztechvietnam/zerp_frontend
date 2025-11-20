@@ -89,7 +89,7 @@ const DocumentsManagement = () => {
 
   const getDocuments = useCallback(async () => {
     try {
-      if (idCategory) {
+      if (idCategory && idCategory !== "all") {
         const category = listDocumentCategories.find((cate) => {
           return cate.id_category.toString() === idCategory.toString();
         });
@@ -160,7 +160,7 @@ const DocumentsManagement = () => {
             filterValues.keyword || ""
           );
           if (results) {
-            if (currentUser?.role?.name === "admin") {
+            if (currentUser?.role?.name === "admin" && idCategory !== "all") {
               setListDocuments(results);
             } else {
               const docList = results.filter((doc: DocumentEntity) => {
@@ -258,12 +258,14 @@ const DocumentsManagement = () => {
               className="cursor-pointer"
               onClick={() => {
                 if (
-                  currentUser?.role.name === "admin" ||
-                  record?.created_id?.toString() === currentUser?.id?.toString()
+                  (currentUser?.role.name === "admin" ||
+                    record?.created_id?.toString() ===
+                      currentUser?.id?.toString()) &&
+                  !idCategory
                 ) {
                   documentFormRef.current?.show(record);
                 } else {
-                  message.error("Bạn không có quyền chỉnh sửa văn bản này");
+                  documentFormRef.current?.show(record, true);
                 }
               }}
             >
@@ -278,6 +280,9 @@ const DocumentsManagement = () => {
         title: "Mã kí hiệu",
         dataIndex: "code",
         ...(haveData ? { width: 80 } : {}),
+        render(value, record) {
+          return <span>{highlightText(value.trim())}</span>;
+        },
       },
       {
         title: "Biểu mẫu",
@@ -290,7 +295,7 @@ const DocumentsManagement = () => {
                 value.map((atm: any, index: number) => (
                   <Tag
                     key={index}
-                    className="w-fit !whitespace-break-spaces cursor-pointer !m-0"
+                    className="w-fit whitespace-break-spaces! cursor-pointer m-0!"
                     color="processing"
                     onClick={async () => {
                       const token = localStorage.getItem("access_token");
@@ -351,7 +356,7 @@ const DocumentsManagement = () => {
                   (cate) => cate.id_category.toString() === value.toString()
                 ) && (
                   <Tag
-                    className="w-fit !whitespace-break-spaces"
+                    className="w-fit whitespace-break-spaces!"
                     color="processing"
                   >
                     {listDocumentCategories.find(
@@ -401,7 +406,7 @@ const DocumentsManagement = () => {
             <div className="w-full grid grid-cols-2 gap-[5px] flex-row flex-nowrap">
               <Tooltip title="Xem văn bản">
                 <Button
-                  className="!px-[10px]"
+                  className="px-2.5!"
                   color="primary"
                   variant="outlined"
                   onClick={async () => {
@@ -458,46 +463,47 @@ const DocumentsManagement = () => {
               </Tooltip>
               {(currentUser?.role?.name === "admin" ||
                 record?.created_id?.toString() ===
-                  currentUser?.id?.toString()) && (
-                <Tooltip title="Xoá văn bản">
-                  <Button
-                    className="!px-[10px]"
-                    variant="outlined"
-                    color="red"
-                    onClick={async () => {
-                      modal.confirm({
-                        title: MEASSAGE.CONFIRM_DELETE,
-                        okText: MEASSAGE.OK,
-                        cancelText: MEASSAGE.NO,
-                        onOk: async () => {
-                          try {
+                  currentUser?.id?.toString()) &&
+                !(currentCategory || idCategory === "all") && (
+                  <Tooltip title="Xoá văn bản">
+                    <Button
+                      className="px-2.5!"
+                      variant="outlined"
+                      color="red"
+                      onClick={async () => {
+                        modal.confirm({
+                          title: MEASSAGE.CONFIRM_DELETE,
+                          okText: MEASSAGE.OK,
+                          cancelText: MEASSAGE.NO,
+                          onOk: async () => {
                             try {
-                              setLoading(true);
-                              await documentService.deleteDocument(
-                                record.id_document
-                              );
-                              message.success("Xoá văn bản thành công");
-                              await getDocuments();
-                              setLoading(false);
-                            } catch (e) {
-                              message.error(
-                                "Có lỗi xảy ra trong quá trình xoá văn bản"
-                              );
-                              console.log(e);
+                              try {
+                                setLoading(true);
+                                await documentService.deleteDocument(
+                                  record.id_document
+                                );
+                                message.success("Xoá văn bản thành công");
+                                await getDocuments();
+                                setLoading(false);
+                              } catch (e) {
+                                message.error(
+                                  "Có lỗi xảy ra trong quá trình xoá văn bản"
+                                );
+                                console.log(e);
+                              }
+                            } catch (error) {
+                              console.log(error);
+                              message.error(MEASSAGE.ERROR, 3);
                             }
-                          } catch (error) {
-                            console.log(error);
-                            message.error(MEASSAGE.ERROR, 3);
-                          }
-                        },
-                        onCancel() {},
-                      });
-                    }}
-                  >
-                    <DeleteOutlined />
-                  </Button>
-                </Tooltip>
-              )}
+                          },
+                          onCancel() {},
+                        });
+                      }}
+                    >
+                      <DeleteOutlined />
+                    </Button>
+                  </Tooltip>
+                )}
             </div>
           );
         },
@@ -531,7 +537,7 @@ const DocumentsManagement = () => {
     const width = window.innerWidth;
 
     if (width < 428) {
-      if (idCategory) {
+      if (currentCategory) {
         return height >= windowHeight - 231
           ? { y: windowHeight - 231, x: "max-content" }
           : undefined;
@@ -541,7 +547,7 @@ const DocumentsManagement = () => {
         : undefined;
     }
 
-    if (width < 768 && !idCategory) {
+    if (width < 768 && !currentCategory) {
       return height >= windowHeight - 271
         ? { y: windowHeight - 271, x: "max-content" }
         : undefined;
@@ -557,8 +563,14 @@ const DocumentsManagement = () => {
         : undefined;
     }
 
-    return height >= windowHeight - 209
-      ? { y: windowHeight - 209, x: "max-content" }
+    if (idCategory) {
+      return height >= windowHeight - 209
+        ? { y: windowHeight - 209, x: "max-content" }
+        : undefined;
+    }
+
+    return height >= windowHeight - 232
+      ? { y: windowHeight - 232, x: "max-content" }
       : undefined;
   };
 
@@ -577,8 +589,14 @@ const DocumentsManagement = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-[28px]">
-            {`${currentCategory ? currentCategory.name : "Quản lý văn bản"}`}
+          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
+            {`${
+              currentCategory
+                ? currentCategory.name
+                : idCategory === "all"
+                ? "Tất cả văn bản"
+                : "Quản lý văn bản"
+            }`}
           </h1>
           <Breadcrumb
             items={[
@@ -589,7 +607,11 @@ const DocumentsManagement = () => {
               {
                 title: (
                   <Tag color="#108ee9">{`${
-                    currentCategory ? currentCategory.name : "Quản lý văn bản"
+                    currentCategory
+                      ? currentCategory.name
+                      : idCategory === "all"
+                      ? "Tất cả văn bản"
+                      : "Quản lý văn bản"
                   }`}</Tag>
                 ),
               },
@@ -599,7 +621,7 @@ const DocumentsManagement = () => {
       }
       toolbarRight={
         <div className="flex items-center gap-4">
-          {!currentCategory && (
+          {!(currentCategory || idCategory === "all") && (
             <Button
               type="primary"
               size="middle"
@@ -619,7 +641,7 @@ const DocumentsManagement = () => {
           <div className="flex flex-col bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-2 px-2 py-1 md:flex-row md:flex-wrap md:items-center">
             <div
               className={`flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center ${
-                idCategory ? "w-full" : "w-full md:w-[calc(50%-8px)]"
+                currentCategory ? "w-full" : "w-full md:w-[calc(50%-8px)]"
               } md:flex-nowrap`}
             >
               <div className="flex items-center sm:w-auto">{iconFilter}</div>
@@ -637,7 +659,7 @@ const DocumentsManagement = () => {
                   }
                 />
               </Form.Item>
-              {idCategory && (
+              {currentCategory && (
                 <Tooltip title="Làm mới">
                   <Button
                     type="primary"
@@ -654,7 +676,7 @@ const DocumentsManagement = () => {
                 </Tooltip>
               )}
             </div>
-            {!idCategory && (
+            {!currentCategory && (
               <div className="flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center w-full md:w-[calc(50%-8px)] md:flex-nowrap">
                 <Form.Item
                   colon={false}

@@ -45,7 +45,7 @@ export const environments = [
   {
     key: SUB_SYSTEM.LIBRARY,
     title: "Thư viện điện tử",
-    path: "/dashboard/library",
+    path: "/dashboard/library/document/all",
     icon: <ReadOutlined width={32} height={32} />,
   },
   {
