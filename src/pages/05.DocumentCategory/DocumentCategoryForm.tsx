@@ -19,6 +19,7 @@ import { buildDepartmentTreeData } from "../06.DocumentsManagement/DocumentsForm
 import { RoleTreeNode } from "../../common/services/department/department";
 import { DocumentCategoryPermissionEntity } from "../../common/services/document-category-permissions/document-category-permissions";
 import { documentCategoryPermissionService } from "../../common/services/document-category-permissions/documentCategoryPermissionsService";
+import { useSidebar } from "../../context/SidebarContext";
 
 export interface DocumentCategoryFormRef {
   show(currentItem?: DocumentCategoriesEntity): Promise<void>;
@@ -45,6 +46,7 @@ export const DocumentCategoryForm = forwardRef<
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [treeDepartment, setTreeDepartment] = useState<RoleTreeNode[]>([]);
   const { message } = App.useApp();
+  const { getPerDocumentCate } = useSidebar();
   const [form] = useForm();
 
   const removeNodeById = useCallback(
@@ -237,6 +239,7 @@ export const DocumentCategoryForm = forwardRef<
       message.success(
         currentCategory ? "Chỉnh sửa thành công" : "Thêm mới thành công"
       );
+      await getPerDocumentCate();
       if (resetData) {
         resetData();
       }

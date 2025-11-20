@@ -58,7 +58,7 @@ import { documentPermissionService } from "../../common/services/document-permis
 import { DocumentPermissionEntity } from "../../common/services/document-permissions/document-permissions";
 
 export interface DocumentFormRef {
-  show(currentItem?: DocumentEntity): Promise<void>;
+  show(currentItem?: DocumentEntity, viewDocument?: boolean): Promise<void>;
 }
 
 interface DocumentFormProps {
@@ -106,6 +106,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
   ({ resetData }, ref) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [isViewDocument, setIsViewDocument] = useState<boolean>(false);
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [currentDocument, setCurrentDocument] = useState<
       DocumentEntity | undefined
@@ -117,6 +118,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const { message } = App.useApp();
     const [form] = useForm();
     const [linkFile, setLinkFile] = useState<string>("");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [formAttachs, setFormAttachs] = useState([
       { file_id: "", title: "", linkFile: "", fileList: [] as any[] },
     ]);
@@ -142,7 +144,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
 
     useEffect(() => {
       setLoading(true);
-      if (currentUser?.role?.name !== "admin") {
+      if (currentUser?.role?.name === "admin") {
         const treeCate = buildCategoryTree(listDocumentCategories, true);
         setTreeData(treeCate);
       } else {
@@ -240,9 +242,10 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     useImperativeHandle(
       ref,
       () => ({
-        show: async (currentItem?: DocumentEntity) => {
+        show: async (currentItem?: DocumentEntity, viewDocument?: boolean) => {
           setLoading(true);
           setShowModal(true);
+          setIsViewDocument(!!viewDocument);
           if (currentItem) {
             setCurrentDocument(currentItem);
             const formControlValues = pick(currentItem, [
@@ -430,14 +433,13 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
           message.error("Chỉnh sửa văn bản thất bại!");
         }
       } else {
-        const fileList = valueForm.file;
-        if (!fileList || fileList.length === 0) {
+        if (!selectedFile) {
           message.warning("Vui lòng chọn file trước khi lưu");
           return;
         }
 
         const formData = new FormData();
-        formData.append("file", fileList.fileList[0].originFileObj);
+        formData.append("file", selectedFile);
 
         try {
           const res = await fileService.uploadFile(formData);
@@ -502,9 +504,23 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
         { file_id: "", title: "", linkFile: "", fileList: [] as any[] },
       ]);
       setSelectedUserIds([]);
+      setSelectedFile(null);
       setCurrentDocument(undefined);
       setCurrentDocumentPermission(undefined);
       form.resetFields();
+    };
+
+    const normalizeTitle = (str: string) => {
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9.-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .toLowerCase();
     };
 
     const allowedTypes = [
@@ -519,13 +535,20 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
 
     const uploadProps: UploadProps = {
       maxCount: 1,
+      showUploadList: false,
       accept: ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx",
-      beforeUpload: (file: File) => {
+      beforeUpload: (file) => {
         if (!allowedTypes.includes(file.type)) {
           message.error("Chỉ cho phép file PDF, Word, Excel và PowerPoint!");
           return Upload.LIST_IGNORE;
         }
+        const sanitized = normalizeTitle(file.name);
+        const newFile = new File([file], sanitized, { type: file.type });
+        setSelectedFile(newFile);
         return false;
+      },
+      onRemove: () => {
+        setSelectedFile(null);
       },
     };
 
@@ -570,22 +593,32 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
           for (const idx of emptyIndexes) {
             if (fileIndex >= droppedFiles.length) break;
             const f = droppedFiles[fileIndex++];
+            const titleClean = normalizeTitle(f.name);
+            const newFile = new File([f], titleClean, {
+              type: f.type,
+            });
             updated[idx] = {
               ...updated[idx],
               title: f.name.replace(/\.[^/.]+$/, ""),
               linkFile: "",
-              fileList: [f],
+              fileList: [newFile],
             };
           }
 
           if (fileIndex < droppedFiles.length) {
             const remainFiles = droppedFiles.slice(fileIndex);
-            const newAttachs = remainFiles.map((f) => ({
-              file_id: "",
-              title: f.name.replace(/\.[^/.]+$/, ""),
-              linkFile: "",
-              fileList: [f],
-            }));
+            const newAttachs = remainFiles.map((f) => {
+              const titleClean = normalizeTitle(f.name);
+              const newFile = new File([f], titleClean, {
+                type: f.type,
+              });
+              return {
+                file_id: "",
+                title: f.name.replace(/\.[^/.]+$/, ""),
+                linkFile: "",
+                fileList: [newFile],
+              };
+            });
             updated.push(...newAttachs);
           }
 
@@ -599,10 +632,10 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const collapseItems = formAttachs.map((form, index) => ({
       key: index,
       label: `Biểu mẫu ${index + 1}`,
-      extra: (
+      extra: !isViewDocument && (
         <Tooltip title="Xoá biểu mẫu">
           <Button
-            className="!px-[10px]"
+            className="px-2.5!"
             variant="outlined"
             color="red"
             onClick={(e) => {
@@ -617,11 +650,12 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       children: (
         <Row gutter={24}>
           <Col xs={24} sm={24} md={24} lg={12}>
-            <div className="flex flex-col gap-[2px]">
+            <div className="flex flex-col gap-0.5">
               <div className="flex items-center">
                 Tiêu đề biểu mẫu {index + 1}
               </div>
               <Input
+                readOnly={isViewDocument}
                 style={{ width: "100%" }}
                 placeholder="Nhập tiêu đề biểu mẫu"
                 value={form.title}
@@ -635,7 +669,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             </div>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12}>
-            <div className="flex flex-col gap-[2px]">
+            <div className="flex flex-col gap-0.5">
               <div className="flex items-center">
                 Tài liệu biểu mẫu {index + 1}
               </div>
@@ -647,9 +681,9 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                         last(form.linkFile.split("/"))
                       )}`,
                     }}
-                    className="flex flex-[0_1_auto] w-fit max-w-full px-[10px] py-1 items-center rounded-lg bg-white gap-[10px] cursor-pointer overflow-hidden"
+                    className="flex flex-[0_1_auto] w-fit max-w-full px-2.5 py-1 items-center rounded-lg bg-white gap-2.5 cursor-pointer overflow-hidden"
                   >
-                    <div className="flex w-[24px] h-[22px]">
+                    <div className="flex w-6 h-[22px]">
                       {getIcon(last(form.linkFile.split("/")))}
                     </div>
                     <div className="text-[#000000e0] text-[14px] not-italic font-normal leading-normal whitespace-nowrap overflow-hidden min-w-0 text-ellipsis">
@@ -658,32 +692,75 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   </div>
                 </Tooltip>
               ) : (
-                <Upload
-                  {...uploadProps}
-                  fileList={form.fileList as any}
-                  onRemove={(file) => {
-                    const newForms = formAttachs.map((f, indexAtm) =>
-                      indexAtm === index
-                        ? {
-                            ...f,
-                            fileList: f.fileList.filter(
-                              (fl) => fl.uid !== file.uid
-                            ),
-                          }
-                        : f
-                    );
-                    setFormAttachs(newForms);
-                  }}
-                  beforeUpload={(file) => {
-                    const newForms = formAttachs.map((f, indexAtm) =>
-                      indexAtm === index ? { ...f, fileList: [file] } : f
-                    );
-                    setFormAttachs(newForms);
-                    return false;
-                  }}
-                >
-                  <Button icon={<UploadOutlined />}>Chọn file</Button>
-                </Upload>
+                <div className="flex flex-col items-start gap-2">
+                  <Upload
+                    maxCount={1}
+                    showUploadList={false}
+                    accept={".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"}
+                    fileList={form.fileList as any}
+                    onRemove={(file) => {
+                      const newForms = formAttachs.map((f, indexAtm) =>
+                        indexAtm === index
+                          ? {
+                              ...f,
+                              fileList: f.fileList.filter(
+                                (fl) => fl.uid !== file.uid
+                              ),
+                            }
+                          : f
+                      );
+                      setFormAttachs(newForms);
+                    }}
+                    beforeUpload={(file) => {
+                      const titleClean = normalizeTitle(file.name);
+                      const newFile = new File([file], titleClean, {
+                        type: file.type,
+                      });
+
+                      const newForms = formAttachs.map((f, indexAtm) =>
+                        indexAtm === index
+                          ? {
+                              ...f,
+                              title: file.name.replace(/\.[^/.]+$/, ""),
+                              linkFile: "",
+                              fileList: [newFile],
+                            }
+                          : f
+                      );
+
+                      setFormAttachs(newForms);
+                      return false;
+                    }}
+                  >
+                    <Button icon={<UploadOutlined />}>Chọn file</Button>
+                  </Upload>
+                  {form.fileList.length > 0 && (
+                    <div
+                      style={{
+                        border: `1px solid ${getBorder(form.fileList[0].name)}`,
+                      }}
+                      className="flex flex-[0_1_auto] w-fit max-w-full px-2.5 py-1 items-center rounded-lg bg-white gap-2.5 cursor-pointer overflow-hidden"
+                    >
+                      <div className="flex w-6 h-[22px]">
+                        {getIcon(form.fileList[0].name)}
+                      </div>
+
+                      <div className="text-[#000000e0] text-[14px] whitespace-nowrap overflow-hidden text-ellipsis">
+                        {form.fileList[0].name}
+                      </div>
+
+                      <DeleteOutlined
+                        onClick={() => {
+                          const newForms = formAttachs.map((f, indexAtm) =>
+                            indexAtm === index ? { ...f, fileList: [] } : f
+                          );
+                          setFormAttachs(newForms);
+                        }}
+                        style={{ color: "red" }}
+                      />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </Col>
@@ -693,10 +770,16 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
 
     return (
       <Modal
-        title={currentDocument ? "Chỉnh sửa văn bản" : "Thêm mới văn bản"}
+        title={
+          isViewDocument
+            ? "Chi tiết văn bản"
+            : currentDocument
+            ? "Chỉnh sửa văn bản"
+            : "Thêm mới văn bản"
+        }
         onCancel={() => closeModal()}
         width={1200}
-        className="!top-[24px]"
+        className="top-6!"
         open={showModal}
         closable={loading ? false : true}
         onOk={async () => {
@@ -708,8 +791,13 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
           }
         }}
         okText={currentDocument ? MEASSAGE.SAVE : MEASSAGE.CREATE}
-        cancelText={currentDocument ? MEASSAGE.CANCEL : MEASSAGE.CLOSE}
+        cancelText={
+          currentDocument && !isViewDocument ? MEASSAGE.CANCEL : MEASSAGE.CLOSE
+        }
         maskClosable={false}
+        okButtonProps={{
+          style: { display: isViewDocument ? "none" : "inline-block" },
+        }}
       >
         <Spin spinning={loading}>
           <Form layout="horizontal" form={form} style={{ padding: 12 }}>
@@ -728,6 +816,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   ]}
                 >
                   <Input
+                    readOnly={isViewDocument}
                     style={{ width: "100%" }}
                     placeholder={"Nhập tiêu đề"}
                     maxLength={255}
@@ -750,6 +839,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   ]}
                 >
                   <Input.TextArea
+                    readOnly={isViewDocument}
                     style={{ width: "100%" }}
                     placeholder={"Nhập mô tả"}
                   />
@@ -771,6 +861,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   ]}
                 >
                   <Input
+                    readOnly={isViewDocument}
                     style={{ width: "100%" }}
                     placeholder={"Nhập mã hiệu văn bản"}
                   />
@@ -795,6 +886,26 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                         Tải tài liệu lên (PDF, Word, Excel, PowerPoint)
                       </Button>
                     </Upload>
+                    {selectedFile && (
+                      <div
+                        style={{
+                          border: `1px solid ${getBorder(selectedFile.name)}`,
+                        }}
+                        className="flex flex-[0_1_auto] w-fit max-w-full px-2.5 py-1 items-center rounded-lg bg-white gap-2.5 cursor-pointer overflow-hidden mt-2.5"
+                      >
+                        <div className="flex w-6 h-[22px]">
+                          {getIcon(selectedFile.name)}
+                        </div>
+                        <div className="text-[#000000e0] text-[14px] not-italic font-normal leading-normal whitespace-nowrap overflow-hidden min-w-0 text-ellipsis">
+                          {selectedFile.name}
+                        </div>
+
+                        <DeleteOutlined
+                          onClick={() => setSelectedFile(null)}
+                          style={{ color: "red", marginLeft: 8 }}
+                        />
+                      </div>
+                    )}
                   </Form.Item>
                 </Col>
               ) : (
@@ -811,9 +922,9 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                             last(linkFile.split("/"))
                           )}`,
                         }}
-                        className="flex flex-[0_1_auto] w-fit max-w-full px-[10px] py-1 items-center rounded-lg bg-white gap-[10px] cursor-pointer overflow-hidden"
+                        className="flex flex-[0_1_auto] w-fit max-w-full px-2.5 py-1 items-center rounded-lg bg-white gap-2.5 cursor-pointer overflow-hidden"
                       >
-                        <div className="flex w-[24px] h-[22px]">
+                        <div className="flex w-6 h-[22px]">
                           {getIcon(last(linkFile.split("/")))}
                         </div>
                         <div className="text-[#000000e0] text-[14px] not-italic font-normal leading-normal whitespace-nowrap overflow-hidden min-w-0 text-ellipsis">
@@ -839,23 +950,34 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                     },
                   ]}
                 >
-                  <TreeSelect
-                    treeData={treeData}
-                    showSearch
-                    placeholder="Chọn danh mục văn bản"
-                    styles={{
-                      popup: { root: { maxHeight: 400, overflow: "auto" } },
-                    }}
-                    filterTreeNode={(inputValue: string, treeNode: any) => {
-                      const title =
-                        typeof treeNode.title === "string"
-                          ? treeNode.title
-                          : "";
-                      return title
-                        .toLocaleLowerCase()
-                        .includes(inputValue?.trim().toLocaleLowerCase());
-                    }}
-                  />
+                  {isViewDocument ? (
+                    <div className="px-[11px] py-1 border border-[#d9d9d9] rounded-md">
+                      {listDocumentCategories.find(
+                        (cate) =>
+                          cate.id_category.toString() ===
+                          form.getFieldValue("category_id")?.toString()
+                      )?.name || ""}
+                    </div>
+                  ) : (
+                    <TreeSelect
+                      disabled={isViewDocument}
+                      treeData={treeData}
+                      showSearch
+                      placeholder="Chọn danh mục văn bản"
+                      styles={{
+                        popup: { root: { maxHeight: 400, overflow: "auto" } },
+                      }}
+                      filterTreeNode={(inputValue: string, treeNode: any) => {
+                        const title =
+                          typeof treeNode.title === "string"
+                            ? treeNode.title
+                            : "";
+                        return title
+                          .toLocaleLowerCase()
+                          .includes(inputValue?.trim().toLocaleLowerCase());
+                      }}
+                    />
+                  )}
                 </Form.Item>
               </Col>
               <Col xs={24} sm={24} md={24} lg={12}>
@@ -871,11 +993,17 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                     },
                   ]}
                 >
-                  <DatePicker
-                    locale={vi}
-                    format="DD/MM/YYYY"
-                    className="w-full"
-                  />
+                  {isViewDocument ? (
+                    <div className="px-[11px] py-1 border border-[#d9d9d9] rounded-md">
+                      {form.getFieldValue("publish_date")?.format("DD/MM/YYYY")}
+                    </div>
+                  ) : (
+                    <DatePicker
+                      locale={vi}
+                      format="DD/MM/YYYY"
+                      className="w-full"
+                    />
+                  )}
                 </Form.Item>
               </Col>
             </Row>
@@ -889,6 +1017,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   initialValue={true}
                 >
                   <Switch
+                    disabled={isViewDocument}
                     checkedChildren="Active"
                     unCheckedChildren="Inactive"
                   />
@@ -902,7 +1031,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   name="is_featured"
                   initialValue={false}
                 >
-                  <Switch />
+                  <Switch disabled={isViewDocument} />
                 </Form.Item>
               </Col>
             </Row>
@@ -910,6 +1039,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
               <Col xs={24} sm={24} md={24} lg={24}>
                 <Dragger
                   {...uploadMultiProps}
+                  disabled={isViewDocument}
                   className="dragger-template-document"
                 >
                   <Card
@@ -919,13 +1049,15 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                           Các biểu mẫu (Có thể kéo file vào khu vực này để thêm
                           nhanh biểu mẫu)
                         </span>
-                        <Button
-                          type="primary"
-                          icon={<PlusOutlined />}
-                          onClick={handleAddFormAttach}
-                        >
-                          Thêm biểu mẫu
-                        </Button>
+                        {!isViewDocument && (
+                          <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={handleAddFormAttach}
+                          >
+                            Thêm biểu mẫu
+                          </Button>
+                        )}
                       </div>
                     }
                     type="inner"
@@ -941,38 +1073,39 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   </Card>
                 </Dragger>
               </Col>
-              <Col xs={24} sm={24} md={24} lg={24} className="mt-[24px]">
-                <Card
-                  title="Phân quyền văn bản"
-                  className="!mt-[10px] lg:!mt-0 shadow-[0_-2px_10px_-2px_rgba(0,0,0,0.05),-2px_0_10px_-2px_rgba(0,0,0,0.05),2px_0_10px_-2px_rgba(0,0,0,0.05)] rounded-lg"
-                  type="inner"
-                >
-                  <TreeSelect
-                    treeData={treeDepartment}
-                    value={selectedUserIds}
-                    onChange={(values) => {
-                      console.log(values);
-                      setSelectedUserIds(values);
-                    }}
-                    treeCheckable
-                    showCheckedStrategy={TreeSelect.SHOW_PARENT}
-                    placeholder="Chọn người dùng được phép truy cập"
-                    allowClear
-                    style={{ width: "100%" }}
-                    treeDefaultExpandAll
-                    maxTagCount="responsive"
-                    filterTreeNode={(inputValue: string, treeNode: any) => {
-                      const title =
-                        typeof treeNode.title === "string"
-                          ? treeNode.title
-                          : "";
-                      return title
-                        .toLocaleLowerCase()
-                        .includes(inputValue?.trim().toLocaleLowerCase());
-                    }}
-                  />
-                </Card>
-              </Col>
+              {!isViewDocument && (
+                <Col xs={24} sm={24} md={24} lg={24} className="mt-6">
+                  <Card
+                    title="Phân quyền văn bản"
+                    className="mt-2.5! lg:mt-0! shadow-[0_-2px_10px_-2px_rgba(0,0,0,0.05),-2px_0_10px_-2px_rgba(0,0,0,0.05),2px_0_10px_-2px_rgba(0,0,0,0.05)] rounded-lg"
+                    type="inner"
+                  >
+                    <TreeSelect
+                      treeData={treeDepartment}
+                      value={selectedUserIds}
+                      onChange={(values) => {
+                        setSelectedUserIds(values);
+                      }}
+                      treeCheckable
+                      showCheckedStrategy={TreeSelect.SHOW_PARENT}
+                      placeholder="Chọn người dùng được phép truy cập"
+                      allowClear
+                      style={{ width: "100%" }}
+                      treeDefaultExpandAll
+                      maxTagCount="responsive"
+                      filterTreeNode={(inputValue: string, treeNode: any) => {
+                        const title =
+                          typeof treeNode.title === "string"
+                            ? treeNode.title
+                            : "";
+                        return title
+                          .toLocaleLowerCase()
+                          .includes(inputValue?.trim().toLocaleLowerCase());
+                      }}
+                    />
+                  </Card>
+                </Col>
+              )}
             </Row>
           </Form>
         </Spin>

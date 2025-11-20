@@ -183,6 +183,12 @@ const AppSidebar: React.FC = () => {
 
     return [
       { name: "Tra cứu văn bản" },
+      {
+        icon: <HddOutlined />,
+        name: "Tất cả văn bản",
+        path: `${SIDE_BAR.DOCUMENT}/all`,
+        subSystem: SUB_SYSTEM.LIBRARY,
+      },
       ...categoryNavItems,
       {
         icon: <PlaySquareOutlined />,
