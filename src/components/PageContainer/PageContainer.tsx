@@ -10,10 +10,12 @@ export interface PageContainerProps {
    * Toolbar phải
    */
   toolbarRight?: React.ReactNode;
+
+  className?: string;
 }
 
 const PageContainer = forwardRef<HTMLDivElement, PageContainerProps>(
-  ({ children, toolbarLeft, toolbarRight }, ref) => {
+  ({ children, toolbarLeft, toolbarRight, className }, ref) => {
     const toolbarComp =
       toolbarLeft || toolbarRight ? (
         <div className="flex items-center h-[auto] pb-[10px]">
@@ -28,7 +30,7 @@ const PageContainer = forwardRef<HTMLDivElement, PageContainerProps>(
       ) : null;
 
     return (
-      <div ref={ref} className={`flex flex-col w-full h-full`}>
+      <div ref={ref} className={`flex flex-col w-full h-full ${className}`}>
         {toolbarComp}
         {children}
       </div>

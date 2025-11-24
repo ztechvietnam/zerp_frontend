@@ -44,7 +44,7 @@ import DocumentViewer, {
 } from "../../components/document-viewer/DocumentViewer";
 import axios from "axios";
 
-interface FilterValues {
+export interface FilterValues {
   keyword?: string;
   categoryIds?: string[];
 }
@@ -707,7 +707,7 @@ const DocumentsManagement = () => {
                 <Tooltip title="Làm mới">
                   <Button
                     type="primary"
-                    disabled={Object.keys(filterValues || {}).length === 0}
+                    disabled={!hasValidFilterValues(filterValues)}
                     onClick={async () => {
                       form.resetFields();
                       setFilterValues({});

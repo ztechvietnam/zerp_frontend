@@ -16,6 +16,7 @@ import {
   EllipsisOutlined,
   FileDoneOutlined,
   HddOutlined,
+  HomeOutlined,
   NotificationOutlined,
   PlaySquareOutlined,
   SolutionOutlined,
@@ -65,6 +66,18 @@ const newsNavItems: NavItem[] = [
     icon: <NotificationOutlined />,
     name: "Tin hoạt động",
     path: SIDE_BAR.NEWS,
+  },
+];
+
+const dashboardDocumentNavItems: NavItem[] = [
+  {
+    name: "Dashboard",
+  },
+  {
+    icon: <HomeOutlined />,
+    name: "Dashboard",
+    path: SIDE_BAR.DASHBOARD_LIBRARY,
+    subSystem: SUB_SYSTEM.LIBRARY,
   },
 ];
 
@@ -230,7 +243,7 @@ const AppSidebar: React.FC = () => {
     return (
       <div>
         <h2
-          className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+          className={`mb-4 text-xs uppercase flex leading-5 text-gray-400 ${
             !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
           }`}
         >
@@ -306,7 +319,7 @@ const AppSidebar: React.FC = () => {
                           className={`menu-item-text ${
                             isActive(nav.path)
                               ? "text-[#1677ff]"
-                              : "text-[#344054]"
+                              : "text-gray-700"
                           }`}
                         >
                           {nav.name}
@@ -446,6 +459,9 @@ const AppSidebar: React.FC = () => {
               <div>{renderMenuItems(customerCareNavItems, "main")}</div>
             )}
             <div>{renderMenuItems(newsNavItems, "main")}</div>
+            {subSystem === SUB_SYSTEM.LIBRARY && (
+              <div>{renderMenuItems(dashboardDocumentNavItems, "main")}</div>
+            )}
             {subSystem === SUB_SYSTEM.LIBRARY && (
               <div>{renderMenuItems(documentLookupNavItems, "main")}</div>
             )}

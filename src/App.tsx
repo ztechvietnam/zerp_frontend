@@ -24,6 +24,7 @@ import HomeContent from "./homepage/HomeContent";
 import NewsManagement from "./pages/09.NewsManagement/NewsManagement";
 import { useEffect } from "react";
 import DashboardHome from "./pages/DashboardHome/DashboardHome";
+import DashboardLibrary from "./pages/DashboardLibrary/DashboardLibrary";
 
 const TITLES: Record<string, string> = {
   ["/dashboard"]: "Trang chủ",
@@ -111,6 +112,10 @@ export default function App() {
             element={<ListZaloMessages />}
           />
           <Route path={SIDE_BAR.LIST_REVIEWS} element={<ListReviews />} />
+          <Route
+            path={SIDE_BAR.DASHBOARD_LIBRARY}
+            element={<DashboardLibrary />}
+          />
           <Route
             path={SIDE_BAR.DOCUMENT_CATEGORY}
             element={<DocumentCategories />}
