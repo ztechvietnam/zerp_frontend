@@ -24,7 +24,7 @@ const LayoutContent: React.FC = () => {
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
-        <div className="layoutBody px-[15px] py-2  lg:px-[30px] lg:py-2.5 mx-auto h-[calc(100vh-46.8px)] lg:h-[calc(100vh-54.8px)] bg-[#f6f9ff]">
+        <div className="layoutBody px-[15px] py-2 overflow-auto lg:px-[30px] lg:py-2.5 mx-auto h-[calc(100vh-46.8px)] lg:h-[calc(100vh-54.8px)] bg-[#f6f9ff]">
           <Outlet />
         </div>
       </div>

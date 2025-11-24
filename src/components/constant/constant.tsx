@@ -25,6 +25,7 @@ export enum SIDE_BAR {
   LIST_REVIEWS = "list-reviews",
   DOCUMENT_CATEGORY = "document-category",
   DOCUMENT_MANAGEMENT = "document-management",
+  DASHBOARD_LIBRARY = "dashboard-library",
   DOCUMENT = "document",
   NEW_DETAIL = "new-detail",
 }

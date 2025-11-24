@@ -18,6 +18,10 @@
     }
   }
 
+  .ant-card-head, .ant-card-body {
+    max-width: calc(100vw - 90px);
+  }
+
   .collapseTemplate {
     .ant-collapse-header {
       display: flex;
@@ -59,11 +63,11 @@
       box-shadow: none !important;
     }
   }
-  .ant-select-selection-placeholder{
+  .ant-select-selection-placeholder {
     font-size: 13px;
   }
 
-  .ant-form-item{
+  .ant-form-item {
     margin-bottom: 0;
   }
 }

@@ -119,7 +119,8 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
       onCancel={handleClose}
       footer={null}
       title={modalTitle}
-      className="!w-[100vw] !top-0"
+      className="w-screen! top-0!"
+      zIndex={1050}
       centered
       bodyStyle={{
         padding: 0,

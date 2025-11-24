@@ -102,6 +102,58 @@ export const buildDepartmentTreeData = (branches: any[]): RoleTreeNode[] => {
   });
 };
 
+export const getIcon = (fileName?: string, size?: number) => {
+  const text = last(fileName?.split("."))?.toLowerCase();
+  switch (text) {
+    case "pdf":
+      return iconPdf(size);
+    case "docx":
+    case "doc":
+      return iconWord(size);
+    case "xlsx":
+    case "xlsm":
+    case "xlsb":
+    case "xls":
+    case "xlt":
+      return iconExcel(size);
+    case "pptx":
+      return iconPp(size);
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "svg":
+      return iconImg(size);
+    default:
+      return iconPdf(size);
+  }
+};
+
+export const getBorder = (fileName?: string) => {
+  const text = last(fileName?.split("."))?.toLowerCase();
+  switch (text) {
+    case "pdf":
+      return "#e50012";
+    case "docx":
+    case "doc":
+      return "#185abd";
+    case "xlsx":
+    case "xlsm":
+    case "xlsb":
+    case "xls":
+    case "xlt":
+      return "#107c41";
+    case "pptx":
+      return "#d35230";
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "svg":
+      return "#78320A";
+    default:
+      return "#e50012";
+  }
+};
+
 export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
   ({ resetData }, ref) => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -166,58 +218,6 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
       perDocumentCategories,
     ]);
 
-    const getIcon = (fileName?: string) => {
-      const text = last(fileName?.split("."))?.toLowerCase();
-      switch (text) {
-        case "pdf":
-          return iconPdf;
-        case "docx":
-        case "doc":
-          return iconWord;
-        case "xlsx":
-        case "xlsm":
-        case "xlsb":
-        case "xls":
-        case "xlt":
-          return iconExcel;
-        case "pptx":
-          return iconPp;
-        case "jpg":
-        case "jpeg":
-        case "png":
-        case "svg":
-          return iconImg;
-        default:
-          return iconPdf;
-      }
-    };
-
-    const getBorder = (fileName?: string) => {
-      const text = last(fileName?.split("."))?.toLowerCase();
-      switch (text) {
-        case "pdf":
-          return "#e50012";
-        case "docx":
-        case "doc":
-          return "#185abd";
-        case "xlsx":
-        case "xlsm":
-        case "xlsb":
-        case "xls":
-        case "xlt":
-          return "#107c41";
-        case "pptx":
-          return "#d35230";
-        case "jpg":
-        case "jpeg":
-        case "png":
-        case "svg":
-          return "#78320A";
-        default:
-          return "#e50012";
-      }
-    };
-
     const flattenPermission = (item: DocumentPermissionEntity) => {
       type PermissionKey = "branch_id" | "department_id" | "user_id";
 
@@ -252,7 +252,6 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
               "title",
               "description",
               "code",
-              "file",
               "status",
               "is_featured",
               "template",
@@ -354,6 +353,13 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     const onOK = async (valueForm: any) => {
       if (currentDocument) {
         try {
+          let newFile: any | undefined = undefined;
+          if (selectedFile) {
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+            const res = await fileService.uploadFile(formData);
+            newFile = res.file;
+          }
           const oldAttachments = currentDocument.document_attachment || [];
           const newAttachments = formAttachs.filter(
             (a) => !a.linkFile && a.fileList && a.fileList.length > 0
@@ -375,8 +381,8 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
             status: valueForm.status ? 1 : 0,
             is_featured: valueForm.is_featured ? 1 : 0,
             category_id: parseInt(valueForm.category_id),
-            file: currentDocument.file,
-            file_id: currentDocument?.file_id || "",
+            file: newFile?.path || currentDocument.file,
+            file_id: newFile?.id || currentDocument?.file_id || "",
             document_attachment: finalAttachments || [],
             publish_date: dayjs(valueForm.publish_date).format("MM/DD/YYYY"),
           };
@@ -867,7 +873,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                   />
                 </Form.Item>
               </Col>
-              {!currentDocument && !linkFile ? (
+              {!isViewDocument ? (
                 <Col xs={24} sm={24} md={24} lg={12}>
                   <Form.Item
                     labelCol={{ span: 24 }}
@@ -876,7 +882,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                     name="file"
                     rules={[
                       {
-                        required: true,
+                        required: selectedFile || linkFile ? false : true,
                         message: "Trường yêu cầu nhập!",
                       },
                     ]}
@@ -886,22 +892,29 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
                         Tải tài liệu lên (PDF, Word, Excel, PowerPoint)
                       </Button>
                     </Upload>
-                    {selectedFile && (
+                    {(selectedFile || linkFile) && (
                       <div
                         style={{
-                          border: `1px solid ${getBorder(selectedFile.name)}`,
+                          border: `1px solid ${getBorder(
+                            selectedFile?.name || last(linkFile.split("/"))
+                          )}`,
                         }}
                         className="flex flex-[0_1_auto] w-fit max-w-full px-2.5 py-1 items-center rounded-lg bg-white gap-2.5 cursor-pointer overflow-hidden mt-2.5"
                       >
                         <div className="flex w-6 h-[22px]">
-                          {getIcon(selectedFile.name)}
+                          {getIcon(
+                            selectedFile?.name || last(linkFile.split("/"))
+                          )}
                         </div>
                         <div className="text-[#000000e0] text-[14px] not-italic font-normal leading-normal whitespace-nowrap overflow-hidden min-w-0 text-ellipsis">
-                          {selectedFile.name}
+                          {selectedFile?.name || last(linkFile.split("/"))}
                         </div>
 
                         <DeleteOutlined
-                          onClick={() => setSelectedFile(null)}
+                          onClick={() => {
+                            setSelectedFile(null);
+                            setLinkFile("");
+                          }}
                           style={{ color: "red", marginLeft: 8 }}
                         />
                       </div>
