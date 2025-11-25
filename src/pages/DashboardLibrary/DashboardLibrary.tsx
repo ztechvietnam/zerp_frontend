@@ -106,17 +106,6 @@ const DashboardLibrary = () => {
             idCateFilter,
             filterValues.keyword || ""
           );
-          if (featuredDocuments.length === 0) {
-            const featureData = results
-              .filter((doc: DocumentEntity) => doc?.is_featured === 1)
-              .sort(
-                (a: DocumentEntity, b: DocumentEntity) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-              )
-              .slice(0, 3);
-            setFeaturedDocuments(featureData);
-          }
           if (results) {
             const docList = results.filter((doc: DocumentEntity) => {
               return (
@@ -125,6 +114,17 @@ const DashboardLibrary = () => {
               );
             });
             setListDocuments(docList);
+            if (featuredDocuments.length === 0) {
+              const featureData = docList
+                .filter((doc: DocumentEntity) => doc?.is_featured === 1)
+                .sort(
+                  (a: DocumentEntity, b: DocumentEntity) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                )
+                .slice(0, 3);
+              setFeaturedDocuments(featureData);
+            }
           } else {
             setListDocuments([]);
           }
@@ -421,7 +421,7 @@ const DashboardLibrary = () => {
   return (
     <PageContainer className="dashboard-library">
       <Spin spinning={loading}>
-        <div className="shrink-0">
+        <div className="shrink-0 min-h-[274px]">
           <Row gutter={24}>
             <Col xs={24} sm={24} md={12} lg={12}>
               <FeaturedDocuments

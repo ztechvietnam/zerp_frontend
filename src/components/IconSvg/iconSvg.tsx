@@ -461,3 +461,32 @@ export const iconShowSidebar = (
     </g>
   </svg>
 );
+
+export const iconDownload = (
+  <svg
+    width="20px"
+    height="20px"
+    viewBox="0 0 20.00 20.00"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    stroke="#000000"
+    stroke-width="0.0002"
+  >
+    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+    <g
+      id="SVGRepo_tracerCarrier"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke="#CCCCCC"
+      stroke-width="0.04"
+    ></g>
+    <g id="SVGRepo_iconCarrier">
+      {" "}
+      <path
+        fill="#667085"
+        fill-rule="evenodd"
+        d="M11 2a1 1 0 10-2 0v7.74L5.173 6.26a1 1 0 10-1.346 1.48l5.5 5a1 1 0 001.346 0l5.5-5a1 1 0 00-1.346-1.48L11 9.74V2zm-7.895 9.204A1 1 0 001.5 12v3.867a2.018 2.018 0 002.227 2.002c1.424-.147 3.96-.369 6.273-.369 2.386 0 5.248.236 6.795.383a2.013 2.013 0 002.205-2V12a1 1 0 10-2 0v3.884l-13.895-4.68zm0 0L2.5 11l.605.204zm0 0l13.892 4.683a.019.019 0 01-.007.005h-.006c-1.558-.148-4.499-.392-6.984-.392-2.416 0-5.034.23-6.478.38h-.009a.026.026 0 01-.013-.011V12a.998.998 0 00-.394-.796z"
+      ></path>{" "}
+    </g>
+  </svg>
+);

@@ -32,4 +32,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
+  .docx {
+    max-width: 100%;
+  }
 }

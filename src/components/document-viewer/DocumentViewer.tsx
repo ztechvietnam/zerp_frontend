@@ -3,10 +3,12 @@ import React, {
   useImperativeHandle,
   useState,
   useRef,
+  useCallback,
 } from "react";
-import { Modal } from "antd";
+import { Button, Modal, Tooltip } from "antd";
 import { renderAsync } from "docx-preview";
 import "./DocumentViewer.css";
+import { iconDownload } from "../IconSvg/iconSvg";
 
 export interface DocumentViewerRef {
   show: (
@@ -18,7 +20,7 @@ export interface DocumentViewerRef {
 const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
   const [visible, setVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState("Xem văn bản");
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string>("");
   const [fileType, setFileType] = useState<"pdf" | "docx" | "other" | null>(
     null
   );
@@ -35,7 +37,6 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
 
       const lower = fileName.toLowerCase();
 
-      // 🎯 Xác định loại file
       const isExcel =
         lower.endsWith(".xlsx") ||
         (typeof firstFile !== "string" &&
@@ -61,44 +62,36 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
         (typeof firstFile !== "string" &&
           (firstFile as File).type.includes("application/pdf"));
 
-      // 🟡 Nếu là Excel hoặc PowerPoint → tải xuống
-      if (isExcel || isPowerpoint) {
-        const blobUrl =
-          typeof firstFile === "string"
-            ? firstFile
-            : URL.createObjectURL(firstFile);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = fileName;
-        a.click();
-        if (blobUrl.startsWith("blob:")) URL.revokeObjectURL(blobUrl);
-        return;
-      }
-
-      // 🟢 Nếu là DOCX
-      if (isDocx && typeof firstFile !== "string") {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const buffer = e.target?.result as ArrayBuffer;
-          if (docxContainerRef.current) {
-            docxContainerRef.current.innerHTML = "";
-            await renderAsync(buffer, docxContainerRef.current);
-          }
-          setVisible(true);
-          setModalTitle(fileName);
-          setFileType("docx");
-          setFileUrl(null);
-        };
-        reader.readAsArrayBuffer(firstFile);
-        return;
-      }
-
-      // 🔵 Nếu là PDF hoặc link
       const url =
         typeof firstFile === "string"
           ? firstFile
           : URL.createObjectURL(firstFile);
+
+      if (isExcel || isPowerpoint) {
+        downloadFile(url, fileName);
+        return;
+      }
       setFileUrl(url);
+
+      if (isDocx && typeof firstFile !== "string") {
+        setVisible(true);
+        setModalTitle(fileName);
+        setFileType("docx");
+
+        setTimeout(() => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const buffer = e.target?.result as ArrayBuffer;
+            if (docxContainerRef.current) {
+              docxContainerRef.current.innerHTML = ""; // reset
+              await renderAsync(buffer, docxContainerRef.current);
+            }
+          };
+          reader.readAsArrayBuffer(firstFile);
+        }, 50);
+
+        return;
+      }
       setModalTitle(fileName);
       setFileType(isPdf ? "pdf" : "other");
       setVisible(true);
@@ -108,10 +101,27 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
   const handleClose = () => {
     if (fileUrl?.startsWith("blob:")) URL.revokeObjectURL(fileUrl);
     setVisible(false);
-    setFileUrl(null);
+    setFileUrl("");
     setFileType(null);
-    if (docxContainerRef.current) docxContainerRef.current.innerHTML = "";
+    if (docxContainerRef.current) {
+      docxContainerRef.current.replaceChildren();
+    }
   };
+
+  const downloadFile = useCallback(
+    (url: string, fileName?: string) => {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName
+        ? fileName
+        : modalTitle.includes(fileType || "")
+        ? modalTitle
+        : `${modalTitle}.${fileType}`;
+      a.click();
+      if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+    },
+    [modalTitle, fileType]
+  );
 
   return (
     <Modal
@@ -128,10 +138,22 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
       }}
     >
       {fileType === "docx" ? (
-        <div
-          ref={docxContainerRef}
-          className="overflow-auto h-[78vh] p-6 bg-gray-50 docx-preview rounded-md"
-        />
+        <div className="flex flex-col w-full">
+          <div className="flex w-full justify-end px-2">
+            <Button
+              type="text"
+              onClick={() => {
+                downloadFile(fileUrl);
+              }}
+            >
+              <Tooltip title="Tải xuống">{iconDownload}</Tooltip>
+            </Button>
+          </div>
+          <div
+            ref={docxContainerRef}
+            className="overflow-auto h-[calc(100vh-120px)] px-0 py-6 lg:px-6 bg-gray-50 docx-preview rounded-md"
+          />
+        </div>
       ) : fileType === "pdf" ? (
         <iframe
           src={fileUrl!}
