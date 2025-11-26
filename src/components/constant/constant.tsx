@@ -46,7 +46,7 @@ export const environments = [
   {
     key: SUB_SYSTEM.LIBRARY,
     title: "Thư viện điện tử",
-    path: "/dashboard/library/document/all",
+    path: "/dashboard/library/dashboard-library",
     icon: <ReadOutlined width={32} height={32} />,
   },
   {
@@ -1820,7 +1820,7 @@ export const dataCategoryNews: CategoryNewsEntity[] = [
 ];
 
 export const dataNews: NewsEntity[] = [
-  // Hoạt động bệnh viện (id = 1)
+  // Tin tức bệnh viện (1)
   {
     id: 101,
     title: "Bệnh viện khai trương khoa Nội tổng hợp mới",
@@ -1828,6 +1828,7 @@ export const dataNews: NewsEntity[] = [
       "Khoa Nội tổng hợp mới được trang bị hiện đại, phục vụ tốt hơn nhu cầu khám chữa bệnh.",
     image: "https://picsum.photos/400/200?random=1",
     category: "1",
+    createdAt: "2025-01-04T09:22:31.441Z",
   },
   {
     id: 102,
@@ -1836,6 +1837,7 @@ export const dataNews: NewsEntity[] = [
       "Bệnh viện tổ chức chuỗi sự kiện khám sức khỏe miễn phí cho người già trên 60 tuổi.",
     image: "https://picsum.photos/400/200?random=2",
     category: "1",
+    createdAt: "2025-01-16T14:11:14.302Z",
   },
   {
     id: 103,
@@ -1844,6 +1846,7 @@ export const dataNews: NewsEntity[] = [
       "Các y bác sĩ cùng nhau chia sẻ kinh nghiệm và ý tưởng nhằm nâng cao chất lượng chăm sóc bệnh nhân.",
     image: "https://picsum.photos/400/200?random=3",
     category: "1",
+    createdAt: "2025-11-20T06:11:50.401Z",
   },
   {
     id: 104,
@@ -1852,6 +1855,7 @@ export const dataNews: NewsEntity[] = [
       "Hơn 200 phần quà đã được trao tặng cho bệnh nhân có hoàn cảnh khó khăn.",
     image: "https://picsum.photos/400/200?random=4",
     category: "1",
+    createdAt: "2025-02-20T17:25:12.884Z",
   },
   {
     id: 105,
@@ -1860,6 +1864,7 @@ export const dataNews: NewsEntity[] = [
       "Khu vực tiếp đón hiện đại, rộng rãi và tiện nghi được đưa vào sử dụng.",
     image: "https://picsum.photos/400/200?random=5",
     category: "1",
+    createdAt: "2025-03-03T07:55:55.320Z",
   },
   {
     id: 106,
@@ -1868,6 +1873,7 @@ export const dataNews: NewsEntity[] = [
       "Người dân có thể đặt lịch khám qua website, tiết kiệm thời gian chờ đợi.",
     image: "https://picsum.photos/400/200?random=26",
     category: "1",
+    createdAt: "2025-03-21T11:22:40.411Z",
   },
   {
     id: 107,
@@ -1876,6 +1882,7 @@ export const dataNews: NewsEntity[] = [
       "Ký kết hợp tác đào tạo bác sĩ và nghiên cứu y khoa chuyên sâu.",
     image: "https://picsum.photos/400/200?random=27",
     category: "1",
+    createdAt: "2025-04-02T13:42:11.004Z",
   },
   {
     id: 108,
@@ -1884,6 +1891,7 @@ export const dataNews: NewsEntity[] = [
       "Hàng trăm cán bộ nhân viên và người dân đã tham gia hiến máu.",
     image: "https://picsum.photos/400/200?random=28",
     category: "1",
+    createdAt: "2025-04-18T09:15:47.772Z",
   },
   {
     id: 109,
@@ -1892,6 +1900,7 @@ export const dataNews: NewsEntity[] = [
       "Rút ngắn thời gian trả kết quả và tăng độ chính xác cho bệnh nhân.",
     image: "https://picsum.photos/400/200?random=29",
     category: "1",
+    createdAt: "2025-05-06T08:11:30.129Z",
   },
   {
     id: 110,
@@ -1900,16 +1909,18 @@ export const dataNews: NewsEntity[] = [
       "Dự án mở rộng bệnh viện nhằm nâng cao chất lượng chăm sóc bệnh nhân.",
     image: "https://picsum.photos/400/200?random=30",
     category: "1",
+    createdAt: "2025-05-20T18:55:11.900Z",
   },
 
-  // Chăm sóc sức khỏe (id = 2)
+  // Chăm sóc sức khỏe (2)
   {
     id: 201,
     title: "10 thói quen tốt để bảo vệ tim mạch",
     description:
       "Chia sẻ những thói quen lành mạnh giúp phòng ngừa các bệnh tim mạch.",
-    image: "https://picsum.photos/400/200?random=6",
+    image: "/images/10-thoi-quen-tot.png",
     category: "2",
+    createdAt: "2025-11-25T06:11:50.401Z",
   },
   {
     id: 202,
@@ -1918,6 +1929,7 @@ export const dataNews: NewsEntity[] = [
       "Tập thể dục sáng giúp tăng cường sức khỏe và tinh thần minh mẫn.",
     image: "https://picsum.photos/400/200?random=7",
     category: "2",
+    createdAt: "2025-06-15T10:11:09.991Z",
   },
   {
     id: 203,
@@ -1926,6 +1938,7 @@ export const dataNews: NewsEntity[] = [
       "Hướng dẫn chế độ dinh dưỡng phù hợp để kiểm soát đường huyết.",
     image: "https://picsum.photos/400/200?random=8",
     category: "2",
+    createdAt: "2025-06-29T15:22:58.221Z",
   },
   {
     id: 204,
@@ -1934,6 +1947,7 @@ export const dataNews: NewsEntity[] = [
       "Một số bài tập đơn giản giúp giảm căng thẳng và cải thiện tinh thần.",
     image: "https://picsum.photos/400/200?random=9",
     category: "2",
+    createdAt: "2025-07-05T08:05:41.555Z",
   },
   {
     id: 205,
@@ -1942,6 +1956,7 @@ export const dataNews: NewsEntity[] = [
       "Ngủ đủ 7-8 tiếng mỗi ngày giúp tăng cường hệ miễn dịch và trí nhớ.",
     image: "https://picsum.photos/400/200?random=10",
     category: "2",
+    createdAt: "2025-07-18T12:25:02.808Z",
   },
   {
     id: 206,
@@ -1949,6 +1964,7 @@ export const dataNews: NewsEntity[] = [
     description: "Uống đủ nước giúp cải thiện chức năng thận và làm đẹp da.",
     image: "https://picsum.photos/400/200?random=31",
     category: "2",
+    createdAt: "2025-07-30T17:58:14.344Z",
   },
   {
     id: 207,
@@ -1956,6 +1972,7 @@ export const dataNews: NewsEntity[] = [
     description: "Yoga giúp giảm lo âu, căng thẳng và cải thiện sự tập trung.",
     image: "https://picsum.photos/400/200?random=32",
     category: "2",
+    createdAt: "2025-08-12T06:45:50.991Z",
   },
   {
     id: 208,
@@ -1964,6 +1981,7 @@ export const dataNews: NewsEntity[] = [
       "Cung cấp các nhóm thực phẩm cần thiết cho mẹ và bé phát triển khỏe mạnh.",
     image: "https://picsum.photos/400/200?random=33",
     category: "2",
+    createdAt: "2025-08-28T19:31:14.411Z",
   },
   {
     id: 209,
@@ -1972,6 +1990,7 @@ export const dataNews: NewsEntity[] = [
       "Đi bộ thường xuyên giúp cải thiện hệ tim mạch và giảm nguy cơ béo phì.",
     image: "https://picsum.photos/400/200?random=34",
     category: "2",
+    createdAt: "2025-09-10T07:21:58.882Z",
   },
   {
     id: 210,
@@ -1979,9 +1998,10 @@ export const dataNews: NewsEntity[] = [
     description: "Nên nghỉ mắt 5 phút sau mỗi 30 phút làm việc với màn hình.",
     image: "https://picsum.photos/400/200?random=35",
     category: "2",
+    createdAt: "2025-09-25T16:14:22.120Z",
   },
 
-  // Nghiên cứu y học (id = 3)
+  // Nghiên cứu y học (3)
   {
     id: 301,
     title: "Công bố nghiên cứu mới về ung thư phổi",
@@ -1989,6 +2009,7 @@ export const dataNews: NewsEntity[] = [
       "Các nhà khoa học phát hiện phương pháp điều trị tiềm năng cho bệnh nhân ung thư phổi.",
     image: "https://picsum.photos/400/200?random=11",
     category: "3",
+    createdAt: "2025-10-02T11:05:10.772Z",
   },
   {
     id: 302,
@@ -1997,6 +2018,7 @@ export const dataNews: NewsEntity[] = [
       "Trí tuệ nhân tạo đang được nghiên cứu để hỗ trợ bác sĩ trong chẩn đoán.",
     image: "https://picsum.photos/400/200?random=12",
     category: "3",
+    createdAt: "2025-10-15T09:44:21.331Z",
   },
   {
     id: 303,
@@ -2005,6 +2027,7 @@ export const dataNews: NewsEntity[] = [
       "Các nhà khoa học đang thử nghiệm vaccine với hiệu quả cao hơn và ít tác dụng phụ.",
     image: "https://picsum.photos/400/200?random=13",
     category: "3",
+    createdAt: "2025-10-29T14:55:48.115Z",
   },
   {
     id: 304,
@@ -2013,6 +2036,7 @@ export const dataNews: NewsEntity[] = [
       "Liệu pháp gene mở ra hi vọng mới cho các bệnh nhân mắc bệnh di truyền.",
     image: "https://picsum.photos/400/200?random=14",
     category: "3",
+    createdAt: "2025-11-05T08:12:31.552Z",
   },
   {
     id: 305,
@@ -2021,6 +2045,7 @@ export const dataNews: NewsEntity[] = [
       "Nghiên cứu mới chỉ ra mối liên hệ giữa chế độ ăn uống và sức khỏe tâm thần.",
     image: "https://picsum.photos/400/200?random=15",
     category: "3",
+    createdAt: "2025-11-19T17:42:14.988Z",
   },
   {
     id: 306,
@@ -2029,6 +2054,7 @@ export const dataNews: NewsEntity[] = [
       "Thuốc đang trong giai đoạn thử nghiệm lâm sàng cho kết quả khả quan.",
     image: "https://picsum.photos/400/200?random=36",
     category: "3",
+    createdAt: "2025-10-01T06:11:50.401Z",
   },
   {
     id: 307,
@@ -2037,6 +2063,7 @@ export const dataNews: NewsEntity[] = [
       "Liệu pháp tế bào gốc có tiềm năng giúp kiểm soát đường huyết.",
     image: "https://picsum.photos/400/200?random=37",
     category: "3",
+    createdAt: "2025-10-07T13:15:09.644Z",
   },
   {
     id: 308,
@@ -2045,6 +2072,7 @@ export const dataNews: NewsEntity[] = [
       "Ứng dụng AI phân tích dữ liệu sức khỏe để dự đoán nguy cơ bệnh tim mạch.",
     image: "https://picsum.photos/400/200?random=38",
     category: "3",
+    createdAt: "2025-10-18T11:02:24.121Z",
   },
   {
     id: 309,
@@ -2053,6 +2081,7 @@ export const dataNews: NewsEntity[] = [
       "Nghiên cứu cơ chế giúp đưa ra phương pháp phòng chống hiệu quả hơn.",
     image: "https://picsum.photos/400/200?random=39",
     category: "3",
+    createdAt: "2025-10-22T08:45:31.500Z",
   },
   {
     id: 310,
@@ -2061,9 +2090,10 @@ export const dataNews: NewsEntity[] = [
       "Công nghệ nano mở ra nhiều giải pháp mới trong điều trị và chẩn đoán.",
     image: "https://picsum.photos/400/200?random=40",
     category: "3",
+    createdAt: "2025-10-29T16:51:42.092Z",
   },
 
-  // Câu chuyện bệnh nhân (id = 4)
+  // Câu chuyện bệnh nhân (4)
   {
     id: 401,
     title: "Hành trình hồi phục kỳ diệu của bệnh nhân ung thư",
@@ -2071,6 +2101,7 @@ export const dataNews: NewsEntity[] = [
       "Một bệnh nhân chia sẻ câu chuyện vượt qua bệnh ung thư sau nhiều tháng điều trị.",
     image: "https://picsum.photos/400/200?random=16",
     category: "4",
+    createdAt: "2025-01-11T10:15:22.884Z",
   },
   {
     id: 402,
@@ -2079,6 +2110,7 @@ export const dataNews: NewsEntity[] = [
       "Câu chuyện đầy xúc động về sự hồi phục của một bệnh nhi sau ca phẫu thuật tim.",
     image: "https://picsum.photos/400/200?random=17",
     category: "4",
+    createdAt: "2025-02-14T08:44:31.119Z",
   },
   {
     id: 403,
@@ -2086,6 +2118,7 @@ export const dataNews: NewsEntity[] = [
     description: "Một ca ghép gan thành công nhờ tình mẫu tử thiêng liêng.",
     image: "https://picsum.photos/400/200?random=18",
     category: "4",
+    createdAt: "2025-03-12T17:38:50.551Z",
   },
   {
     id: 404,
@@ -2094,6 +2127,7 @@ export const dataNews: NewsEntity[] = [
       "Câu chuyện về sự kiên cường và nỗ lực phục hồi của bệnh nhân.",
     image: "https://picsum.photos/400/200?random=19",
     category: "4",
+    createdAt: "2025-04-08T09:01:12.211Z",
   },
   {
     id: 405,
@@ -2101,6 +2135,7 @@ export const dataNews: NewsEntity[] = [
     description: "Một bệnh nhân đã có cơ hội sống mới sau ca ghép thận.",
     image: "https://picsum.photos/400/200?random=20",
     category: "4",
+    createdAt: "2025-05-14T14:55:31.900Z",
   },
   {
     id: 406,
@@ -2109,6 +2144,7 @@ export const dataNews: NewsEntity[] = [
       "Sau nhiều tháng hôn mê, bệnh nhân đã tỉnh lại và dần hồi phục.",
     image: "https://picsum.photos/400/200?random=41",
     category: "4",
+    createdAt: "2025-06-19T18:42:11.551Z",
   },
   {
     id: 407,
@@ -2117,6 +2153,7 @@ export const dataNews: NewsEntity[] = [
       "Một ca phẫu thuật ghép tim thành công đã đem lại sự sống mới.",
     image: "https://picsum.photos/400/200?random=42",
     category: "4",
+    createdAt: "2025-07-28T10:08:22.002Z",
   },
   {
     id: 408,
@@ -2124,6 +2161,7 @@ export const dataNews: NewsEntity[] = [
     description: "Câu chuyện đầy nghị lực của một bệnh nhân mắc bệnh hiếm.",
     image: "https://picsum.photos/400/200?random=43",
     category: "4",
+    createdAt: "2025-08-21T07:41:50.711Z",
   },
   {
     id: 409,
@@ -2132,6 +2170,7 @@ export const dataNews: NewsEntity[] = [
       "Một thương binh đã hồi phục và trở lại cuộc sống bình thường.",
     image: "https://picsum.photos/400/200?random=44",
     category: "4",
+    createdAt: "2025-09-14T12:55:40.002Z",
   },
   {
     id: 410,
@@ -2139,16 +2178,18 @@ export const dataNews: NewsEntity[] = [
     description: "Nhờ sự can thiệp kịp thời, bệnh nhân đã qua cơn nguy kịch.",
     image: "https://picsum.photos/400/200?random=45",
     category: "4",
+    createdAt: "2025-10-09T18:21:05.931Z",
   },
 
-  // Thông báo (id = 5)
+  // Thông báo (5)
   {
     id: 501,
-    title: "Lịch nghỉ lễ Quốc khánh",
+    title: "Lịch nghỉ Tết Nguyên Đán 2026",
     description:
-      "Bệnh viện thông báo lịch nghỉ lễ 2/9 cho toàn thể cán bộ và bệnh nhân.",
-    image: "https://picsum.photos/400/200?random=21",
+      "Bệnh viện thông báo lịch nghỉ lễ Tết Nguyên Đán cho toàn thể cán bộ và bệnh nhân.",
+    image: "/images/tet-2026.jpg",
     category: "5",
+    createdAt: "2025-11-26T06:11:50.401Z",
   },
   {
     id: 502,
@@ -2157,6 +2198,7 @@ export const dataNews: NewsEntity[] = [
       "Thông báo thay đổi trong quy trình tiếp nhận và phân loại bệnh nhân.",
     image: "https://picsum.photos/400/200?random=22",
     category: "5",
+    createdAt: "2025-02-23T14:41:13.482Z",
   },
   {
     id: 503,
@@ -2165,6 +2207,7 @@ export const dataNews: NewsEntity[] = [
       "Một số dịch vụ y tế sẽ được điều chỉnh mức phí kể từ tháng tới.",
     image: "https://picsum.photos/400/200?random=23",
     category: "5",
+    createdAt: "2025-03-29T18:14:41.664Z",
   },
   {
     id: 504,
@@ -2173,6 +2216,7 @@ export const dataNews: NewsEntity[] = [
       "Phòng khám sẽ mở cửa thêm vào buổi tối để phục vụ bệnh nhân tốt hơn.",
     image: "https://picsum.photos/400/200?random=24",
     category: "5",
+    createdAt: "2025-04-22T07:31:55.409Z",
   },
   {
     id: 505,
@@ -2181,6 +2225,7 @@ export const dataNews: NewsEntity[] = [
       "Bệnh viện cần tuyển thêm điều dưỡng và bác sĩ cho nhiều khoa.",
     image: "https://picsum.photos/400/200?random=25",
     category: "5",
+    createdAt: "2025-05-27T09:45:22.883Z",
   },
   {
     id: 506,
@@ -2189,6 +2234,7 @@ export const dataNews: NewsEntity[] = [
       "Một số khoa sẽ có sự điều chỉnh về giờ khám bệnh từ tuần tới.",
     image: "https://picsum.photos/400/200?random=46",
     category: "5",
+    createdAt: "2025-07-01T11:02:11.112Z",
   },
   {
     id: 507,
@@ -2196,6 +2242,7 @@ export const dataNews: NewsEntity[] = [
     description: "Khuyến cáo người dân tiêm vaccine phòng bệnh đúng lịch.",
     image: "https://picsum.photos/400/200?random=47",
     category: "5",
+    createdAt: "2025-08-03T13:55:44.302Z",
   },
   {
     id: 508,
@@ -2203,6 +2250,7 @@ export const dataNews: NewsEntity[] = [
     description: "Một số khu vực sẽ tạm ngừng cấp điện để bảo trì thiết bị.",
     image: "https://picsum.photos/400/200?random=48",
     category: "5",
+    createdAt: "2025-09-06T06:42:33.991Z",
   },
   {
     id: 509,
@@ -2211,14 +2259,16 @@ export const dataNews: NewsEntity[] = [
       "Hệ thống sẽ được nâng cấp để phục vụ tốt hơn cho bác sĩ và bệnh nhân.",
     image: "https://picsum.photos/400/200?random=49",
     category: "5",
+    createdAt: "2025-10-11T15:33:12.485Z",
   },
   {
     id: 510,
     title: "Thông báo hội nghị cán bộ nhân viên",
     description:
       "Bệnh viện tổ chức hội nghị tổng kết cuối năm cho toàn thể nhân viên.",
-    image: "https://picsum.photos/400/200?random=50",
+    image: "/images/hoi-nghi.jpg",
     category: "5",
+    createdAt: "2025-11-28T17:11:49.744Z",
   },
 ];
 

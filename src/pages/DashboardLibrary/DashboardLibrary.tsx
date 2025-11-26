@@ -43,12 +43,17 @@ import { useForm } from "antd/es/form/Form";
 import { useSidebar } from "../../context/SidebarContext";
 import { useAuth } from "../../context/AuthContext";
 import useApp from "antd/es/app/useApp";
-import { buildCategoryTree } from "../../components/constant/constant";
+import {
+  buildCategoryTree,
+  dataNews,
+} from "../../components/constant/constant";
 import { documentService } from "../../common/services/document/documentService";
 import Highlighter from "react-highlight-words";
 import axios from "axios";
 import dayjs from "dayjs";
 import "./dashboardLibrary.css";
+import ActivityNews from "./ActivityNews";
+import { NewsEntity } from "../../common/services/news/news";
 
 const DashboardLibrary = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
@@ -58,6 +63,7 @@ const DashboardLibrary = () => {
   const [featuredDocuments, setFeaturedDocuments] = useState<DocumentEntity[]>(
     []
   );
+  const [activityNews, setActivityNews] = useState<NewsEntity[]>([]);
   const [treeData, setTreeData] = useState<TreeSelectNode[]>([]);
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const documentViewerRef = useRef<DocumentViewerRef>(null);
@@ -147,6 +153,16 @@ const DashboardLibrary = () => {
     perDocument,
   ]);
 
+  const getActivityNews = () => {
+    const activityNewsData = dataNews
+      .sort(
+        (a: NewsEntity, b: NewsEntity) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 3);
+    setActivityNews(activityNewsData);
+  };
+
   const listData = useMemo(() => {
     const start = (pageIndex - 1) * pageSize;
     return listDocuments.slice(start, start + pageSize);
@@ -155,6 +171,7 @@ const DashboardLibrary = () => {
   useEffect(() => {
     (async () => {
       await getDocuments();
+      getActivityNews();
     })();
   }, [getDocuments]);
 
@@ -430,10 +447,7 @@ const DashboardLibrary = () => {
               />
             </Col>
             <Col xs={24} sm={24} md={12} lg={12}>
-              <FeaturedDocuments
-                data={featuredDocuments}
-                fetchFileAndShow={fetchFileAndShow}
-              />
+              <ActivityNews data={activityNews} />
             </Col>
           </Row>
         </div>

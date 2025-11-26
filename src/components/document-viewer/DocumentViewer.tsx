@@ -140,14 +140,16 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
       {fileType === "docx" ? (
         <div className="flex flex-col w-full">
           <div className="flex w-full justify-end px-2">
-            <Button
-              type="text"
-              onClick={() => {
-                downloadFile(fileUrl);
-              }}
-            >
-              <Tooltip title="Tải xuống">{iconDownload}</Tooltip>
-            </Button>
+            <Tooltip title="Tải xuống">
+              <Button
+                type="text"
+                onClick={() => {
+                  downloadFile(fileUrl);
+                }}
+              >
+                {iconDownload}
+              </Button>
+            </Tooltip>
           </div>
           <div
             ref={docxContainerRef}
