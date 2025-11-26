@@ -351,6 +351,7 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
     );
 
     const onOK = async (valueForm: any) => {
+      setLoading(true);
       if (currentDocument) {
         try {
           let newFile: any | undefined = undefined;
@@ -499,6 +500,8 @@ export const DocumentForm = forwardRef<DocumentFormRef, DocumentFormProps>(
         } catch (err) {
           console.error(err);
           message.error("Thêm mới văn bản thất bại!");
+        } finally {
+          setLoading(false);
         }
       }
     };
