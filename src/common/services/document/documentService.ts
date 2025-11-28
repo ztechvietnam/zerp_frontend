@@ -14,11 +14,19 @@ export class DocumentService extends ServiceBase {
     );
   }
 
-  async findAndFilter(categoryIds: number[], keyword?: string): Promise<any> {
+  async findAndFilter(
+    categoryIds: number[],
+    keyword?: string,
+    years?: string[],
+    startDate?: string | null,
+    endDate?: string | null
+  ): Promise<any> {
     return this.post(
       {
         keyword: keyword || "",
         categoryIds,
+        years,
+        timeRange: [startDate, endDate],
       },
       {
         endpoint: "/findandfilter",

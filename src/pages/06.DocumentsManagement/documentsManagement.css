@@ -18,7 +18,8 @@
     }
   }
 
-  .ant-card-head, .ant-card-body {
+  .ant-card-head,
+  .ant-card-body {
     max-width: calc(100vw - 90px);
   }
 
@@ -52,7 +53,8 @@
     box-shadow: none !important;
   }
   .ant-input::placeholder {
-    font-size: 13px;
+    font-size: 14px;
+    color: #747578eb !important;
   }
 
   .ant-select.ant-tree-select {
@@ -64,10 +66,41 @@
     }
   }
   .ant-select-selection-placeholder {
-    font-size: 13px;
+    font-size: 14px;
+    color: #747578eb !important;
+  }
+
+  .ant-select-arrow {
+    color: #747578eb !important;
   }
 
   .ant-form-item {
     margin-bottom: 0;
+  }
+}
+
+.selectFilter {
+  .ant-select-selector {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    .ant-select-selection-item {
+      color: #344054 !important;
+    }
+  }
+}
+
+.dateFilter {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  .ant-picker-input {
+    > input::placeholder {
+      color: #747578eb !important;
+      font-size: 14px;
+    }
+    .ant-picker-suffix {
+      color: #747578eb !important;
+    }
   }
 }
