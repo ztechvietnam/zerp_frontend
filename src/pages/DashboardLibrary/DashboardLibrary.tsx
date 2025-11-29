@@ -12,10 +12,12 @@ import {
   Breadcrumb,
   Button,
   Col,
+  DatePicker,
   Form,
   Input,
   Pagination,
   Row,
+  Select,
   Spin,
   Table,
   TableColumnsType,
@@ -36,7 +38,11 @@ import DocumentViewer, {
   DocumentViewerRef,
 } from "../../components/document-viewer/DocumentViewer";
 import { iconFilter } from "../../components/IconSvg/iconSvg";
-import { EyeOutlined, RedoOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  RedoOutlined,
+  SwapRightOutlined,
+} from "@ant-design/icons";
 import { debounce, last } from "lodash";
 import { DocumentEntity } from "../../common/services/document/document";
 import { useForm } from "antd/es/form/Form";
@@ -66,6 +72,7 @@ const DashboardLibrary = () => {
   const [activityNews, setActivityNews] = useState<NewsEntity[]>([]);
   const [treeData, setTreeData] = useState<TreeSelectNode[]>([]);
   const [filterValues, setFilterValues] = useState<FilterValues>({});
+  const [timeType, setTimeType] = useState<"year" | "date">("date");
   const documentViewerRef = useRef<DocumentViewerRef>(null);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -110,7 +117,10 @@ const DashboardLibrary = () => {
         if (idCateFilter?.length) {
           const results = await documentService.findAndFilter(
             idCateFilter,
-            filterValues.keyword || ""
+            filterValues.keyword || "",
+            filterValues.years || [],
+            filterValues.startDate || null,
+            filterValues.endDate || null
           );
           if (results) {
             const docList = results.filter((doc: DocumentEntity) => {
@@ -415,8 +425,8 @@ const DashboardLibrary = () => {
         ? 330
         : width < 768
         ? 300
-        : width < 1024
-        ? 566
+        : width < 1280
+        ? 618
         : width < 1550
         ? 578
         : 556;
@@ -466,20 +476,21 @@ const DashboardLibrary = () => {
               >
                 <div className="pb-2.5 filter-header">
                   <Form layout="horizontal" form={form}>
-                    <div className="flex flex-col bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-2 px-2 py-1 md:flex-row md:flex-wrap md:items-center">
+                    <div className="flex flex-col bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-2 px-2 py-1 sm:flex-row sm:flex-wrap sm:items-center">
                       <div
-                        className={`flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center w-full md:w-[calc(50%-8px)] md:flex-nowrap`}
+                        className={`flex flex-row items-stretch sm:items-center gap-2 w-full sm:w-[calc(50%-4px)] xl:w-[calc((100%-32px-107px-46px)/3)] xl:max-w-[calc((100%-399px-32px)/2)] sm:flex-nowrap`}
                       >
                         <div className="flex items-center sm:w-auto">
                           {iconFilter}
                         </div>
+
                         <Form.Item
                           colon={false}
-                          className="flex-1 m-0 min-w-[200px]"
+                          className="flex-1 m-0"
                           name="keyword"
                         >
                           <Input
-                            className="w-full placeholder:text-[#8c8c8c] placeholder:text-[12px] placeholder:font-normal placeholder:leading-[18px] placeholder:tracking-[-0.02em]"
+                            className="w-full"
                             placeholder="Nhập từ khoá để tìm kiếm..."
                             maxLength={255}
                             onChange={(e) =>
@@ -488,10 +499,11 @@ const DashboardLibrary = () => {
                           />
                         </Form.Item>
                       </div>
-                      <div className="flex flex-row items-stretch sm:items-center gap-2 md:flex-row md:items-center w-full md:w-[calc(50%-8px)] md:flex-nowrap">
+
+                      <div className="flex flex-row items-stretch sm:items-center gap-2 w-full sm:w-[calc(50%-4px)] xl:w-[calc((100%-32px-107px-46px)/3)] xl:max-w-[calc((100%-399px-32px)/2)] sm:flex-nowrap">
                         <Form.Item
                           colon={false}
-                          className="flex-1 m-0 min-w-[200px]"
+                          className="flex-1 m-0"
                           name="categoryIds"
                         >
                           <TreeSelect
@@ -503,25 +515,129 @@ const DashboardLibrary = () => {
                             style={{ width: "100%" }}
                             maxTagCount="responsive"
                             showSearch
-                            filterTreeNode={(
-                              inputValue: string,
-                              treeNode: any
-                            ) => {
+                            filterTreeNode={(inputValue, treeNode) => {
                               const title =
                                 typeof treeNode.title === "string"
                                   ? treeNode.title
                                   : "";
                               return title
-                                .toLocaleLowerCase()
-                                .includes(
-                                  inputValue?.trim().toLocaleLowerCase()
-                                );
+                                .toLowerCase()
+                                .includes(inputValue?.trim().toLowerCase());
                             }}
-                            onChange={(e) =>
-                              debouncedOnFilter("categoryIds", e)
+                            onChange={(value) =>
+                              debouncedOnFilter("categoryIds", value)
                             }
                           />
                         </Form.Item>
+                      </div>
+
+                      <div className="flex flex-row items-stretch sm:items-center gap-2 w-full sm:w-[107px] sm:ml-[18px] xl:ml-0 sm:flex-nowrap">
+                        <Form.Item
+                          colon={false}
+                          className="m-0 w-full"
+                          name="timeType"
+                          initialValue="date"
+                        >
+                          <Select
+                            value={timeType}
+                            onChange={(value) => {
+                              setTimeType(value);
+                              form.setFieldsValue({
+                                years: [],
+                                startDate: null,
+                                endDate: null,
+                              });
+                              filterValues.years = [];
+                              filterValues.startDate = null;
+                              filterValues.endDate = null;
+                              setFilterValues({ ...filterValues });
+                            }}
+                            options={[
+                              { label: "Theo năm", value: "year" },
+                              { label: "Theo ngày", value: "date" },
+                            ]}
+                            placeholder="Loại thời gian"
+                            className="selectFilter"
+                          />
+                        </Form.Item>
+                      </div>
+
+                      <div className="flex flex-row items-stretch sm:items-center gap-2 w-full sm:w-[calc(100%-107px-8px-18px)] xl:w-[calc((100%-32px-107px-46px)/3+54px)] xl:min-w-[300px] sm:flex-nowrap">
+                        {timeType === "year" ? (
+                          <Form.Item
+                            colon={false}
+                            className="m-0 w-full"
+                            name={"years"}
+                          >
+                            <Select
+                              mode="multiple"
+                              allowClear
+                              placeholder="Chọn năm"
+                              maxTagCount="responsive"
+                              options={[2021, 2022, 2023, 2024, 2025].map(
+                                (y) => ({
+                                  label: y,
+                                  value: y,
+                                })
+                              )}
+                              onChange={(v) => debouncedOnFilter("years", v)}
+                              className="selectFilter"
+                            />
+                          </Form.Item>
+                        ) : (
+                          <div className="flex items-center gap-0.5 w-full">
+                            <Form.Item
+                              colon={false}
+                              className="m-0 w-[calc(50%-9px)] min-w-[114px]"
+                              name={"startDate"}
+                            >
+                              <DatePicker
+                                className="w-full dateFilter"
+                                format="DD/MM/YYYY"
+                                onChange={(v) =>
+                                  debouncedOnFilter(
+                                    "startDate",
+                                    v.format("DD/MM/YYYY")
+                                  )
+                                }
+                                placeholder="Từ ngày"
+                                disabledDate={(date) => {
+                                  const endDate = form.getFieldValue("endDate");
+                                  return (
+                                    !!endDate && date.isAfter(endDate, "day")
+                                  );
+                                }}
+                              />
+                            </Form.Item>
+                            <SwapRightOutlined />
+                            <Form.Item
+                              colon={false}
+                              className="m-0 w-[calc(50%-9px)] min-w-[114px]"
+                              name={"endDate"}
+                            >
+                              <DatePicker
+                                className="w-full dateFilter"
+                                format="DD/MM/YYYY"
+                                onChange={(v) =>
+                                  debouncedOnFilter(
+                                    "endDate",
+                                    v.format("DD/MM/YYYY")
+                                  )
+                                }
+                                placeholder="Đến ngày"
+                                disabledDate={(date) => {
+                                  const startDate =
+                                    form.getFieldValue("startDate");
+                                  return (
+                                    !!startDate &&
+                                    date.isBefore(startDate, "day")
+                                  );
+                                }}
+                              />
+                            </Form.Item>
+                          </div>
+                        )}
+
                         <Tooltip title="Làm mới">
                           <Button
                             type="primary"
@@ -531,7 +647,8 @@ const DashboardLibrary = () => {
                               setFilterValues({});
                               setPageIndex(1);
                             }}
-                            className="px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] transition w-fit lg:w-auto"
+                            className="px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] 
+                         transition w-fit lg:w-auto"
                           >
                             <RedoOutlined />
                           </Button>
