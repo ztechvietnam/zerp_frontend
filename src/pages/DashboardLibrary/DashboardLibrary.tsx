@@ -348,11 +348,11 @@ const DashboardLibrary = () => {
         },
       },
       {
-        title: "Ngày tạo",
-        dataIndex: "createdAt",
+        title: "Ngày phát hành",
+        dataIndex: "publish_date",
         ...(haveData ? { width: 80 } : {}),
         render(value) {
-          return <span>{dayjs(value).format("DD/MM/YYYY")}</span>;
+          return <span>{value ? dayjs(value).format("DD/MM/YYYY") : ""}</span>;
         },
       },
       {
