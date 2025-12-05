@@ -37,30 +37,39 @@ const DocumentViewer = forwardRef<DocumentViewerRef>((_, ref) => {
 
       const lower = fileName.toLowerCase();
 
+      const getExtension = (name: string) =>
+        name.split(".").pop()?.toLowerCase() || "";
+
+      const mime =
+        typeof firstFile !== "string" ? (firstFile as File).type : "";
+      const ext = getExtension(lower);
+
       const isExcel =
-        lower.endsWith(".xlsx") ||
-        (typeof firstFile !== "string" &&
-          (firstFile as File).type.includes(
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          ));
+        ["xlsx", "xls", "xlsm", "xlsb"].includes(ext) ||
+        [
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/vnd.ms-excel",
+          "application/vnd.ms-excel.sheet.macroEnabled.12",
+          "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+        ].includes(mime);
+
       const isPowerpoint =
-        lower.endsWith(".pptx") ||
-        (typeof firstFile !== "string" &&
-          (firstFile as File).type.includes(
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-          ));
+        ["ppt", "pptx", "pptm"].includes(ext) ||
+        [
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "application/vnd.ms-powerpoint",
+          "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+        ].includes(mime);
 
       const isDocx =
-        lower.endsWith(".docx") ||
-        (typeof firstFile !== "string" &&
-          (firstFile as File).type.includes(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          ));
+        ["doc", "docx", "docm"].includes(ext) ||
+        [
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/msword",
+          "application/vnd.ms-word.document.macroEnabled.12",
+        ].includes(mime);
 
-      const isPdf =
-        lower.endsWith(".pdf") ||
-        (typeof firstFile !== "string" &&
-          (firstFile as File).type.includes("application/pdf"));
+      const isPdf = ext === "pdf" || mime === "application/pdf";
 
       const url =
         typeof firstFile === "string"

@@ -15,6 +15,7 @@ import {
   DownOutlined,
   EllipsisOutlined,
   FileDoneOutlined,
+  FileTextOutlined,
   HddOutlined,
   HomeOutlined,
   NotificationOutlined,
@@ -95,6 +96,24 @@ const documentManagementNavItems: NavItem[] = [
     icon: <BookOutlined />,
     name: "Quản lý văn bản",
     path: SIDE_BAR.DOCUMENT_MANAGEMENT,
+    subSystem: SUB_SYSTEM.MANAGEMENT,
+  },
+];
+
+const newManagementNavItems: NavItem[] = [
+  {
+    name: "Phân hệ quản trị tin tức",
+  },
+  {
+    icon: <FileTextOutlined />,
+    name: "Danh mục tin tức",
+    path: SIDE_BAR.NEW_CATEGORY,
+    subSystem: SUB_SYSTEM.MANAGEMENT,
+  },
+  {
+    icon: <FileTextOutlined />,
+    name: "Quản trị tin tức",
+    path: SIDE_BAR.NEW_MANAGEMENT,
     subSystem: SUB_SYSTEM.MANAGEMENT,
   },
 ];
@@ -467,6 +486,9 @@ const AppSidebar: React.FC = () => {
             )}
             {subSystem === SUB_SYSTEM.LIBRARY && (
               <div>{renderMenuItems(documentManagementNavItems, "main")}</div>
+            )}
+            {subSystem === SUB_SYSTEM.LIBRARY && (
+              <div>{renderMenuItems(newManagementNavItems, "main")}</div>
             )}
             {subSystem === SUB_SYSTEM.MANAGEMENT && (
               <div>{renderMenuItems(systemAdminNavItems, "main")}</div>

@@ -574,12 +574,14 @@ const DashboardLibrary = () => {
                               allowClear
                               placeholder="Chọn năm"
                               maxTagCount="responsive"
-                              options={[2021, 2022, 2023, 2024, 2025].map(
-                                (y) => ({
-                                  label: y,
+                              options={Array.from({ length: 6 }, (_, i) => {
+                                const currentYear = new Date().getFullYear();
+                                const y = currentYear - i;
+                                return {
+                                  label: String(y),
                                   value: y,
-                                })
-                              )}
+                                };
+                              })}
                               onChange={(v) => debouncedOnFilter("years", v)}
                               className="selectFilter"
                             />

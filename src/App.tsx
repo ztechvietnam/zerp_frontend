@@ -20,11 +20,14 @@ import ListDepartments from "./pages/08.DepartmentManagement/ListDepartments";
 import PrivateRoute from "./context/PrivateRoute";
 import HomeLayout from "./homepage/HomeLayout";
 import { NewDetail } from "./homepage/NewDetail";
+import { NewDetail2 } from "./pages/11.ActivityNews/NewDetail";
 import HomeContent from "./homepage/HomeContent";
 import NewsManagement from "./pages/09.NewsManagement/NewsManagement";
 import { useEffect } from "react";
 import DashboardHome from "./pages/DashboardHome/DashboardHome";
 import DashboardLibrary from "./pages/DashboardLibrary/DashboardLibrary";
+import NewsCategories from "./pages/10.NewsCategory/NewsCategories";
+import ActivityNews from "./pages/11.ActivityNews/ActivityNews";
 
 const TITLES: Record<string, string> = {
   ["/dashboard"]: "Trang chủ",
@@ -95,7 +98,7 @@ export default function App() {
         >
           <Route index element={<Home />} />
 
-          <Route path={SIDE_BAR.NEWS} element={<NewsManagement />} />
+          <Route path={SIDE_BAR.NEWS} element={<ActivityNews />} />
 
           <Route
             path={SIDE_BAR.DEPARTMENT_MANAGEMENT}
@@ -127,6 +130,12 @@ export default function App() {
           <Route
             path={`${SIDE_BAR.DOCUMENT}/:idCategory`}
             element={<DocumentsManagement />}
+          />
+          <Route path={SIDE_BAR.NEW_CATEGORY} element={<NewsCategories />} />
+          <Route path={SIDE_BAR.NEW_MANAGEMENT} element={<NewsManagement />} />
+          <Route
+            path={`${SIDE_BAR.NEWS}/${SIDE_BAR.NEW_DETAIL}/:idNew`}
+            element={<NewDetail2 />}
           />
         </Route>
       </Routes>
