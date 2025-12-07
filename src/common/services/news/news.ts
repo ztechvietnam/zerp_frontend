@@ -5,4 +5,5 @@ export interface NewsEntity {
   image: string;
   category: string;
   createdAt: string;
+  content?: string;
 }

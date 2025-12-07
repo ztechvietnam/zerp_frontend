@@ -13,20 +13,18 @@ import {
   Pagination,
   Row,
   Select,
-  Spin,
   Table,
   TableColumnsType,
   Tag,
 } from "antd";
-import {
-  dataCategoryNews,
-  dataNews,
-  dataTemplates,
-} from "../../components/constant/constant";
+import { dataCategoryNews, dataNews } from "../../components/constant/constant";
 import { FilterOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import dayjs from "dayjs";
-import { DocumentForm, DocumentFormRef } from "./DocumentsForm";
+import {
+  NewsForm,
+  NewsFormRef,
+} from "./NewsForm";
 import { NewsEntity } from "../../common/services/news/news";
 
 const NewsManagement = () => {
@@ -40,7 +38,7 @@ const NewsManagement = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  const documentFormRef = useRef<DocumentFormRef>(null);
+  const newsFormRef = useRef<NewsFormRef>(null);
   const [form] = useForm();
   const { message } = App.useApp();
 
@@ -163,7 +161,7 @@ const NewsManagement = () => {
             type="primary"
             size="middle"
             onClick={() => {
-              documentFormRef.current?.show();
+              newsFormRef.current?.show();
             }}
           >
             Thêm tin tức
@@ -332,6 +330,7 @@ const NewsManagement = () => {
           </Row>
         </Form>
       </Drawer>
+      <NewsForm ref={newsFormRef} />
     </PageContainer>
   );
 };

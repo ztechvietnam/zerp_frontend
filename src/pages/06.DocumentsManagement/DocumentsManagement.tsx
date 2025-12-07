@@ -436,7 +436,7 @@ const DocumentsManagement = () => {
                     }
 
                     try {
-                      const response = await axios.get(record.file, {
+                      const response = await axios.get(record.file.replace("https://zerp.hih.vn", "http://172.16.124.100:2207"), {
                         responseType: "blob",
                         headers: { Authorization: `Bearer ${token}` },
                       });
@@ -755,10 +755,14 @@ const DocumentsManagement = () => {
                     allowClear
                     placeholder="Chọn năm"
                     maxTagCount="responsive"
-                    options={[2021, 2022, 2023, 2024, 2025].map((y) => ({
-                      label: y,
-                      value: y,
-                    }))}
+                    options={Array.from({ length: 6 }, (_, i) => {
+                      const currentYear = new Date().getFullYear();
+                      const y = currentYear - i;
+                      return {
+                        label: String(y),
+                        value: y,
+                      };
+                    })}
                     onChange={(v) => debouncedOnFilter("years", v)}
                     className="selectFilter"
                   />
