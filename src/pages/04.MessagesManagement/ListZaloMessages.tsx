@@ -20,6 +20,7 @@ import {
   Table,
   TableColumnsType,
   Tag,
+  Tooltip,
 } from "antd";
 import {
   FilterOutlined,
@@ -37,6 +38,7 @@ import {
 } from "../../common/services/customer-zalo-messages/zalo-mesage";
 import { zaloMessageService } from "../../common/services/customer-zalo-messages/zalo-mesage-service";
 import { PatientEntity } from "../../common/services/patient/patient";
+import { iconSendMessage } from "../../components/IconSvg/iconSvg";
 
 export const TypeZaloMessage: Record<ZaloMessageType, string> = {
   [ZaloMessageType.CamOn]: "Tin cảm ơn",
@@ -305,9 +307,27 @@ const ListZaloMessages = () => {
       dataIndex: "sent",
       render: (value) => {
         return (
-          <Tag color={value ? "success" : "error"}>
-            {value ? "Đã gửi" : "Chưa gửi"}
-          </Tag>
+          <>
+            {value ? (
+              <Tag color="success">Đã gửi</Tag>
+            ) : (
+              <div className="flex gap-2">
+                <Tag color="error" className="flex! items-center">
+                  Chưa gửi
+                </Tag>
+                <Tooltip title="Gửi tin nhắn">
+                  <Button
+                    onClick={async () => {
+                      message.success("Gửi tin nhắn thành công");
+                      await getDataPatients();
+                    }}
+                  >
+                    {iconSendMessage}
+                  </Button>
+                </Tooltip>
+              </div>
+            )}
+          </>
         );
       },
     },
