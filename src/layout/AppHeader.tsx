@@ -46,8 +46,7 @@ const AppHeader: React.FC = () => {
     return null;
   }, [location.pathname]);
 
-  const handleSwitchEnvironment = (envKey: string, envPath: string) => {
-    localStorage.setItem("selectedEnvironment", envKey);
+  const handleSwitchEnvironment = (envPath: string) => {
     navigate(envPath);
   };
 
@@ -84,7 +83,7 @@ const AppHeader: React.FC = () => {
                   ? "text-[#fff] border-[1px] bg-[#1677ff]"
                   : "text-gray-700 bg-gray-100 hover:bg-[#efefef]"
               }`}
-              onClick={() => handleSwitchEnvironment(env.key, env.path)}
+              onClick={() => handleSwitchEnvironment(env.path)}
             >
               {env.title}
             </div>

@@ -432,9 +432,6 @@ const AppSidebar: React.FC = () => {
       >
         <Link
           to="/dashboard"
-          onClick={() => {
-            localStorage.removeItem("selectedEnvironment");
-          }}
         >
           {isExpanded || isHovered || isMobileOpen ? (
             <>

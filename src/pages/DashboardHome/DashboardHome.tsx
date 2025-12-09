@@ -1,25 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { environments } from "../../components/constant/constant";
 import UserDropdown from "../../components/header/UserDropdown";
-
-const LOCAL_STORAGE_KEY = "selectedEnvironment";
 
 export default function DashboardHome() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedEnv = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (savedEnv) {
-      const env = environments.find((e) => e.key === savedEnv);
-      if (env) {
-        navigate(env.path, { replace: true });
-      }
-    }
-  }, [navigate]);
-
   const handleSelect = (envKey: string, path: string) => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, envKey);
     navigate(path);
   };
 
