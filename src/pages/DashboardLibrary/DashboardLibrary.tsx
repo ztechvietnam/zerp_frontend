@@ -123,12 +123,17 @@ const DashboardLibrary = () => {
             filterValues.endDate || null
           );
           if (results) {
-            const docList = results.filter((doc: DocumentEntity) => {
-              return (
-                doc?.created_id?.toString() === currentUser?.id?.toString() ||
-                perDocument.includes(doc?.id_document?.toString())
-              );
-            });
+            let docList: DocumentEntity[] = [];
+            if (currentUser?.role?.name === "admin") {
+              docList = results;
+            } else {
+              docList = results.filter((doc: DocumentEntity) => {
+                return (
+                  doc?.created_id?.toString() === currentUser?.id?.toString() ||
+                  perDocument.includes(doc?.id_document?.toString())
+                );
+              });
+            }
             setListDocuments(docList);
             if (featuredDocuments.length === 0) {
               const featureData = docList

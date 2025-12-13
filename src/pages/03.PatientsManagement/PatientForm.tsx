@@ -27,7 +27,6 @@ import {
   ZaloMessageEntity,
   ZaloMessageType,
 } from "../../common/services/customer-zalo-messages/zalo-mesage";
-import { TypeZaloMessage } from "../04.MessagesManagement/ListZaloMessages";
 import { customersService } from "../../common/services/patient/customersService";
 import "../../index.css";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -95,12 +94,12 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       },
       {
         title: "Loại tin nhắn",
-        dataIndex: "message_type",
         width: 100,
+        dataIndex: "zns_template",
         render(value) {
           return (
             <Tag color="processing">
-              {TypeZaloMessage[value as ZaloMessageType]}
+              {value?.zns_template_name || value?.zns_template_code || ""}
             </Tag>
           );
         },

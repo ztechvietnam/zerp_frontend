@@ -1,5 +1,6 @@
 import { EntityBase } from "../entity-base";
 import { PatientEntity } from "../patient/patient";
+import { ZaloZnsTemplateEntity } from "../zalo-zns-templates/zalo-zns-templates";
 
 export interface ZaloMessageEntity extends EntityBase {
   content: string;
@@ -9,6 +10,7 @@ export interface ZaloMessageEntity extends EntityBase {
   message_type: string;
   sent: number;
   sent_time: string;
+  zns_template: ZaloZnsTemplateEntity;
 }
 
 export enum ZaloMessageType {

@@ -1,7 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   App,
@@ -17,18 +23,21 @@ import {
   Pagination,
   Popover,
   Row,
+  Select,
   Table,
   TableColumnsType,
   Tag,
   Tooltip,
+  TreeSelect,
 } from "antd";
 import {
   FilterOutlined,
+  RedoOutlined,
   SearchOutlined,
   SwapRightOutlined,
 } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
-import { debounce } from "lodash";
+import { cloneDeep, debounce, set } from "lodash";
 import Highlighter from "react-highlight-words";
 import dayjs, { Dayjs } from "dayjs";
 import "../../index.css";
@@ -38,17 +47,20 @@ import {
 } from "../../common/services/customer-zalo-messages/zalo-mesage";
 import { zaloMessageService } from "../../common/services/customer-zalo-messages/zalo-mesage-service";
 import { PatientEntity } from "../../common/services/patient/patient";
-import { iconSendMessage } from "../../components/IconSvg/iconSvg";
+import { iconFilter, iconSendMessage } from "../../components/IconSvg/iconSvg";
+import { zaloZnsTemplateService } from "../../common/services/zalo-zns-templates/zalo-zns-templates-service";
+import { ZaloZnsTemplateEntity } from "../../common/services/zalo-zns-templates/zalo-zns-templates";
 
-export const TypeZaloMessage: Record<ZaloMessageType, string> = {
-  [ZaloMessageType.CamOn]: "Tin cảm ơn",
-  [ZaloMessageType.HenTaiKham]: "Hẹn tái khám",
-};
+export interface FilterValues {
+  customer_name?: string;
+  message_type?: string[];
+  status?: number;
+}
 
 const ListZaloMessages = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [counterFilter, setCounterFilter] = useState<number>(0);
+  const [filterValues, setFilterValues] = useState<FilterValues>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [keyword, setKeyword] = useState<string>("");
   const [startSendMessage, setStartSendMessage] = useState<Dayjs | undefined>(
@@ -57,8 +69,10 @@ const ListZaloMessages = () => {
   const [endSendMessage, setEndSendMessage] = useState<Dayjs | undefined>(
     undefined
   );
-  const [showFilter, setShowFilter] = useState<boolean>(false);
   const [listMessages, setListMessages] = useState<ZaloMessageEntity[]>([]);
+  const [messageTypeList, setMessageTypeList] = useState<
+    ZaloZnsTemplateEntity[]
+  >([]);
   const [dataFilter, setDataFilter] = useState<ZaloMessageEntity[]>([]);
   const [totalData, setTotalData] = useState<number>(0);
   const pageContainerRef = useRef<HTMLDivElement>(null);
@@ -110,6 +124,29 @@ const ListZaloMessages = () => {
   useEffect(() => {
     (async () => await getDataPatients())();
   }, [getDataPatients]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const results = await zaloZnsTemplateService.get({
+          params: {
+            page: 1,
+            limit: 50,
+          },
+        });
+        if (results) {
+          setMessageTypeList(results.data);
+        } else {
+          setMessageTypeList([]);
+        }
+        setLoading(false);
+      } catch (e) {
+        setLoading(false);
+        console.log(e);
+      }
+    })();
+  }, []);
 
   const removeVietnameseTones = (str: string) => {
     return str
@@ -278,7 +315,7 @@ const ListZaloMessages = () => {
     {
       title: "Người nhận",
       dataIndex: "customer",
-      width: 100,
+      width: 150,
       render(value) {
         return (
           <div className="cursor-pointer w-fit flex items-center px-[6px] py-[2px] border border-transparent hover:border-gray-300 hover:rounded transition-all duration-200">
@@ -292,11 +329,11 @@ const ListZaloMessages = () => {
     {
       title: "Loại tin nhắn",
       width: 100,
-      dataIndex: "message_type",
+      dataIndex: "zns_template",
       render(value) {
         return (
           <Tag color="processing">
-            {TypeZaloMessage[value as ZaloMessageType]}
+            {value?.zns_template_name || value?.zns_template_code || ""}
           </Tag>
         );
       },
@@ -305,7 +342,7 @@ const ListZaloMessages = () => {
       title: "Trạng thái",
       width: 80,
       dataIndex: "sent",
-      render: (value) => {
+      render: (value, record) => {
         return (
           <>
             {value ? (
@@ -318,8 +355,33 @@ const ListZaloMessages = () => {
                 <Tooltip title="Gửi tin nhắn">
                   <Button
                     onClick={async () => {
-                      message.success("Gửi tin nhắn thành công");
-                      await getDataPatients();
+                      try {
+                        setLoading(true);
+                        const result =
+                          await zaloMessageService.sendMessageByMessageId(
+                            record.id.toString()
+                          );
+                        if (result?.success) {
+                          const newMessage = await zaloMessageService.getById(
+                            record.id.toString()
+                          );
+                          setDataFilter((prev) =>
+                            prev.map((item) =>
+                              item.id === newMessage.id ? newMessage : item
+                            )
+                          );
+                          message.success("Gửi tin nhắn thành công");
+                        } else {
+                          message.error("Gửi tin nhắn không thành công");
+                        }
+                      } catch (e) {
+                        console.log(e);
+                        message.error(
+                          "Có lỗi xảy ra trong quá trình gửi tin nhắn"
+                        );
+                      } finally {
+                        setLoading(false);
+                      }
                     }}
                   >
                     {iconSendMessage}
@@ -333,7 +395,7 @@ const ListZaloMessages = () => {
     },
     {
       title: "Thời điểm gửi",
-      width: 100,
+      width: 150,
       dataIndex: "sent_time",
       filterDropdown: ({ clearFilters, close }) => (
         <div
@@ -405,31 +467,61 @@ const ListZaloMessages = () => {
     },
   ];
 
+  const onFilter = useCallback(
+    (field: keyof FilterValues, value?: string | string[]) => {
+      setFilterValues((currentFilters) => {
+        const newFilters = cloneDeep(currentFilters);
+        set(newFilters, field, value);
+        return newFilters;
+      });
+      setPageIndex(1);
+    },
+    []
+  );
+
+  const debouncedOnFilter = useMemo(
+    () =>
+      debounce((field: keyof FilterValues, value: any) => {
+        onFilter(field, value);
+      }, 1000),
+    [onFilter]
+  );
+
+  const hasValidFilterValues = (values: any) => {
+    if (!values) return false;
+
+    return Object.values(values).some((value) => {
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === "string") return value.trim() !== "";
+      return value !== undefined && value !== null;
+    });
+  };
+
   const getTableScroll = () => {
     const height = tableRef.current?.offsetHeight ?? 0;
     const windowHeight = window.innerHeight;
     const width = window.innerWidth;
 
-    if (width < 428) {
-      return height >= windowHeight - 316
-        ? { y: windowHeight - 316, x: "max-content" }
+    if (width < 539) {
+      return height >= windowHeight - 376
+        ? { y: windowHeight - 376, x: "max-content" }
         : undefined;
     }
 
-    if (width < 538) {
-      return height >= windowHeight - 288
-        ? { y: windowHeight - 288, x: "max-content" }
+    if (width <= 640) {
+      return height >= windowHeight - 354
+        ? { y: windowHeight - 354, x: "max-content" }
         : undefined;
     }
 
-    if (width < 1200) {
-      return height >= windowHeight - 274
-        ? { y: windowHeight - 274, x: "max-content" }
+    if (width <= 1280) {
+      return height >= windowHeight - 326
+        ? { y: windowHeight - 326, x: "max-content" }
         : undefined;
     }
 
-    return height >= windowHeight - 234
-      ? { y: windowHeight - 234, x: "max-content" }
+    return height >= windowHeight - 286
+      ? { y: windowHeight - 286, x: "max-content" }
       : undefined;
   };
 
@@ -456,24 +548,86 @@ const ListZaloMessages = () => {
           />
         </div>
       }
-      toolbarRight={
-        <div className="flex items-center gap-4">
-          <Button
-            className="flex !gap-[3px] items-center justify-center cursor-pointer"
-            onClick={() => {
-              setShowFilter(true);
-            }}
-          >
-            <FilterOutlined />
-            <span className="hidden lg:flex">Bộ lọc</span>
-            <span
-              className={`${counterFilter ? "flex" : "hidden"}`}
-            >{`(${counterFilter})`}</span>
-          </Button>
-        </div>
-      }
     >
-      <div className="flex flex-col gap-[10px] w-full h-[calc(100%-60px)]">
+      <div className="pb-2.5 filter-header">
+        <Form layout="horizontal" form={form}>
+          <div className="flex flex-col bg-[#f5f5f5] rounded-sm border border-[#d9d9d9] gap-2 px-2 py-1 sm:flex-row sm:flex-wrap sm:items-center">
+            <div
+              className={`flex flex-row items-stretch sm:items-center gap-2 w-full xl:w-[calc((100%-160px-16px)/2)] sm:flex-nowrap`}
+            >
+              <div className="flex items-center sm:w-auto">{iconFilter}</div>
+
+              <Form.Item
+                colon={false}
+                className="flex-1 m-0"
+                name="customer_name"
+              >
+                <Input
+                  className="w-full"
+                  placeholder="Nhập tên người nhận để tìm kiếm..."
+                  maxLength={255}
+                  onChange={(e) =>
+                    debouncedOnFilter("customer_name", e.target?.value)
+                  }
+                />
+              </Form.Item>
+            </div>
+
+            <div className="flex flex-row items-stretch sm:items-center gap-2 w-full sm:w-[calc(100%-168px)] xl:w-[calc((100%-160px-16px)/2)] sm:flex-nowrap">
+              <Form.Item
+                colon={false}
+                className="flex-1 m-0"
+                name="message_type"
+              >
+                <Select
+                  mode="multiple"
+                  allowClear
+                  options={messageTypeList.map((type) => ({
+                    label:
+                      type.zns_template_name || type.zns_template_code || "",
+                    value: type.zns_template_code,
+                  }))}
+                  placeholder="Loại tin nhắn"
+                  className="selectFilter"
+                  maxTagCount="responsive"
+                  onChange={(value) => debouncedOnFilter("message_type", value)}
+                />
+              </Form.Item>
+            </div>
+
+            <div className="flex flex-row items-stretch sm:items-center gap-2 w-full sm:w-40 xl:ml-0 sm:flex-nowrap">
+              <Form.Item colon={false} className="m-0 w-full" name="status">
+                <Select
+                  allowClear
+                  options={[
+                    { label: "Chưa gửi", value: "0" },
+                    { label: "Đã gửi", value: "1" },
+                  ]}
+                  placeholder="Trạng thái"
+                  className="selectFilter"
+                  onChange={(value) => debouncedOnFilter("status", value)}
+                />
+              </Form.Item>
+              <Tooltip title="Làm mới">
+                <Button
+                  type="primary"
+                  disabled={!hasValidFilterValues(filterValues)}
+                  onClick={async () => {
+                    form.resetFields();
+                    setFilterValues({});
+                    setPageIndex(1);
+                  }}
+                  className="px-3 py-1 text-sm bg-white border border-[#d9d9d9] rounded hover:bg-[#fafafa] 
+                         transition w-fit lg:w-auto"
+                >
+                  <RedoOutlined />
+                </Button>
+              </Tooltip>
+            </div>
+          </div>
+        </Form>
+      </div>
+      <div className="flex flex-col gap-2.5 w-full h-[calc(100%-60px)]">
         <div ref={tableRef} className="flex h-[calc(100%-32px)]">
           <Table
             rowKey="id"
@@ -528,79 +682,6 @@ const ListZaloMessages = () => {
           />
         </div>
       </div>
-
-      <Drawer
-        title="Bộ lọc"
-        placement="right"
-        closable={false}
-        onClose={() => {
-          setShowFilter(false);
-        }}
-        width={window.innerWidth < 768 ? (window.innerWidth * 70) / 100 : 400}
-        open={showFilter}
-      >
-        <Form layout="horizontal" form={form} style={{ padding: 12 }}>
-          <Row gutter={12}>
-            <Col span={24}>
-              <Form.Item
-                labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}
-                label="Từ khoá"
-                name="keyword"
-              >
-                <Input
-                  style={{ width: "100%" }}
-                  placeholder={"Nhập từ khoá để tìm kiếm..."}
-                  maxLength={255}
-                  onPressEnter={async () => {
-                    try {
-                      const formValues = form.getFieldsValue();
-                      await getDataPatients(formValues);
-                      setPageIndex(1);
-                      setShowFilter(false);
-                    } catch (e) {
-                      await getDataPatients();
-                      setPageIndex(1);
-                    }
-                  }}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={24}>
-              <div className="flex gap-[10px] justify-end">
-                <Button
-                  type="primary"
-                  onClick={async () => {
-                    try {
-                      const formValues = form.getFieldsValue();
-                      await getDataPatients(formValues);
-                      setPageIndex(1);
-                      setShowFilter(false);
-                    } catch (e) {
-                      await getDataPatients();
-                      setPageIndex(1);
-                    }
-                  }}
-                >
-                  Tìm kiếm
-                </Button>
-                <Button
-                  onClick={async () => {
-                    form.resetFields();
-                    await getDataPatients();
-                    setPageIndex(1);
-                    setShowFilter(false);
-                  }}
-                >
-                  Đặt lại
-                </Button>
-              </div>
-            </Col>
-          </Row>
-        </Form>
-      </Drawer>
     </PageContainer>
   );
 };
