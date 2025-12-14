@@ -16,10 +16,13 @@ class ZaloMessageService extends CrudServiceBase<ZaloMessageEntity> {
     });
   }
 
-  async sendMessageByMessageId(message_id: string): Promise<any> {
-    return this.post<any>({
-      endpoint: `send-one-zns/${message_id}`,
-    });
+  async sendMessageByMessageId(message_id: string) {
+    return this.post<any>(
+      {},
+      {
+        endpoint: `send-one-zns/${message_id}`,
+      }
+    );
   }
 }
 
