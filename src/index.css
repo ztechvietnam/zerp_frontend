@@ -818,6 +818,18 @@ span.flatpickr-weekday,
     text-transform: uppercase;
     font-weight: 700;
     font-size: 16px;
+    padding: 9.5px 24px !important;
+  }
+
+  .ant-descriptions-item-content {
+    font-size: 16px;
+  }
+}
+.description-patient2 {
+  .ant-descriptions-item-label {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 16px;
     padding: 16px 24px !important;
   }
 

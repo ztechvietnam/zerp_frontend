@@ -19,7 +19,7 @@ const PageContainer = forwardRef<HTMLDivElement, PageContainerProps>(
     const toolbarComp =
       toolbarLeft || toolbarRight ? (
         <div className="flex items-center h-[auto] pb-[10px]">
-          <div className="flex items-center text-[15px] text-gray-600 font-sans">
+          <div className="flex items-center text-[15px] text-gray-600 font-sans max-w-full">
             {toolbarLeft}
           </div>
           <div className="flex-1" />

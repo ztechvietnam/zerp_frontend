@@ -77,42 +77,46 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       []
     );
 
-    const columns: TableColumnsType<ZaloMessageEntity> = [
-      {
-        title: "Nội dung tin nhắn",
-        dataIndex: "content",
-        width: 400,
-        render(value) {
-          return (
-            <p
-              dangerouslySetInnerHTML={{
-                __html: value.replace(/\r\n/g, "<br />"),
-              }}
-            />
-          );
+    const columns = (
+      haveData: boolean
+    ): TableColumnsType<ZaloMessageEntity> => {
+      return [
+        {
+          title: "Nội dung tin nhắn",
+          dataIndex: "content",
+          ...(haveData ? { width: 400 } : {}),
+          render(value) {
+            return (
+              <p
+                dangerouslySetInnerHTML={{
+                  __html: value.replace(/\r\n/g, "<br />"),
+                }}
+              />
+            );
+          },
         },
-      },
-      {
-        title: "Loại tin nhắn",
-        width: 100,
-        dataIndex: "zns_template",
-        render(value) {
-          return (
-            <Tag color="processing">
-              {value?.zns_template_name || value?.zns_template_code || ""}
-            </Tag>
-          );
+        {
+          title: "Loại tin nhắn",
+          ...(haveData ? { width: 100 } : {}),
+          dataIndex: "zns_template",
+          render(value) {
+            return (
+              <Tag color="processing">
+                {value?.zns_template_name || value?.zns_template_code || ""}
+              </Tag>
+            );
+          },
         },
-      },
-      {
-        title: "Thời điểm gửi",
-        dataIndex: "sent_time",
-        width: 100,
-        render: (value) => {
-          return dayjs(value).format("HH:mm DD/MM/YYYY");
+        {
+          title: "Thời điểm gửi",
+          dataIndex: "sent_time",
+          ...(haveData ? { width: 100 } : {}),
+          render: (value) => {
+            return dayjs(value).format("HH:mm DD/MM/YYYY");
+          },
         },
-      },
-    ];
+      ];
+    };
 
     const getDataMessage = useCallback(async () => {
       setLoading(true);
@@ -203,7 +207,10 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                       {currentPatient.name}
                     </Descriptions.Item>
                     <Descriptions.Item label="Mã Y Tế" span={2}>
-                      {currentPatient.customer_id}
+                      {currentPatient.medical_id}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="CCCD" span={2}>
+                      {currentPatient.personal_id}
                     </Descriptions.Item>
                     <Descriptions.Item label="Số điện thoại" span={2}>
                       {currentPatient.phone}
@@ -221,7 +228,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                   bordered
                   size="middle"
                   layout="vertical"
-                  className="qr-code-container description-patient"
+                  className="qr-code-container description-patient2"
                   id="myqrcode"
                 >
                   <Descriptions.Item label="QR cấp phép Zalo App" span={1}>
@@ -234,7 +241,6 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                         size={222}
                         errorLevel="L"
                         type="svg"
-                        // bordered={false}
                       />
                       <Tooltip
                         title="Click để tải xuống"
@@ -251,7 +257,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
             <Tabs.TabPane tab="Lịch sử gửi tin nhắn" key="historyMessage">
               <Table
                 rowKey="id"
-                columns={columns}
+                columns={columns(listMessages.length)}
                 dataSource={listMessages}
                 scroll={{ y: window.innerHeight - 430 }}
               />

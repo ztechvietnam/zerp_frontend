@@ -256,20 +256,23 @@ const ListZaloMessages = () => {
   const renderPatient = (patient: PatientEntity) => {
     return (
       <Descriptions column={2} bordered size="middle">
-        <Descriptions.Item label="Mã Y Tế" span={2}>
-          {patient.customer_id}
-        </Descriptions.Item>
         <Descriptions.Item label="Họ tên" span={2}>
           {patient.name}
+        </Descriptions.Item>
+        <Descriptions.Item label="Mã Y Tế" span={2}>
+          {patient.medical_id}
+        </Descriptions.Item>
+        <Descriptions.Item label="CCCD" span={2}>
+          {patient.personal_id}
         </Descriptions.Item>
         <Descriptions.Item label="Số điện thoại" span={2}>
           {patient.phone}
         </Descriptions.Item>
-        <Descriptions.Item label="Địa chỉ" span={2}>
-          {patient.address}
-        </Descriptions.Item>
         <Descriptions.Item label="Email" span={2}>
           {patient.email}
+        </Descriptions.Item>
+        <Descriptions.Item label="Địa chỉ" span={2}>
+          {patient.address}
         </Descriptions.Item>
       </Descriptions>
     );

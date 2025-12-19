@@ -8,6 +8,8 @@ import { TreeNode } from "../../common/services/category/category";
 import { NewsEntity } from "../../common/services/news/news";
 import { QuestionEntity } from "../../common/services/question/question";
 import { DocumentCategoriesEntity } from "../../common/services/document-categories/documentCategories";
+import { PatientEntity } from "../../common/services/patient/patient";
+import { EntityBase } from "../../common/services/entity-base";
 
 export const encodeBase64 = (str: string): string =>
   btoa(unescape(encodeURIComponent(str)));
@@ -28,6 +30,7 @@ export enum SIDE_BAR {
   NEW_CATEGORY = "new-category",
   NEW_MANAGEMENT = "new-management",
   DASHBOARD_LIBRARY = "dashboard-library",
+  DASHBOARD_CUSTOMER = "dashboard-customer",
   DOCUMENT = "document",
   NEW_DETAIL = "new-detail",
 }
@@ -42,7 +45,7 @@ export const environments = [
   {
     key: SUB_SYSTEM.CUSTOMER_SUPPORT,
     title: "Chăm sóc khách hàng",
-    path: "/dashboard/customer-support",
+    path: "/dashboard/customer-support/dashboard-customer",
     icon: <SolutionOutlined width={32} height={32} />,
   },
   {
@@ -2305,3 +2308,165 @@ export const contentTemplate = `
 
   <p>Với sự kiện khai trương này, Bệnh viện Đa khoa Trung ương khẳng định cam kết mang lại dịch vụ khám chữa bệnh chất lượng cao...</p>
 `;
+
+export interface DashboardCustomerEntity {
+  id: number;
+  patient: any;
+  diagnostic_clinic: any;
+  clinical_examination: any;
+  clinic_concluded: any;
+  status: number;
+  createdAt: string;
+}
+
+export const dataDashboardCustomer: DashboardCustomerEntity[] = [
+  {
+    id: 1,
+    patient: {
+      name: "Phạm Văn Trường",
+      phone: "0912345678",
+      customer_id: "123456",
+    },
+    createdAt: "2025-11-15T00:30:50.401Z",
+    diagnostic_clinic: [
+      {
+        startTime: "2025-11-15T00:30:50.401Z",
+        endTime: "2025-11-15T00:40:50.401Z",
+      },
+    ],
+    clinical_examination: [
+      {
+        startTime: "2025-11-15T00:35:50.401Z",
+        endTime: "2025-11-15T00:40:50.401Z",
+        action: "Chụp X-Quang",
+      },
+      {
+        startTime: "2025-11-15T00:50:50.401Z",
+        endTime: "2025-11-15T00:55:50.401Z",
+        action: "Xét nghiệm máu",
+      },
+    ],
+    clinic_concluded: [
+      {
+        startTime: "2025-11-15T01:00:50.401Z",
+        endTime: "2025-11-15T01:05:50.401Z",
+      },
+    ],
+    status: 1,
+  },
+  {
+    id: 2,
+    patient: {
+      name: "Trần Thị Dung",
+      phone: "0912345678",
+      customer_id: "123456",
+    },
+    createdAt: "2025-11-15T00:45:50.401Z",
+    diagnostic_clinic: [
+      {
+        startTime: "2025-11-15T00:35:50.401Z",
+        endTime: null,
+      },
+    ],
+    clinical_examination: [],
+    clinic_concluded: [],
+    status: 0,
+  },
+  {
+    id: 3,
+    patient: {
+      name: "Nguyễn Đức Thành",
+      phone: "0912345678",
+      customer_id: "123456",
+    },
+    createdAt: "2025-11-15T00:30:50.401Z",
+    diagnostic_clinic: [
+      {
+        startTime: "2025-11-15T00:30:50.401Z",
+        endTime: "2025-11-15T00:40:50.401Z",
+      },
+    ],
+    clinical_examination: [
+      {
+        startTime: "2025-11-15T00:35:50.401Z",
+        endTime: "2025-11-15T00:40:50.401Z",
+        action: "Chụp X-Quang",
+      },
+      {
+        startTime: "2025-11-15T00:50:50.401Z",
+        endTime: "2025-11-15T00:55:50.401Z",
+        action: "Xét nghiệm máu",
+      },
+    ],
+    clinic_concluded: [
+      {
+        startTime: "2025-11-15T01:00:50.401Z",
+        endTime: "2025-11-15T01:05:50.401Z",
+      },
+    ],
+    status: 1,
+  },
+  {
+    id: 4,
+    patient: {
+      name: "Phạm Thị Oanh",
+      phone: "0912345678",
+      customer_id: "123456",
+    },
+    createdAt: "2025-11-15T00:30:50.401Z",
+    diagnostic_clinic: [
+      {
+        startTime: "2025-11-15T00:35:50.401Z",
+        endTime: "2025-11-15T00:40:50.401Z",
+      },
+    ],
+    clinical_examination: [
+      {
+        startTime: "2025-11-15T00:50:50.401Z",
+        endTime: "2025-11-15T00:55:50.401Z",
+        action: "Xét nghiệm máu",
+      },
+      {
+        startTime: "2025-11-15T01:00:50.401Z",
+        endTime: null,
+        action: "Chụp X-Quang",
+      },
+    ],
+    clinic_concluded: [],
+    status: 0,
+  },
+  {
+    id: 5,
+    patient: {
+      name: "Hoàng Thị Bình",
+      phone: "0912345678",
+      customer_id: "123456",
+    },
+    createdAt: "2025-11-15T00:30:50.401Z",
+    diagnostic_clinic: [
+      {
+        startTime: "2025-11-15T00:35:50.401Z",
+        endTime: "2025-11-15T00:40:50.401Z",
+      },
+    ],
+    clinical_examination: [
+      {
+        startTime: "2025-11-15T00:50:50.401Z",
+        endTime: "2025-11-15T00:55:50.401Z",
+        action: "Xét nghiệm máu",
+      },
+      {
+        startTime: "2025-11-15T00:50:50.401Z",
+        endTime: "2025-11-15T00:55:50.401Z",
+        action: "Siêu âm ổ bụng",
+      },
+    ],
+    clinic_concluded: [
+      {
+        startTime: "2025-11-15T00:35:50.401Z",
+        endTime: null,
+      },
+    ],
+    status: 0,
+  },
+];
