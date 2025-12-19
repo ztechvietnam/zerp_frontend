@@ -28,6 +28,7 @@ import DashboardHome from "./pages/DashboardHome/DashboardHome";
 import DashboardLibrary from "./pages/DashboardLibrary/DashboardLibrary";
 import NewsCategories from "./pages/10.NewsCategory/NewsCategories";
 import ActivityNews from "./pages/11.ActivityNews/ActivityNews";
+import DashboardCustomer from "./pages/DashboardCustomer/DashboardCustomer";
 
 const TITLES: Record<string, string> = {
   ["/dashboard"]: "Trang chủ",
@@ -118,6 +119,10 @@ export default function App() {
           <Route
             path={SIDE_BAR.DASHBOARD_LIBRARY}
             element={<DashboardLibrary />}
+          />
+          <Route
+            path={SIDE_BAR.DASHBOARD_CUSTOMER}
+            element={<DashboardCustomer />}
           />
           <Route
             path={SIDE_BAR.DOCUMENT_CATEGORY}

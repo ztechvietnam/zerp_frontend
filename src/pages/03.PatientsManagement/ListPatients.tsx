@@ -156,7 +156,7 @@ const ListPatients = () => {
   const columns: TableColumnsType<PatientEntity> = [
     {
       title: "Mã Y Tế",
-      dataIndex: "customer_id",
+      dataIndex: "medical_id",
       width: 120,
       render: (value: string) => highlightText(value),
     },
@@ -198,6 +198,12 @@ const ListPatients = () => {
           </div>
         </div>
       ),
+    },
+    {
+      title: "CCCD",
+      dataIndex: "personal_id",
+      width: 120,
+      render: (value: string) => highlightText(value),
     },
     {
       title: "Di động",
