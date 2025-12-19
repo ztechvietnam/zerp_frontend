@@ -1,0 +1,21 @@
+.dashboard-library {
+  .ant-spin-nested-loading {
+    width: 100%;
+    height: 100%;
+  }
+  .ant-spin-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+  .ant-tabs-extra-content {
+    margin-left: 10%;
+  }
+}
+
+.tab-header {
+  .ant-tabs-nav {
+    margin-bottom: 0;
+  }
+}

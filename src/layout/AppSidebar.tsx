@@ -82,6 +82,18 @@ const dashboardDocumentNavItems: NavItem[] = [
   },
 ];
 
+const dashboardCustomerNavItems: NavItem[] = [
+  {
+    name: "Dashboard",
+  },
+  {
+    icon: <HomeOutlined />,
+    name: "Dashboard",
+    path: SIDE_BAR.DASHBOARD_CUSTOMER,
+    subSystem: SUB_SYSTEM.CUSTOMER_SUPPORT,
+  },
+];
+
 const documentManagementNavItems: NavItem[] = [
   {
     name: "Phân hệ quản trị văn bản",
@@ -430,9 +442,7 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link
-          to="/dashboard"
-        >
+        <Link to="/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
@@ -471,6 +481,9 @@ const AppSidebar: React.FC = () => {
       >
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
+            {subSystem === SUB_SYSTEM.CUSTOMER_SUPPORT && (
+              <div>{renderMenuItems(dashboardCustomerNavItems, "main")}</div>
+            )}
             {subSystem === SUB_SYSTEM.CUSTOMER_SUPPORT && (
               <div>{renderMenuItems(customerCareNavItems, "main")}</div>
             )}
