@@ -24,6 +24,14 @@ class ZaloMessageService extends CrudServiceBase<ZaloMessageEntity> {
       }
     );
   }
+  async sendAllMessages() {
+    return this.post<any>(
+      {},
+      {
+        endpoint: `send-all-unsent-zns`,
+      }
+    );
+  }
 }
 
 export const zaloMessageService = new ZaloMessageService();

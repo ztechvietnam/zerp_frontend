@@ -13,27 +13,23 @@ import {
   App,
   Breadcrumb,
   Button,
-  Col,
   DatePicker,
   Descriptions,
-  Drawer,
   Form,
   Input,
   InputRef,
   Pagination,
   Popover,
-  Row,
   Select,
   Table,
   TableColumnsType,
   Tag,
   Tooltip,
-  TreeSelect,
 } from "antd";
 import {
-  FilterOutlined,
   RedoOutlined,
   SearchOutlined,
+  SendOutlined,
   SwapRightOutlined,
 } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
@@ -41,10 +37,7 @@ import { cloneDeep, debounce, set } from "lodash";
 import Highlighter from "react-highlight-words";
 import dayjs, { Dayjs } from "dayjs";
 import "../../index.css";
-import {
-  ZaloMessageType,
-  ZaloMessageEntity,
-} from "../../common/services/customer-zalo-messages/zalo-mesage";
+import { ZaloMessageEntity } from "../../common/services/customer-zalo-messages/zalo-mesage";
 import { zaloMessageService } from "../../common/services/customer-zalo-messages/zalo-mesage-service";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { iconFilter, iconSendMessage } from "../../components/IconSvg/iconSvg";
@@ -257,22 +250,22 @@ const ListZaloMessages = () => {
     return (
       <Descriptions column={2} bordered size="middle">
         <Descriptions.Item label="Họ tên" span={2}>
-          {patient.name}
+          {patient?.name || ""}
         </Descriptions.Item>
         <Descriptions.Item label="Mã Y Tế" span={2}>
-          {patient.medical_id}
+          {patient?.medical_id || ""}
         </Descriptions.Item>
         <Descriptions.Item label="CCCD" span={2}>
-          {patient.personal_id}
+          {patient?.personal_id || ""}
         </Descriptions.Item>
         <Descriptions.Item label="Số điện thoại" span={2}>
-          {patient.phone}
+          {patient?.phone || ""}
         </Descriptions.Item>
         <Descriptions.Item label="Email" span={2}>
-          {patient.email}
+          {patient?.email || ""}
         </Descriptions.Item>
         <Descriptions.Item label="Địa chỉ" span={2}>
-          {patient.address}
+          {patient?.address || ""}
         </Descriptions.Item>
       </Descriptions>
     );
@@ -323,7 +316,7 @@ const ListZaloMessages = () => {
         return (
           <div className="cursor-pointer w-fit flex items-center px-[6px] py-[2px] border border-transparent hover:border-gray-300 hover:rounded transition-all duration-200">
             <Popover content={renderPatient(value)} placement="rightTop">
-              {value.name}
+              {value?.name || ""}
             </Popover>
           </div>
         );
@@ -549,6 +542,34 @@ const ListZaloMessages = () => {
               },
             ]}
           />
+        </div>
+      }
+      toolbarRight={
+        <div className="flex gap-2.5 items-center">
+          <Button
+            className="flex gap-[5px]! items-center justify-center cursor-pointer"
+            type="primary"
+            onClick={async () => {
+              try {
+                setLoading(true);
+                const result = await zaloMessageService.sendAllMessages();
+                if (result) {
+                  await getDataPatients();
+                  message.success("Đã gửi tất cả tin nhắn");
+                } else {
+                  message.error("Có lỗi xảy ra trong quá trình gửi tin nhắn");
+                }
+              } catch (e) {
+                console.log(e);
+                message.error("Có lỗi xảy ra trong quá trình gửi tin nhắn");
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            <SendOutlined />
+            Gửi tất cả
+          </Button>
         </div>
       }
     >
