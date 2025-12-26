@@ -72,7 +72,7 @@ const ListPatients = () => {
   );
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
+    let intervalId: any | null = null;
 
     if (pageIndex === 1) {
       intervalId = setInterval(() => {
@@ -232,20 +232,6 @@ const ListPatients = () => {
       },
     },
   ];
-
-  const calculateCounterFilter = (formValues?: any) => {
-    if (formValues) {
-      const filledCount = Object.values(formValues).filter((value) => {
-        if (Array.isArray(value)) return value.length > 0;
-        if (typeof value === "object" && value !== null)
-          return Object.keys(value).length > 0;
-        return value !== undefined && value !== null && value !== "";
-      }).length;
-      setCounterFilter(filledCount);
-    } else {
-      setCounterFilter(0);
-    }
-  };
 
   const syncData = async () => {
     try {
