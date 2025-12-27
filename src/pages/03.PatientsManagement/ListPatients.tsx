@@ -257,19 +257,19 @@ const ListPatients = () => {
     const width = window.innerWidth;
 
     if (width < 500) {
-      return height >= windowHeight - 288
-        ? { y: windowHeight - 288, x: "max-content" }
+      return height >= windowHeight - 292
+        ? { y: windowHeight - 292, x: "max-content" }
         : undefined;
     }
 
     if (width < 700) {
-      return height >= windowHeight - 244
-        ? { y: windowHeight - 244, x: "max-content" }
+      return height >= windowHeight - 248
+        ? { y: windowHeight - 248, x: "max-content" }
         : undefined;
     }
 
-    return height >= windowHeight - 240
-      ? { y: windowHeight - 240, x: "max-content" }
+    return height >= windowHeight - 244
+      ? { y: windowHeight - 244, x: "max-content" }
       : undefined;
   };
 
@@ -278,7 +278,7 @@ const ListPatients = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-[28px]">
+          <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-[28px]">
             Quản lý bệnh nhân
           </h1>
           <Breadcrumb

@@ -475,29 +475,29 @@ const ListUsers = () => {
     const width = window.innerWidth;
 
     if (width < 428) {
-      return height >= windowHeight - 271
-        ? { y: windowHeight - 271, x: "max-content" }
+      return height >= windowHeight - 275
+        ? { y: windowHeight - 275, x: "max-content" }
         : undefined;
     }
 
     if (width < 768) {
-      return height >= windowHeight - 271
-        ? { y: windowHeight - 271, x: "max-content" }
+      return height >= windowHeight - 275
+        ? { y: windowHeight - 275, x: "max-content" }
         : undefined;
     }
     if (width < 1200) {
-      return height >= windowHeight - 231
-        ? { y: windowHeight - 231, x: "max-content" }
+      return height >= windowHeight - 235
+        ? { y: windowHeight - 235, x: "max-content" }
         : undefined;
     }
     if (width < 1488) {
-      return height >= windowHeight - 234
-        ? { y: windowHeight - 234, x: "max-content" }
+      return height >= windowHeight - 238
+        ? { y: windowHeight - 238, x: "max-content" }
         : undefined;
     }
 
-    return height >= windowHeight - 209
-      ? { y: windowHeight - 209, x: "max-content" }
+    return height >= windowHeight - 213
+      ? { y: windowHeight - 213, x: "max-content" }
       : undefined;
   };
 
@@ -516,7 +516,7 @@ const ListUsers = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
+          <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-7">
             Quản lý người dùng
           </h1>
           <Breadcrumb

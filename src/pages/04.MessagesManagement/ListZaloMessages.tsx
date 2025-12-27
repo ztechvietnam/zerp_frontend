@@ -499,25 +499,25 @@ const ListZaloMessages = () => {
     const width = window.innerWidth;
 
     if (width < 539) {
-      return height >= windowHeight - 376
-        ? { y: windowHeight - 376, x: "max-content" }
+      return height >= windowHeight - 380
+        ? { y: windowHeight - 380, x: "max-content" }
         : undefined;
     }
 
     if (width <= 640) {
-      return height >= windowHeight - 354
-        ? { y: windowHeight - 354, x: "max-content" }
+      return height >= windowHeight - 358
+        ? { y: windowHeight - 358, x: "max-content" }
         : undefined;
     }
 
     if (width <= 1280) {
-      return height >= windowHeight - 326
-        ? { y: windowHeight - 326, x: "max-content" }
+      return height >= windowHeight - 330
+        ? { y: windowHeight - 330, x: "max-content" }
         : undefined;
     }
 
-    return height >= windowHeight - 286
-      ? { y: windowHeight - 286, x: "max-content" }
+    return height >= windowHeight - 290
+      ? { y: windowHeight - 290, x: "max-content" }
       : undefined;
   };
 
@@ -526,7 +526,7 @@ const ListZaloMessages = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-[28px]">
+          <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-[28px]">
             Quản lý lịch sử gửi tin nhắn ZNS
           </h1>
           <Breadcrumb

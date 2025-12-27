@@ -71,7 +71,7 @@ const ListRoles = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-[28px]">
+          <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-[28px]">
             Quản lý phân quyền
           </h1>
           <Breadcrumb
