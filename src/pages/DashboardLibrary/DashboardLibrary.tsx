@@ -427,14 +427,14 @@ const DashboardLibrary = () => {
     const width = window.innerWidth;
     const base =
       width < 550
-        ? 330
+        ? 338
         : width < 768
-        ? 300
+        ? 308
         : width < 1280
-        ? 618
-        : width < 1550
-        ? 578
-        : 556;
+        ? 626
+        : width < 1620
+        ? 586
+        : 564;
     return height >= windowHeight - base
       ? { y: windowHeight - base, x: "max-content" }
       : undefined;
@@ -473,7 +473,7 @@ const DashboardLibrary = () => {
                 ref={pageContainerRef}
                 toolbarLeft={
                   <div>
-                    <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
+                    <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-7">
                       Tất cả văn bản
                     </h1>
                   </div>

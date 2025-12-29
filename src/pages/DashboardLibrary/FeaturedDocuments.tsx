@@ -111,7 +111,7 @@ const FeaturedDocuments: React.FC<Props> = ({ data, fetchFileAndShow }) => {
   return (
     <div className="flex flex-col gap-1">
       <div>
-        <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
+        <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-7">
           Văn bản quan trọng
         </h1>
       </div>

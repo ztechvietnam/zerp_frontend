@@ -556,44 +556,44 @@ const DocumentsManagement = () => {
 
     if (width < 540) {
       if (currentCategory) {
-        return height >= windowHeight - 333
-          ? { y: windowHeight - 333, x: "max-content" }
+        return height >= windowHeight - 337
+          ? { y: windowHeight - 337, x: "max-content" }
           : undefined;
       }
-      return height >= windowHeight - 373
-        ? { y: windowHeight - 373, x: "max-content" }
+      return height >= windowHeight - 377
+        ? { y: windowHeight - 377, x: "max-content" }
         : undefined;
     }
 
     if (width < 640) {
       if (currentCategory) {
-        return height >= windowHeight - 311
-          ? { y: windowHeight - 311, x: "max-content" }
+        return height >= windowHeight - 315
+          ? { y: windowHeight - 315, x: "max-content" }
           : undefined;
       }
-      return height >= windowHeight - 351
-        ? { y: windowHeight - 351, x: "max-content" }
+      return height >= windowHeight - 355
+        ? { y: windowHeight - 355, x: "max-content" }
         : undefined;
     }
     if (width < 1280) {
-      return height >= windowHeight - 271
-        ? { y: windowHeight - 271, x: "max-content" }
+      return height >= windowHeight - 275
+        ? { y: windowHeight - 275, x: "max-content" }
         : undefined;
     }
     if (width < 1488) {
-      return height >= windowHeight - 234
-        ? { y: windowHeight - 234, x: "max-content" }
+      return height >= windowHeight - 238
+        ? { y: windowHeight - 238, x: "max-content" }
         : undefined;
     }
 
     if (idCategory) {
-      return height >= windowHeight - 209
-        ? { y: windowHeight - 209, x: "max-content" }
+      return height >= windowHeight - 213
+        ? { y: windowHeight - 213, x: "max-content" }
         : undefined;
     }
 
-    return height >= windowHeight - 232
-      ? { y: windowHeight - 232, x: "max-content" }
+    return height >= windowHeight - 236
+      ? { y: windowHeight - 236, x: "max-content" }
       : undefined;
   };
 
@@ -612,7 +612,7 @@ const DocumentsManagement = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
+          <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-7">
             {`${
               currentCategory
                 ? currentCategory.name

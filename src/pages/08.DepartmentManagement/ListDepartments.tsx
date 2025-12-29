@@ -357,13 +357,13 @@ const ListDepartments = () => {
     const width = window.innerWidth;
 
     if (width < 768) {
-      return height >= windowHeight - 161
-        ? { y: windowHeight - 161, x: "max-content" }
+      return height >= windowHeight - 165
+        ? { y: windowHeight - 165, x: "max-content" }
         : undefined;
     }
 
-    return height >= windowHeight - 140
-      ? { y: windowHeight - 140, x: "max-content" }
+    return height >= windowHeight - 144
+      ? { y: windowHeight - 144, x: "max-content" }
       : undefined;
   };
 
@@ -372,7 +372,7 @@ const ListDepartments = () => {
       ref={pageContainerRef}
       toolbarLeft={
         <div>
-          <h1 className="text-[24px] mb-0 font-semibold text-[#006699] leading-7">
+          <h1 className="text-[24px] mb-1 font-semibold text-[#006699] leading-7">
             Danh sách đơn vị
           </h1>
           <Breadcrumb
