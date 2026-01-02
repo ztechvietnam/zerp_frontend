@@ -14,9 +14,11 @@ import {
   DatePicker,
   Pagination,
   Row,
+  Select,
   Spin,
   Table,
   Tag,
+  Tooltip,
 } from "antd";
 import "./dashboardCustomer.css";
 import { cloneDeep, debounce, set, uniqBy } from "lodash";
@@ -29,6 +31,7 @@ import {
 } from "../../common/services/patient/patientDashboard";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { ColumnsType } from "antd/es/table";
+import { IdcardOutlined, PhoneOutlined } from "@ant-design/icons";
 
 const DashboardCustomer = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
@@ -38,6 +41,7 @@ const DashboardCustomer = () => {
     []
   );
   const [receptionDate, setReceptionDate] = useState<Dayjs>(dayjs());
+  const [areaSelected, setAreaSelected] = useState<string>("all");
   const [totalData, setTotalData] = useState<number>(0);
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -63,7 +67,7 @@ const DashboardCustomer = () => {
             }
           );
           setDataDashboard(filterData);
-          setTotalData(results.total || 0);
+          setTotalData(filterData.length || 0);
         } else {
           setDataDashboard([]);
           setTotalData(0);
@@ -100,7 +104,7 @@ const DashboardCustomer = () => {
   const columns: ColumnsType<PatientDashboardEntity> = [
     {
       title: "THÔNG TIN BỆNH NHÂN",
-      width: 250,
+      width: 200,
       dataIndex: "customer",
       align: "left",
       onCell: () => ({
@@ -112,17 +116,26 @@ const DashboardCustomer = () => {
       render(value: PatientEntity) {
         return (
           <div className="flex flex-col">
-            <span>{`${value?.name?.toLocaleUpperCase()} | ${
-              value?.phone
-            }`}</span>
-            <span>{`Mã Y Tế: ${value?.medical_id}`}</span>
+            <span className="font-bold">{`${value?.name?.toLocaleUpperCase()}`}</span>
+            <Tooltip title={`Số điện thoại: ${value?.phone}`}>
+              <span className="flex gap-2 text-[16px] cursor-pointer">
+                <PhoneOutlined />
+                {value?.phone}
+              </span>
+            </Tooltip>
+            <Tooltip title={`Mã y tế: ${value?.medical_id}`}>
+              <span className="flex gap-2 text-[16px] cursor-pointer">
+                <IdcardOutlined />
+                {value?.medical_id}
+              </span>
+            </Tooltip>
           </div>
         );
       },
     },
     {
       title: "TIẾP ĐÓN",
-      width: 150,
+      width: 100,
       dataIndex: "reception_time",
       align: "left",
       onCell: () => ({
@@ -136,8 +149,8 @@ const DashboardCustomer = () => {
       },
     },
     {
-      title: "PHÒNG KHÁM CHẨN ĐOÁN",
-      width: 200,
+      title: "PHÒNG KHÁM",
+      width: 250,
       align: "left",
       onCell: () => ({
         style: {
@@ -150,7 +163,9 @@ const DashboardCustomer = () => {
           <ScheduleTime
             data={[
               {
+                action: record.department_name,
                 startTime: record.exam_time,
+                endTime: record.exam_end_time,
                 status: record.exam_status,
               },
             ]}
@@ -160,8 +175,14 @@ const DashboardCustomer = () => {
     },
     {
       title: "CẬN LÂM SÀNG",
-      width: 500,
+      width: 400,
       dataIndex: "customer_paraclinical",
+      onCell: () => ({
+        style: {
+          verticalAlign: "top",
+          textAlign: "left",
+        },
+      }),
       render(value: CustomerParaclinicalEntity[]) {
         return (
           <ScheduleTime
@@ -174,28 +195,6 @@ const DashboardCustomer = () => {
               };
             })}
             isClinicalExamination
-          />
-        );
-      },
-    },
-    {
-      title: "PHÒNG KHÁM KẾT LUẬN",
-      width: 200,
-      align: "left",
-      onCell: () => ({
-        style: {
-          verticalAlign: "top",
-          textAlign: "left",
-        },
-      }),
-      render(record: PatientDashboardEntity) {
-        return (
-          <ScheduleTime
-            data={[
-              {
-                endTime: record.exam_end_time,
-              },
-            ]}
           />
         );
       },
@@ -246,14 +245,21 @@ const DashboardCustomer = () => {
         ? { y: windowHeight - 295, x: "max-content" }
         : undefined;
     }
+
+    if (width < 1081) {
+      return height >= windowHeight - 220
+        ? { y: windowHeight - 220, x: "max-content" }
+        : undefined;
+    }
+
     if (width < 1280) {
       return height >= windowHeight - 255
         ? { y: windowHeight - 255, x: "max-content" }
         : undefined;
     }
 
-    return height >= windowHeight - 215
-      ? { y: windowHeight - 215, x: "max-content" }
+    return height >= windowHeight - 221
+      ? { y: windowHeight - 221, x: "max-content" }
       : undefined;
   };
 
@@ -281,11 +287,28 @@ const DashboardCustomer = () => {
                   </div>
                 }
                 toolbarRight={
-                  <DatePicker
-                    format={"DD/MM/YYYY"}
-                    value={receptionDate}
-                    onChange={(date) => setReceptionDate(date)}
-                  />
+                  <div className="flex gap-2.5 items-center">
+                    <Select
+                      defaultValue={areaSelected}
+                      value={areaSelected}
+                      onChange={(value) => {
+                        setAreaSelected(value);
+                      }}
+                      options={[
+                        { label: "Tất cả", value: "all" },
+                        { label: "Khu vực sản", value: "KhuVucSan" },
+                        { label: "Khu vực nhi", value: "KhuVucNhi" },
+                      ]}
+                      placeholder="Loại thời gian"
+                      className="w-[120px]"
+                    />
+                    <DatePicker
+                      className="w-[120px]"
+                      format={"DD/MM/YYYY"}
+                      value={receptionDate}
+                      onChange={(date) => setReceptionDate(date)}
+                    />
+                  </div>
                 }
               >
                 <div

@@ -23,11 +23,11 @@ const ScheduleTime: React.FC<Props> = ({ data, isClinicalExamination }) => {
                   <div className="bg-[#f83a42] w-full h-1.5"></div>
                 )}
                 {item?.action ? (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-start gap-1.5">
                     {item.status === "ĐÚNG" ? (
-                      <div className="bg-[#23ce64] w-1.5 h-1.5 rounded-full"></div>
+                      <div className="bg-[#23ce64] w-1.5 h-1.5 rounded-full mt-[9px]"></div>
                     ) : (
-                      <div className="bg-[#f83a42] w-1.5 h-1.5 rounded-full"></div>
+                      <div className="bg-[#f83a42] w-1.5 h-1.5 rounded-full mt-[9px]"></div>
                     )}
                     <div className="max-w-[calc(100%-12px)]">{`${
                       item.action
@@ -56,26 +56,27 @@ const ScheduleTime: React.FC<Props> = ({ data, isClinicalExamination }) => {
               </>
             ) : (
               <>
-                {item.endTime || item.startTime ? (
+                {item.status === "ĐÚNG" ? (
                   <div className="bg-[#23ce64] w-[65%] h-1.5 rounded-xs"></div>
                 ) : (
                   <div className="bg-[#f83a42] w-full h-1.5"></div>
                 )}
-                <div className="flex items-center gap-1.5">
-                  {item.endTime || item.startTime ? (
-                    <div className="bg-[#23ce64] w-1.5 h-1.5 rounded-full"></div>
+                <div className="flex items-start gap-1.5">
+                  {item.status === "ĐÚNG" ? (
+                    <div className="bg-[#23ce64] w-1.5 h-1.5 rounded-full mt-[9px]"></div>
                   ) : (
-                    <div className="bg-[#f83a42] w-1.5 h-1.5 rounded-full"></div>
+                    <div className="bg-[#f83a42] w-1.5 h-1.5 rounded-full mt-[9px]"></div>
                   )}
-                  {item.startTime ? (
-                    <div>{`Vào: ${dayjs(item.startTime).format("HH:mm")}`}</div>
-                  ) : (
-                    <div>{`Ra: ${
+                  <div className="max-w-[calc(100%-12px)] flex flex-col gap-0.5">
+                    <div className="w-full font-bold">{item.action}</div>
+                    <div className="w-full">{`Giờ vào: ${dayjs(
+                      item.startTime
+                    ).format("HH:mm")} - Kết luận: ${
                       item.endTime
                         ? dayjs(item.endTime).format("HH:mm")
                         : "......"
                     }`}</div>
-                  )}
+                  </div>
                 </div>
               </>
             )}
