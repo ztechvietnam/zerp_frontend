@@ -43,6 +43,8 @@ const TITLES: Record<string, string> = {
   ["/dashboard/library/document-category"]: "Danh mục văn bản",
   ["/dashboard/library/document-management"]: "Quản lý văn bản",
   ["/dashboard/library/document"]: "Tra cứu văn bản",
+  ["/dashboard/customer-support/dashboard-customer"]: "Dashboard bệnh nhân",
+  ["/dashboard/library/dashboard-library"]: "Dashboard thư viện",
 };
 
 function TitleManager() {

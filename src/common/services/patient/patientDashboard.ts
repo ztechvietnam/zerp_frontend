@@ -2,6 +2,7 @@ import { EntityBase } from "../entity-base";
 import { PatientEntity } from "./patient";
 
 export interface PatientDashboardEntity extends EntityBase {
+    area: string | null;
     customer_id: number | null;
     customer: PatientEntity | null;
     reception_time: Date | null;

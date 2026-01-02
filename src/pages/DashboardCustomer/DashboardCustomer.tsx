@@ -40,6 +40,7 @@ const DashboardCustomer = () => {
   const [dataDashboard, setDataDashboard] = useState<PatientDashboardEntity[]>(
     []
   );
+  const [listData, setListData] = useState<PatientDashboardEntity[]>([]);
   const [receptionDate, setReceptionDate] = useState<Dayjs>(dayjs());
   const [areaSelected, setAreaSelected] = useState<string>("all");
   const [totalData, setTotalData] = useState<number>(0);
@@ -57,20 +58,9 @@ const DashboardCustomer = () => {
           },
         });
         if (results) {
-          const filterData = results.data.filter(
-            (item: PatientDashboardEntity) => {
-              if (receptionDate) {
-                const itemDate = dayjs(item.reception_time);
-                return itemDate.isSame(receptionDate, "day");
-              }
-              return true;
-            }
-          );
-          setDataDashboard(filterData);
-          setTotalData(filterData.length || 0);
+          setDataDashboard(results.data || []);
         } else {
           setDataDashboard([]);
-          setTotalData(0);
         }
         setLoading(false);
       } catch (e) {
@@ -78,7 +68,7 @@ const DashboardCustomer = () => {
         console.log(e);
       }
     },
-    [pageIndex, pageSize, receptionDate]
+    [pageIndex, pageSize]
   );
 
   useEffect(() => {
@@ -100,6 +90,29 @@ const DashboardCustomer = () => {
       await getDataDashboard();
     })();
   }, [getDataDashboard]);
+
+  useEffect(() => {
+    if (dataDashboard.length === 0) {
+      setTotalData(0);
+      setListData([]);
+      return;
+    } else {
+      let filterData = dataDashboard.filter((item: PatientDashboardEntity) => {
+        if (receptionDate) {
+          const itemDate = dayjs(item.reception_time);
+          return itemDate.isSame(receptionDate, "day");
+        }
+        return true;
+      });
+      if (areaSelected !== "all") {
+        filterData = filterData.filter((item: PatientDashboardEntity) => {
+          return item.area === areaSelected;
+        });
+      }
+      setListData(filterData);
+      setTotalData(filterData.length);
+    }
+  }, [dataDashboard, receptionDate, areaSelected]);
 
   const columns: ColumnsType<PatientDashboardEntity> = [
     {
@@ -199,41 +212,6 @@ const DashboardCustomer = () => {
         );
       },
     },
-    // {
-    //   title: "TÌNH TRẠNG",
-    //   width: 150,
-    //   dataIndex: "exam_status",
-    //   render(value: any) {
-    //     return (
-    //       <div>
-    //         {value === "ĐÚNG" ? (
-    //           <div className="flex gap-1 w-fit items-center border bg-[#f4fff0] border-[#23ce64] px-1.5 py-0.5 rounded-[50px]">
-    //             <div className="bg-[#23ce64] w-1.5 h-1.5 rounded-full"></div>
-    //             <span className="text-[#23ce64] font-medium">Tốt</span>
-    //           </div>
-    //         ) : (
-    //           <div className="flex gap-1 w-fit items-center border bg-[#ffebeb] border-[#f83a42] px-1.5 py-0.5 rounded-[50px]">
-    //             <div className="bg-[#f83a42] w-1.5 h-1.5 rounded-full"></div>
-    //             <span className="text-[#f83a42] font-medium">Quá thời gian</span>
-    //           </div>
-    //         )}
-    //       </div>
-    //     );
-    //   },
-    // },
-    // {
-    //   title: "",
-    //   width: 50,
-    //   render() {
-    //     return (
-    //       <div className="w-full cursor-pointer">
-    //         <Tooltip title="Xem chi tiết">
-    //           <ProfileOutlined />
-    //         </Tooltip>
-    //       </div>
-    //     );
-    //   },
-    // },
   ];
 
   const getTableScroll = () => {
@@ -318,7 +296,7 @@ const DashboardCustomer = () => {
                     <Table
                       rowKey="id"
                       columns={columns}
-                      dataSource={dataDashboard}
+                      dataSource={listData}
                       pagination={false}
                       scroll={getTableScroll()}
                       style={{
