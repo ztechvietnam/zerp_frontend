@@ -53,7 +53,11 @@ const ScheduleTime: React.FC<Props> = ({ data, isClinicalExamination }) => {
                     )}
                     <div className="max-w-[calc(100%-12px)]">{`${
                       item.action
-                    } | ${dayjs(item.startTime).format("HH:mm")} - ${
+                    } | ${
+                      item.startTime
+                        ? dayjs(item.startTime).format("HH:mm")
+                        : "......"
+                    } - ${
                       item.endTime
                         ? dayjs(item.endTime).format("HH:mm")
                         : "......"
@@ -66,9 +70,11 @@ const ScheduleTime: React.FC<Props> = ({ data, isClinicalExamination }) => {
                     ) : (
                       <div className="bg-[#f83a42] w-1.5 h-1.5 rounded-full"></div>
                     )}
-                    <div>{`Vào: ${dayjs(item.startTime).format(
-                      "HH:mm"
-                    )} - Ra: ${
+                    <div>{`Vào: ${
+                      item.startTime
+                        ? dayjs(item.startTime).format("HH:mm")
+                        : "......"
+                    } - Ra: ${
                       item.endTime
                         ? dayjs(item.endTime).format("HH:mm")
                         : "......"
@@ -117,9 +123,11 @@ const ScheduleTime: React.FC<Props> = ({ data, isClinicalExamination }) => {
                   ) : (
                     <div className="bg-[#f83a42] w-1.5 h-1.5 rounded-full mt-[9px]"></div>
                   )}
-                  <div className="max-w-[calc(100%-12px)]">{`${
-                    item.action
-                  } | ${dayjs(item.startTime).format("HH:mm")} - ${
+                  <div className="max-w-[calc(100%-12px)]">{`${item.action} | ${
+                    item.startTime
+                      ? dayjs(item.startTime).format("HH:mm")
+                      : "......"
+                  } - ${
                     item.endTime
                       ? dayjs(item.endTime).format("HH:mm")
                       : "......"
@@ -164,9 +172,11 @@ const ScheduleTime: React.FC<Props> = ({ data, isClinicalExamination }) => {
                 )}
                 <div className="max-w-[calc(100%-12px)] flex flex-col gap-0.5">
                   <div className="w-full font-bold">{item.action}</div>
-                  <div className="w-full">{`Giờ vào: ${dayjs(
+                  <div className="w-full">{`Giờ vào: ${
                     item.startTime
-                  ).format("HH:mm")} - Kết luận: ${
+                      ? dayjs(item.startTime).format("HH:mm")
+                      : "......"
+                  } - Kết luận: ${
                     item.endTime
                       ? dayjs(item.endTime).format("HH:mm")
                       : "......"
