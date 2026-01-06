@@ -198,17 +198,25 @@ const DashboardCustomer = () => {
       }),
       render(value: CustomerParaclinicalEntity[]) {
         return (
-          <ScheduleTime
-            data={uniqBy(uniqBy(value, "id"), "service_name").map((item) => {
-              return {
-                action: item.service_name,
-                startTime: item.order_time,
-                endTime: item.result_time,
-                status: item.paraclinical_status,
-              };
-            })}
-            isClinicalExamination
-          />
+          <>
+            {value && value?.length ? (
+              <ScheduleTime
+                data={uniqBy(uniqBy(value, "id"), "service_name").map(
+                  (item) => {
+                    return {
+                      action: item.service_name,
+                      startTime: item.diagnostic_checkin_time,
+                      endTime: item.result_time,
+                      status: item.paraclinical_status,
+                    };
+                  }
+                )}
+                isClinicalExamination
+              />
+            ) : (
+              <>Không có dữ liệu</>
+            )}
+          </>
         );
       },
     },

@@ -28,5 +28,6 @@ export interface CustomerParaclinicalEntity extends EntityBase {
     service_group_name: string;
     order_time: Date;
     result_time: Date;
+    diagnostic_checkin_time: Date;
     paraclinical_status: string;
 }
