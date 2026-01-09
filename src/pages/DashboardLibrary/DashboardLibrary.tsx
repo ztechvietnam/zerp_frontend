@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
-  Breadcrumb,
   Button,
   Col,
   DatePicker,
@@ -281,7 +280,7 @@ const DashboardLibrary = () => {
         title: "Mã kí hiệu",
         dataIndex: "code",
         ...(haveData ? { width: 80 } : {}),
-        render(value, record) {
+        render(value) {
           return <span>{highlightText(value.trim())}</span>;
         },
       },
@@ -715,7 +714,7 @@ const DashboardLibrary = () => {
                       pageSize={pageSize}
                       showSizeChanger
                       pageSizeOptions={[10, 20, 30, 50]}
-                      onShowSizeChange={(current: number, size: number) => {
+                      onShowSizeChange={(size: number) => {
                         setPageSize(size);
                       }}
                       onChange={(currentPage) => {

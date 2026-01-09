@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   Breadcrumb,
@@ -21,7 +15,7 @@ import {
   Tooltip,
 } from "antd";
 import "./dashboardCustomer.css";
-import { cloneDeep, debounce, set, uniqBy } from "lodash";
+import { uniqBy } from "lodash";
 import dayjs, { Dayjs } from "dayjs";
 import ScheduleTime from "./ScheduleTime";
 import { patientDashboardService } from "../../common/services/patient/patientDashboardService";
@@ -50,6 +44,7 @@ const DashboardCustomer = () => {
   const getDataDashboard = useCallback(
     async (formValues?: any) => {
       try {
+        console.log(formValues);
         setLoading(true);
         const results = await patientDashboardService.get({
           params: {
@@ -351,7 +346,7 @@ const DashboardCustomer = () => {
                       pageSize={pageSize}
                       showSizeChanger
                       pageSizeOptions={[50, 100]}
-                      onShowSizeChange={(current: number, size: number) => {
+                      onShowSizeChange={(size: number) => {
                         setPageSize(size);
                       }}
                       onChange={(currentPage) => {

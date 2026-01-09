@@ -18,7 +18,7 @@ import {
   UploadProps,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
-import React, {
+import {
   forwardRef,
   useCallback,
   useEffect,

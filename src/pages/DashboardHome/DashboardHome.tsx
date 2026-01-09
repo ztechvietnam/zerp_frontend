@@ -5,7 +5,7 @@ import UserDropdown from "../../components/header/UserDropdown";
 export default function DashboardHome() {
   const navigate = useNavigate();
 
-  const handleSelect = (envKey: string, path: string) => {
+  const handleSelect = (path: string) => {
     navigate(path);
   };
 
@@ -35,7 +35,7 @@ export default function DashboardHome() {
             <div
               key={env.key}
               className="bg-[#f2fbff] shadow-md transition-all hover:shadow-xl cursor-pointer p-6 flex items-center gap-4 rounded-lg border border-solid border-[#91D5FF]"
-              onClick={() => handleSelect(env.key, env.path)}
+              onClick={() => handleSelect(env.path)}
             >
               <div
                 className="bg-[#FFFFFF] h-[64px] min-h-[64px] w-[64px] min-w-[64px] rounded-xl flex items-center justify-center iconHomepage"

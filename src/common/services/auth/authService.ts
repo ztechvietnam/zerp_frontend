@@ -73,7 +73,7 @@ export class AuthService extends ServiceBase {
 
   // refresh token
   async refresh(refreshToken: string) {
-    return this.post<{ token: string; refreshToken: string }>(
+    return this.post<{ token: string; refreshToken: string; user: UserEntity | undefined }>(
       {},
       {
         endpoint: "refresh",

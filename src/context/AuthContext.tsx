@@ -11,7 +11,7 @@ import {
   scheduleTokenRefresh,
 } from "../common/function/commonFunction";
 import { authService } from "../common/services/auth/authService";
-import { decodeBase64, encodeBase64 } from "../components/constant/constant";
+import { encodeBase64 } from "../components/constant/constant";
 
 interface AuthContextType {
   currentUser: UserEntity | undefined;
@@ -36,8 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const savedToken = localStorage.getItem("access_token");
     const savedUser = localStorage.getItem("currentUser");
     const refreshToken = localStorage.getItem("refresh_token");
-
-    const encodedPassword = sessionStorage.getItem("user_password");
 
     const initAuth = async () => {
       if (savedToken && savedUser) {

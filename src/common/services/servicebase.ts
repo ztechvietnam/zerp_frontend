@@ -4,7 +4,6 @@ import { defaultsDeep } from "lodash";
 import Axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { Parser } from "./parser";
 import { urlJoin } from "./url-join";
-import { MessageInstance } from "antd/es/message/interface";
 import { message } from "antd";
 
 export interface RequestOptions<T = any> extends AxiosRequestConfig {
@@ -183,7 +182,7 @@ export abstract class ServiceBase {
     );
   }
 
-  async get<T = any>(options?: RequestOptions): Promise<any> {
+  async get<T = any>(options?: RequestOptions): Promise<T> {
     const opts = this.getOptions(options);
     try {
       const data = await this.client.get(
@@ -193,7 +192,7 @@ export abstract class ServiceBase {
       if (opts.parser) {
         return await opts.parser.parse(data);
       }
-      return data;
+      return data as T;
     } catch (e) {
       if (opts.passthroughErrorCatcher) throw e;
       const catched = await this.catchError(e);
@@ -204,7 +203,7 @@ export abstract class ServiceBase {
     }
   }
 
-  async post<T = any>(data: any, options?: RequestOptions): Promise<any> {
+  async post<T = any>(data: any, options?: RequestOptions): Promise<T> {
     const opts = this.getOptions(options);
     try {
       const response = await this.client.post(
@@ -215,7 +214,7 @@ export abstract class ServiceBase {
       if (opts.parser) {
         return await opts.parser.parse(response);
       }
-      return response;
+      return response as T;
     } catch (e) {
       if (opts.passthroughErrorCatcher) {
         throw e;
@@ -229,7 +228,7 @@ export abstract class ServiceBase {
     }
   }
 
-  async patch<T = any>(data: any, options?: RequestOptions): Promise<any> {
+  async patch<T = any>(data: any, options?: RequestOptions): Promise<T> {
     const opts = this.getOptions(options);
     try {
       const result = await this.client.patch(
@@ -240,7 +239,7 @@ export abstract class ServiceBase {
       if (opts.parser) {
         return await opts.parser.parse(result);
       }
-      return result;
+      return result as T;
     } catch (e) {
       if (opts.passthroughErrorCatcher) throw e;
       const catched = await this.catchError(e);
@@ -254,7 +253,7 @@ export abstract class ServiceBase {
   async delete(data: any, options?: RequestOptions): Promise<boolean> {
     const opts = this.getOptions(options);
     try {
-      const { data: result } = await this.client.delete(
+      await this.client.delete(
         `${this.getAbsoluteRequestUrl(options)}`,
         opts
       );

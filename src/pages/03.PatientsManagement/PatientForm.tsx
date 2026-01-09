@@ -13,20 +13,12 @@ import {
   Tooltip,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
-import React, {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useState,
-} from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { pick } from "lodash";
 import { PatientEntity } from "../../common/services/patient/patient";
 import dayjs from "dayjs";
 import { zaloMessageService } from "../../common/services/customer-zalo-messages/zalo-mesage-service";
-import {
-  ZaloMessageEntity,
-  ZaloMessageType,
-} from "../../common/services/customer-zalo-messages/zalo-mesage";
+import { ZaloMessageEntity } from "../../common/services/customer-zalo-messages/zalo-mesage";
 import { customersService } from "../../common/services/patient/customersService";
 import "../../index.css";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -38,7 +30,7 @@ export interface PatientFormRef {
 interface PatientFormProps {}
 
 export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
-  (props, ref) => {
+  (_props, ref) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [tabActive, setTabActive] = useState<string>("profile");
@@ -257,7 +249,7 @@ export const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
             <Tabs.TabPane tab="Lịch sử gửi tin nhắn" key="historyMessage">
               <Table
                 rowKey="id"
-                columns={columns(listMessages.length)}
+                columns={columns(!!listMessages?.length)}
                 dataSource={listMessages}
                 scroll={{ y: window.innerHeight - 430 }}
               />

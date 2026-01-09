@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   Breadcrumb,
@@ -53,7 +53,7 @@ const ListReviews = () => {
       title: "Họ và tên",
       dataIndex: "name",
       width: 100,
-      render: (value, record: ReviewEntity) => {
+      render: (record: ReviewEntity) => {
         return (
           <span
             className="cursor-pointer"
@@ -381,8 +381,8 @@ const ListReviews = () => {
             onChange={(page) => {
               setPageIndex(page);
             }}
-            onShowSizeChange={(current, size) => {
-              console.log(current, size);
+            onShowSizeChange={(size) => {
+              setPageSize(size);
             }}
             align="end"
           />

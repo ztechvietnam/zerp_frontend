@@ -1,5 +1,5 @@
 import { Content } from "antd/es/layout/layout";
-import React, { useState } from "react";
+import { useState } from "react";
 import { dataCategoryNews } from "../components/constant/constant";
 import { Menu } from "antd";
 import ListNews from "./ListNews";

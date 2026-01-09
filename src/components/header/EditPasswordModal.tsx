@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { App, Col, Form, Input, Modal, Row, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
-import React, { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { decodeBase64, encodeBase64, MEASSAGE } from "../constant/constant";
 import { UserEntity } from "../../common/services/user/user";
-import { useAuth } from "../../context/AuthContext";
 import { userService } from "../../common/services/user/user-service";
 
 export interface EditPasswordModalRef {

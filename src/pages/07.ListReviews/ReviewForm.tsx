@@ -7,7 +7,7 @@ import {
   Spin,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
-import React, {
+import {
   forwardRef,
   useImperativeHandle,
   useState,
@@ -22,7 +22,7 @@ export interface ReviewFormRef {
 interface ReviewFormProps {}
 
 export const ReviewForm = forwardRef<ReviewFormRef, ReviewFormProps>(
-  (props, ref) => {
+  (_props, ref) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [currentReview, setCurrentReview] = useState<

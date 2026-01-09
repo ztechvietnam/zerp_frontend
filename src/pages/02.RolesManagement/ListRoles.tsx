@@ -1,5 +1,5 @@
 import { Breadcrumb, Pagination, Table, TableColumnsType, Tag } from "antd";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RoleEntity } from "../../common/services/role/role";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import { roleService } from "../../common/services/role/role-service";
@@ -47,20 +47,20 @@ const ListRoles = () => {
       title: "STT",
       width: 60,
       align: "center",
-      render: (value, record: RoleEntity, index) => {
+      render: (index: number) => {
         return <span>{index + 1}</span>;
       },
     },
     {
       title: "Tên quyền",
       dataIndex: "role_name",
-      render: (value, record: RoleEntity) => {
+      render: (record: RoleEntity) => {
         return <span>{record.role_name}</span>;
       },
     },
     {
       title: "Mã quyền",
-      render: (value, record: RoleEntity) => {
+      render: (record: RoleEntity) => {
         return <span>{record.name}</span>;
       },
     },
@@ -120,7 +120,11 @@ const ListRoles = () => {
             }}
           />
         </div>
-        <div className={`flex items-center ${totalData > 0 ? 'justify-between': 'justify-end'}`}>
+        <div
+          className={`flex items-center ${
+            totalData > 0 ? "justify-between" : "justify-end"
+          }`}
+        >
           {totalData > 0 && (
             <div className="flex items-center justify-between gap-[5px]">
               <span className="hidden lg:flex">Đang hiển thị</span>
@@ -145,7 +149,7 @@ const ListRoles = () => {
             pageSize={pageSize}
             showSizeChanger
             pageSizeOptions={[10, 20, 30, 50]}
-            onShowSizeChange={(current: number, size: number) => {
+            onShowSizeChange={(size: number) => {
               setPageSize(size);
             }}
             onChange={(currentPage) => {

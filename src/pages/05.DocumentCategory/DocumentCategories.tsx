@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
-import { App, Breadcrumb, Button, Modal, Table, Tag, Tooltip } from "antd";
+import { App, Breadcrumb, Button, Table, Tag, Tooltip } from "antd";
 import {
   DocumentCategoryForm,
   DocumentCategoryFormRef,
@@ -34,6 +34,7 @@ const DocumentCategories = () => {
 
   const getDocumentCategories = useCallback(async (formValues?: any) => {
     try {
+      console.log(formValues);
       setLoading(true);
       const results = await documentCategoriesService.get({
         params: {

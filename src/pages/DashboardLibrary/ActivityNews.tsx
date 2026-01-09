@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Button, Descriptions, List, Popover, Tag, Tooltip } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { Descriptions, List, Popover, Tag, Tooltip } from "antd";
 import { dataCategoryNews } from "../../components/constant/constant";
 import { NewsEntity } from "../../common/services/news/news";
 

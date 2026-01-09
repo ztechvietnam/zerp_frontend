@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   App,
@@ -19,7 +19,7 @@ import {
 } from "antd";
 import { PatientEntity } from "../../common/services/patient/patient";
 import { PatientForm, PatientFormRef } from "./PatientForm";
-import { FilterOutlined, SyncOutlined } from "@ant-design/icons";
+import { SyncOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { customersService } from "../../common/services/patient/customersService";
 import { debounce } from "lodash";
@@ -31,7 +31,6 @@ import "../../index.css";
 const ListPatients = () => {
   const [pageIndex, setPageIndex] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [counterFilter, setCounterFilter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [keyword, setKeyword] = useState<string>("");
   const [showFilter, setShowFilter] = useState<boolean>(false);
@@ -48,6 +47,7 @@ const ListPatients = () => {
   const getDataPatients = useCallback(
     async (formValues?: any) => {
       try {
+        console.log(formValues);
         setLoading(true);
         const results = await customersService.get({
           params: {
@@ -164,7 +164,7 @@ const ListPatients = () => {
       title: "Họ và tên",
       dataIndex: "fullName",
       width: 250,
-      render: (value, record: PatientEntity) => {
+      render: (record: PatientEntity) => {
         return (
           <span
             className="cursor-pointer"
@@ -367,7 +367,7 @@ const ListPatients = () => {
             pageSize={pageSize}
             showSizeChanger
             pageSizeOptions={[10, 20, 30, 50]}
-            onShowSizeChange={(current: number, size: number) => {
+            onShowSizeChange={(size: number) => {
               setPageSize(size);
             }}
             onChange={(currentPage) => {

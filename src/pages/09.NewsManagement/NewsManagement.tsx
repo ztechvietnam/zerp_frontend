@@ -21,10 +21,7 @@ import { dataCategoryNews, dataNews } from "../../components/constant/constant";
 import { FilterOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import dayjs from "dayjs";
-import {
-  NewsForm,
-  NewsFormRef,
-} from "./NewsForm";
+import { NewsForm, NewsFormRef } from "./NewsForm";
 import { NewsEntity } from "../../common/services/news/news";
 
 const NewsManagement = () => {
@@ -206,6 +203,7 @@ const NewsManagement = () => {
                 setSelectedRowKeys(e);
               },
             }}
+            loading={loading}
             scroll={
               window.innerWidth < 768
                 ? (tableRef.current?.offsetHeight ?? 0) >=
@@ -232,6 +230,9 @@ const NewsManagement = () => {
             current={pageIndex}
             onChange={(page) => {
               setPageIndex(page);
+            }}
+            onShowSizeChange={(size: number) => {
+              setPageSize(size);
             }}
             align="end"
           />

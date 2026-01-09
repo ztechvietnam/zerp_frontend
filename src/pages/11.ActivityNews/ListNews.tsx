@@ -89,7 +89,7 @@ const ListNews: React.FC<ListNewsProps> = ({ category }) => {
               pageSize={pageSize}
               showSizeChanger
               pageSizeOptions={[5, 10, 20, 50]}
-              onShowSizeChange={(current: number, size: number) => {
+              onShowSizeChange={(size: number) => {
                 setPageSize(size);
               }}
               onChange={(currentPage) => {

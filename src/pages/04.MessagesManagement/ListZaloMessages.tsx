@@ -1,13 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   App,
@@ -77,6 +71,7 @@ const ListZaloMessages = () => {
   const getDataPatients = useCallback(
     async (formValues?: any) => {
       try {
+        console.log(formValues);
         setLoading(true);
         const results = await zaloMessageService.get({
           params: {
@@ -101,7 +96,7 @@ const ListZaloMessages = () => {
   );
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
+    let intervalId: number | null = null;
 
     if (pageIndex === 1) {
       intervalId = setInterval(() => {
@@ -393,7 +388,7 @@ const ListZaloMessages = () => {
       title: "Thời điểm gửi",
       width: 150,
       dataIndex: "sent_time",
-      filterDropdown: ({ clearFilters, close }) => (
+      filterDropdown: ({ close }) => (
         <div
           className="flex flex-col gap-2 p-2"
           onKeyDown={(e) => e.stopPropagation()}
@@ -697,7 +692,7 @@ const ListZaloMessages = () => {
             pageSize={pageSize}
             showSizeChanger
             pageSizeOptions={[10, 20, 30, 50]}
-            onShowSizeChange={(current: number, size: number) => {
+            onShowSizeChange={(size: number) => {
               setPageSize(size);
             }}
             onChange={(currentPage) => {

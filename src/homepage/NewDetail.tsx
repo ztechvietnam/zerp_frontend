@@ -1,7 +1,9 @@
+/* eslint-disable no-empty-pattern */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { contentTemplate, dataNews } from "../components/constant/constant";
-import { App, List, Skeleton } from "antd";
+import { App, Skeleton } from "antd";
 import { NewsEntity } from "../common/services/news/news";
 import { StickyButton } from "./StickyButton";
 import { Content } from "antd/es/layout/layout";

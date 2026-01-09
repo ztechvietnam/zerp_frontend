@@ -13,7 +13,7 @@ export const parseJwt = (token: string): { exp: number } => {
   return JSON.parse(jsonPayload);
 };
 
-let refreshTimer: NodeJS.Timeout;
+let refreshTimer: number;
 
 export const scheduleTokenRefresh = (token: string) => {
   const { exp } = parseJwt(token);

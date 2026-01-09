@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import React, { JSX } from "react";
+import { JSX } from "react";
 
 export default function PrivateRoute({ children }: { children: JSX.Element }) {
   const { currentUser, token } = useAuth();

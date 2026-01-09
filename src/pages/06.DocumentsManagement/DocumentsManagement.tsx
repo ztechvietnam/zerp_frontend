@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PageContainer from "../../components/PageContainer/PageContainer";
 import {
   Breadcrumb,
@@ -298,7 +292,7 @@ const DocumentsManagement = () => {
         title: "Mã kí hiệu",
         dataIndex: "code",
         ...(haveData ? { width: 80 } : {}),
-        render(value, record) {
+        render(value) {
           return <span>{highlightText(value.trim())}</span>;
         },
       },
@@ -436,10 +430,16 @@ const DocumentsManagement = () => {
                     }
 
                     try {
-                      const response = await axios.get(record.file.replace("https://zerp.hih.vn", "http://172.16.124.100:2207"), {
-                        responseType: "blob",
-                        headers: { Authorization: `Bearer ${token}` },
-                      });
+                      const response = await axios.get(
+                        record.file.replace(
+                          "https://zerp.hih.vn",
+                          "http://172.16.124.100:2207"
+                        ),
+                        {
+                          responseType: "blob",
+                          headers: { Authorization: `Bearer ${token}` },
+                        }
+                      );
 
                       const mimeType =
                         response.headers["content-type"] ||
@@ -877,7 +877,7 @@ const DocumentsManagement = () => {
             pageSize={pageSize}
             showSizeChanger
             pageSizeOptions={[10, 20, 30, 50]}
-            onShowSizeChange={(current: number, size: number) => {
+            onShowSizeChange={(size: number) => {
               setPageSize(size);
             }}
             onChange={(currentPage) => {

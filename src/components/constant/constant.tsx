@@ -8,8 +8,6 @@ import { TreeNode } from "../../common/services/category/category";
 import { NewsEntity } from "../../common/services/news/news";
 import { QuestionEntity } from "../../common/services/question/question";
 import { DocumentCategoriesEntity } from "../../common/services/document-categories/documentCategories";
-import { PatientEntity } from "../../common/services/patient/patient";
-import { EntityBase } from "../../common/services/entity-base";
 
 export const encodeBase64 = (str: string): string =>
   btoa(unescape(encodeURIComponent(str)));
